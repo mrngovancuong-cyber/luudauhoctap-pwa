@@ -265,22 +265,37 @@ function handleQuestionViewed(qid){
   state.perQuestion[qid].start = now; 
 }
 
-function handleAnswered(qid){
+/**
+ * Ghi nhận hành vi khi học sinh trả lời một câu hỏi.
+ * PHIÊN BẢN TỐI ƯU HÓA
+ */
+function handleAnswered(qid) {
   const now = Date.now();
   const pq = state.perQuestion[qid] || (state.perQuestion[qid] = {});
+
+  // Khởi tạo các giá trị thời gian nếu chưa có
   if (!pq.firstSeen) pq.firstSeen = now;
   if (!pq.start) pq.start = now;
+  
+  // Ghi lại thời điểm trả lời (quan trọng cho suy luận "rời đi -> trả lời ngay")
   pq.answerTime = now;
 
-  const prev = pq.lastAnswer;
+  // Đếm tổng số lần chọn đáp án cho câu này
   pq.answerCount = (pq.answerCount || 0) + 1;
-  if (prev && prev !== state.answers[qid]) {
-    pq.changedAnswers = (pq.changedAnswers || 0) + 1;
+  
+  // Từ answerCount, ta có thể suy ra số lần thay đổi
+  // Không cần logic 'prev' phức tạp nữa.
+  if (pq.answerCount > 1) {
+    pq.changedAnswers = pq.answerCount - 1;
+  } else {
+    pq.changedAnswers = 0;
   }
-  pq.lastAnswer = state.answers[qid];
-
-  const spent = Math.max(1, Math.floor((pq.answerTime - pq.start)/1000));
-  pq.timeSpent = (pq.timeSpent || 0) + spent;
+  
+  // Tính và cộng dồn thời gian suy nghĩ (tính từ lần tương tác gần nhất)
+  const spentSeconds = Math.max(1, Math.floor((now - pq.start) / 1000));
+  pq.timeSpent = (pq.timeSpent || 0) + spentSeconds;
+  
+  // Reset lại thời gian bắt đầu cho lần tương tác tiếp theo với câu hỏi này
   pq.start = now;
 }
 
