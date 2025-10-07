@@ -26,9 +26,3 @@
   # Status 200 có nghĩa là "chuyển hướng ngầm" (rewrite), 
   # trình duyệt sẽ không biết có sự chuyển hướng này.
   status = 200
-
-# THÊM QUY TẮC NÀY VÀO
-[[redirects]]
-  from = "/"
-  to = "/home.html"
-  status = 200

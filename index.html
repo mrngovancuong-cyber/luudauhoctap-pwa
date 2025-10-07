@@ -1,115 +1,87 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lưu Dấu Học Tập</title>
-  <!-- Liên kết CSS mới -->
-  <link rel="stylesheet" href="css/styleD.css">
-<link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#0b1220" />
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lưu Dấu Học Tập - Cổng Luyện tập</title>
+    
+    <!-- SỬA LẠI: Liên kết đến file CSS chung của dự án -->
+    <link rel="stylesheet" href="css/styleHome.css">
+    
+    <!-- Thêm một vài style riêng cho trang chủ -->
+    <style>
+        .welcome-section { 
+            text-align: center; 
+            padding: 2rem 1rem; 
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .welcome-section h2 {
+            color: var(--accent);
+        }
+        .exam-list { 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .exam-link {
+            display: block;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s ease-in-out;
+        }
+        .exam-link:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .exam-link h3 { 
+            margin: 0 0 8px 0; 
+            color: var(--text); 
+            font-size: 1.1em;
+        }
+        .exam-link p { 
+            margin: 0; 
+            font-size: 0.9em; 
+            color: var(--muted); 
+        }
+        #loading-message {
+            color: var(--muted);
+        }
+    </style>
 </head>
 <body>
-  <!-- Header cố định -->
-  <header class="sticky-header">
-    <div class="header-top">
-      <div class="header-left">
-        <img src="icons/logo.png" alt="Logo" class="logo">
-      </div>
-      <div class="header-center">
-        <h1 class="title" id="examTitle">LƯU DẤU HỌC TẬP</h1>
-      </div>
-      <div class="header-right">
-        <!-- Timer ẩn lúc đầu -->
-        <span id="timer" hidden>00:00</span>
-        <span id="timeWarn" hidden></span>
-      </div>
-    </div>
-    <div class="header-bottom">
-      <!-- Navigator hiển thị số câu hỏi (ẩn lúc đầu) -->
-      <div id="navigator" hidden>
-        <div class="navigator-title">Trạng thái trả lời</div>
-        <div id="navigator-items"></div>
-      </div>
-    </div>
-  </header>
+    <!-- TÁI SỬ DỤNG LẠI CẤU TRÚC HEADER TỪ indexE.html -->
+    <header class="sticky-header">
+        <div class="header-top">
+            <div class="header-left">
+                <!-- Bạn có thể thêm logo ở đây nếu muốn -->
+                <img src="icons/logo.png" alt="Logo" class="logo">
+            </div>
+            <div class="header-center">
+                <h1 class="title">Lưu Dấu Học Tập</h1>
+            </div>
+            <div class="header-right"></div>
+        </div>
+    </header>
 
-  <!-- Thanh điều khiển -->
-  <section class="control-bar">
-    <div class="controls-row">
-      <div class="left">
-        <button id="btn-guidelines" class="action-btn btn-guide">Hướng dẫn làm bài</button>
-      </div>
-      <div class="right">
-        <button id="btn-start" class="action-btn btn-start">Bắt đầu làm</button>
-      </div>
-    </div>
-    <div id="guidelines" class="guidelines" hidden>
-      <h3>Hướng dẫn làm bài</h3>
-      <p>- Đọc kỹ câu hỏi và chọn đáp án đúng.</p>
-      <p>- Khi đã sẵn sàng, nhấn <b>Bắt đầu làm</b>.</p>
-      <p>- Có thể lưu tạm trong quá trình làm.</p>
-      <p>- Nộp bài khi hoàn thành hoặc khi hết giờ.</p>
-    </div>
-  </section>
+    <main>
+        <section class="welcome-section">
+            <h2>Chào mừng các em học sinh!</h2>
+            <p>Hãy chọn một bài tập bên dưới để bắt đầu ôn luyện kiến thức nhé.</p>
+        </section>
 
-  <!-- Nội dung chính -->
-  <main>
-    <!-- Thông tin học sinh (ẩn lúc đầu) -->
-    <section class="card" id="student-info" hidden>
-      <h3>Thông tin học sinh</h3>
-      <div class="grid two">
-        <input type="text" id="studentName" placeholder="Họ và tên" class="form-field">
-        <input type="text" id="studentId" placeholder="Mã số học sinh" class="form-field">
-      </div>
-      <div class="grid two">
-        <input type="text" id="className" placeholder="Lớp" class="form-field">
-        <input type="email" id="email" placeholder="Email" class="form-field">
-      </div>
-    </section>
+        <section id="exam-list" class="exam-list">
+            <p id="loading-message" style="text-align: center;">Đang tải danh sách bài tập...</p>
+            <!-- Danh sách bài tập sẽ được chèn vào đây bởi home.js -->
+        </section>
+    </main>
 
-    <!-- Khu vực câu hỏi (ẩn lúc đầu) -->
-    <section id="questions" hidden>
-      <!-- Câu hỏi sẽ được render tại đây bởi appF.js -->
-    </section>
-
-    <!-- Kết quả và phản hồi -->
-    <section id="resultCard" class="card hidden">
-      <h3>Kết quả làm bài</h3>
-      <div id="resultSummary"></div>
-      <div id="feedback"></div>
-      <div id="answerReveal" hidden>
-        <h4>Đáp án chi tiết</h4>
-        <div id="correctAnswers"></div>
-      </div>
-    </section>
-
-    <!-- Tiến độ trả lời (ẩn lúc đầu, chỉ hiển thị khi làm bài) -->
-    <div id="answer-progress" class="answer-progress" hidden>
-      Đã trả lời: <span id="answeredCount">0</span>/<span id="totalCount">0</span>
-    </div>
-
-    <!-- Cụm nút cuối trang (ẩn lúc đầu) -->
-    <section class="end-controls" hidden id="end-controls">
-      <div class="btn-group-center">
-        <button id="btn-save" class="action-btn btn-save">Lưu tạm</button>
-        <button id="btn-clear" class="action-btn btn-clear">Xoá dữ liệu tạm</button>
-        <button id="btn-submit" class="action-btn btn-submit">Nộp bài</button>
-      </div>
-    </section>
-  </main>
-
-  <!-- Script JS mới -->
-  <script type="module" src="js/appF.js"></script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("service-worker.js").catch(console.error);
-    });
-  }
-</script>
-
+    <script src="js/home.js"></script>
 </body>
 </html>
