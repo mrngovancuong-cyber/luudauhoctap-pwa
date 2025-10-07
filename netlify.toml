@@ -1,0 +1,23 @@
+# File cấu hình cho Netlify
+[build]
+  # Netlify sẽ tự động chạy "npm install" dựa vào package.json
+  command = "echo 'Build command is not needed for this static site'"
+  
+  # Chỉ cho Netlify biết nơi chứa các file function
+  functions = "netlify/functions"
+  
+  # Chỉ cho Netlify biết thư mục chứa các file web tĩnh (HTML, CSS, JS)
+  # Dấu "." có nghĩa là thư mục gốc
+  publish = "." 
+
+# Cấu hình chuyển hướng (redirect) để tạo proxy
+[[redirects]]
+  # Bất kỳ request nào bắt đầu bằng /api/
+  from = "/api/*"
+  
+  # Sẽ được chuyển hướng đến function tên là "proxy"
+  to = "/.netlify/functions/proxy/:splat"
+  
+  # Status 200 có nghĩa là "chuyển hướng ngầm" (rewrite), 
+  # trình duyệt sẽ không biết có sự chuyển hướng này.
+  status = 200
