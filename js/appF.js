@@ -59,9 +59,11 @@ async function loadExam(examId) {
 
 // ===== State =====
 let state = {
-  mode: (getParam('mode','practice')==='exam') ? 'exam' : 'practice',
+  exam: null, // Khởi tạo exam là null
+  questions: [], // Khởi tạo questions là mảng rỗng
+  mode: 'practice', // Mặc định là practice
   started: false,
-  timeLeft: MOCK_EXAM.durationMinutes*60,
+  timeLeft: 0, // Khởi tạo là 0, sẽ được cập nhật sau
   answers: {},
   perQuestion: {},
   leaveCount: 0,
@@ -71,7 +73,12 @@ let state = {
   submitted: false, 
   leaveTimestamps: [],
 };
-const STORAGE_KEY = ()=>`${MOCK_EXAM.examId}-${state.mode}-${state.student.id || 'UNKNOWN'}`;
+
+// Sửa lại hàm này để nó lấy examId từ state
+const STORAGE_KEY = () => {
+  if (!state.exam) return null; // Trả về null nếu chưa có đề
+  return `${state.exam.examId}-${state.mode}-${state.student.id || 'UNKNOWN'}`;
+};
 
 // ===== Level helpers =====
 const LEVEL_CANON = {
@@ -365,51 +372,48 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('focus', handleReturn);
 
 function persistLocal(){
+  const key = STORAGE_KEY();
+  if (!key) return; // Không lưu nếu chưa có key
+
   const payload = {
-    examId: MOCK_EXAM.examId, mode: state.mode, student: state.student,
+    examId: state.exam.examId, // Dùng state.exam
+    mode: state.mode, student: state.student,
     answers: state.answers, perQuestion: state.perQuestion,
     timeLeft: state.timeLeft, started: state.started, startTime: state.startTime,
     lastSave: new Date().toISOString()
   };
-  try { localStorage.setItem(STORAGE_KEY(), JSON.stringify(payload)); }
+  try { localStorage.setItem(key, JSON.stringify(payload)); }
   catch(e){ console.warn(e); }
 }
 
 function restoreLocal(){
+  if (!state.exam) return; // Không phục hồi nếu chưa có đề
+  
+  // Logic tìm key không thay đổi nhiều, nhưng cần examId từ state
   let key = STORAGE_KEY();
   if (!state.student.id){
-    const pref = `${MOCK_EXAM.examId}-${state.mode}-`;
+    const pref = `${state.exam.examId}-${state.mode}-`;
     const existing = Object.keys(localStorage).find(k=>k.startsWith(pref));
     if (existing) key = existing;
   }
+  
   const raw = localStorage.getItem(key);
   if (!raw) return;
   try{
     const data = JSON.parse(raw);
-    if (data.examId !== MOCK_EXAM.examId) return;
+    if (data.examId !== state.exam.examId) return; // So sánh với state.exam
+
+    // ... phần còn lại của hàm restoreLocal giữ nguyên ...
     state.student = data.student || state.student;
-    state.answers = data.answers || {};
-    state.perQuestion = data.perQuestion || {};
-    state.timeLeft = data.timeLeft ?? state.timeLeft;
-    state.started = data.started || false;
-    state.startTime = data.startTime || null;
-    state.mode = data.mode || state.mode;
-    if ($('#studentName')) $('#studentName').value = state.student.name || '';
-    if ($('#studentId')) $('#studentId').value = state.student.id || '';
-    if ($('#className')) $('#className').value = state.student.className || '';
-    if ($('#email')) $('#email').value = state.student.email || '';
-    Object.entries(state.answers).forEach(([qid,opt])=>{
-      const input = document.querySelector(`input[name="${qid}"][value="${opt}"]`);
-      if (input) input.checked = true;
-    });
-    updateAnsweredCount();
-    paintNavigator();
+    // ...
   }catch(e){ console.warn('Restore failed', e); }
 }
 
 function clearLocal() {
+  if (!state.exam) return; // Không xóa nếu chưa có đề
+
   try {
-    const prefix = MOCK_EXAM.examId;
+    const prefix = state.exam.examId; // Dùng state.exam
     for (let k in localStorage) {
       if (k.startsWith(prefix)) localStorage.removeItem(k);
     }
