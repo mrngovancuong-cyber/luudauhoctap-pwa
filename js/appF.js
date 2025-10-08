@@ -191,14 +191,22 @@ function renderExam() {
   // =========================================================
   
   attachDynamicListeners(); // Gọi lại hàm để gắn event cho các input mới
-// === THÊM ĐOẠN MÃ NÀY VÀO CUỐI HÀM ===
-  // Kiểm tra xem MathJax đã được tải và sẵn sàng chưa
-  if (typeof MathJax !== 'undefined' && MathJax.typeset) {
-    console.log("Kích hoạt MathJax để vẽ lại công thức...");
-    // Ra lệnh cho MathJax quét toàn bộ trang và vẽ lại công thức
-    MathJax.typeset();
-  }
-  // =====================================
+  // --- LOGIC MỚI: ĐỢI MATHJAX SẴN SÀNG ---
+  // Hàm này sẽ liên tục kiểm tra xem MathJax đã sẵn sàng chưa
+  const waitForMathJax = () => {
+    if (window.mathJaxReady) {
+      // Khi đã sẵn sàng, thực hiện typeset
+      console.log("MathJax is ready, typesetting now...");
+      MathJax.typesetPromise();
+    } else {
+      // Nếu chưa, đợi 100ms rồi kiểm tra lại
+      console.log("Waiting for MathJax to be ready...");
+      setTimeout(waitForMathJax, 100);
+    }
+  };
+
+  // Bắt đầu quá trình chờ
+  waitForMathJax();
 }
 
 function attachDynamicListeners() {
