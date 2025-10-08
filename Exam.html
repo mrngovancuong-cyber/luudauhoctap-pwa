@@ -9,26 +9,7 @@
 <link rel="manifest" href="/manifest.json" />
 <meta name="theme-color" content="#0b1220" />
 
-<script>
-  window.MathJax = {
-    tex: {
-      inlineMath: [['\\(', '\\)']], // Định nghĩa ký hiệu cho công thức inline
-      displayMath: [['\\[', '\\]']]  // Định nghĩa ký hiệu cho công thức display
-    },
-    startup: {
-      // Bảo MathJax không tự động quét trang khi tải xong
-      ready: () => {
-        console.log('MathJax has loaded and is ready.');
-        // Tạo một promise để báo cho code của chúng ta biết
-        MathJax.startup.promise.then(() => {
-          console.log('MathJax startup is complete.');
-          // Đặt một cờ báo hiệu toàn cục
-          window.mathJaxReady = true;
-        });
-      }
-    }
-  };
-</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 </head>

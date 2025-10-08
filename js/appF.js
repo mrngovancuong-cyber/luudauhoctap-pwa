@@ -191,22 +191,29 @@ function renderExam() {
   // =========================================================
   
   attachDynamicListeners(); // Gọi lại hàm để gắn event cho các input mới
-  // --- LOGIC MỚI: ĐỢI MATHJAX SẴN SÀNG ---
-  // Hàm này sẽ liên tục kiểm tra xem MathJax đã sẵn sàng chưa
-  const waitForMathJax = () => {
-    if (window.mathJaxReady) {
-      // Khi đã sẵn sàng, thực hiện typeset
-      console.log("MathJax is ready, typesetting now...");
-      MathJax.typesetPromise();
-    } else {
-      // Nếu chưa, đợi 100ms rồi kiểm tra lại
-      console.log("Waiting for MathJax to be ready...");
-      setTimeout(waitForMathJax, 100);
+  // --- LOGIC KÍCH HOẠT MATHJAX ĐƠN GIẢN HƠN ---
+  
+  // Chúng ta sẽ thử gọi MathJax. Nếu nó chưa sẵn sàng, nó sẽ báo lỗi,
+  // nhưng chúng ta sẽ bắt lỗi đó và thử lại sau một chút.
+  function typesetWithRetry() {
+    try {
+      // Kiểm tra xem đối tượng MathJax và hàm typesetPromise có tồn tại không
+      if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+        console.log("MathJax is available. Typesetting...");
+        // Gọi hàm và xử lý khi nó hoàn thành hoặc thất bại
+        window.MathJax.typesetPromise().catch((err) => console.error('MathJax Typeset Promise failed:', err));
+      } else {
+        // Nếu MathJax chưa được định nghĩa, hãy thử lại sau 150ms
+        console.log("MathJax not ready yet, retrying in 150ms...");
+        setTimeout(typesetWithRetry, 150);
+      }
+    } catch (err) {
+      console.error("Error calling MathJax:", err);
     }
-  };
+  }
 
-  // Bắt đầu quá trình chờ
-  waitForMathJax();
+  // Bắt đầu lần thử đầu tiên
+  typesetWithRetry();
 }
 
 function attachDynamicListeners() {
