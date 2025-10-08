@@ -140,26 +140,27 @@ function renderExam() {
     }
   });
 
-  // --- PHIÊN BẢN SỬA LỖI ĐÚNG NẰM Ở ĐÂY ---
-  function finalizeRender() {
-    try {
-      // 1. Gắn listener TRƯỚC
-      attachDynamicListeners();
+  // === THAY ĐỔI CỐT LÕI NẰM Ở ĐÂY ===
 
-      // 2. Sau đó mới render MathJax
+  // 1. Gắn Listener NGAY LẬP TỨC sau khi vòng lặp kết thúc
+  // Tại thời điểm này, tất cả các element input đã có trong DOM
+  attachDynamicListeners();
+
+  // 2. Kích hoạt MathJax một cách độc lập
+  // Dùng lại hàm typesetWithRetry đáng tin cậy
+  function typesetWithRetry() {
+    try {
       if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-        console.log("MathJax is available. Typesetting...");
         window.MathJax.typesetPromise().catch((err) => console.error('MathJax Typeset Promise failed:', err));
       } else {
-        console.log("MathJax not available yet.");
+        setTimeout(typesetWithRetry, 150);
       }
     } catch (err) {
-      console.error("Error during finalizeRender:", err);
+      console.error("Error calling MathJax:", err);
     }
   }
-
-  // Chờ một chút để DOM ổn định rồi mới thực hiện các tác vụ cuối cùng
-  setTimeout(finalizeRender, 150);
+  // Bắt đầu quá trình render công thức
+  typesetWithRetry();
 }  
 // --- KẾT THÚC HÀM renderExam Ở ĐÂY ---
   
