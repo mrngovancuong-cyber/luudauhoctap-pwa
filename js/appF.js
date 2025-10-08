@@ -179,16 +179,14 @@ function renderExam() {
     return;
   }
 
-  // ===== THÊM ĐOẠN MÃ NÀY =====
-  // Cập nhật tiêu đề trang và tiêu đề chính
+   // Cập nhật tiêu đề trang và tiêu đề chính
   const pageTitle = exam.title || 'Luyện tập và Kiểm tra';
   document.title = pageTitle;
   const examTitleEl = document.getElementById('examTitle');
   if (examTitleEl) {
     examTitleEl.textContent = pageTitle;
   }
-  // ============================
-
+ 
   const questionsContainer = document.getElementById('questions');
   const navigatorContainer = document.getElementById('navigator-items');
   questionsContainer.innerHTML = "";
@@ -197,50 +195,116 @@ function renderExam() {
   const totalCountEl = document.getElementById('totalCount');
   if(totalCountEl) totalCountEl.textContent = exam.questions.length;
 
+  // === THAY THẾ TOÀN BỘ VÒNG LẶP forEach BẰNG ĐOẠN NÀY ===
   exam.questions.forEach((q, idx) => {
-    const answerOptions = ['A', 'B', 'C', 'D'];
-    let answersHtml = q.answers.map((ans, ansIdx) => {
-      const option = answerOptions[ansIdx];
-      return `
-        <label class="answer" for="ans-${q.id}-${option}">
-          <input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}">
-          <span>${escapeHtml(ans)}</span>
-        </label>
-      `;
-    }).join('');
 
+    // ----- BƯỚC 1: LẮP RÁP CÁC LINH KIỆN MEDIA (NẾU CÓ) -----
+    
+    // Tạo HTML cho hình ảnh
+    const imageHtml = q.imageUrl 
+      ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>`
+      : '';
+      
+    // Tạo HTML cho âm thanh
+    const audioHtml = q.audioUrl
+      ? ` <div class="media-container">
+            <p class="media-instruction">Nghe đoạn âm thanh sau:</p>
+            <audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio>
+          </div>`
+      : '';
+
+    // ----- BƯỚC 2: LẮP RÁP LINH KIỆN CÂU TRẢ LỜI (DỰA VÀO LOẠI CÂU HỎI) -----
+    let answerBlockHtml = '';
+    const questionType = q.questionType || 'multiple_choice'; // Mặc định là trắc nghiệm
+
+    switch (questionType) {
+      
+      case 'fill_blank':
+        answerBlockHtml = `
+          <div class="answer-container-fill-blank">
+            <input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời...">
+          </div>
+        `;
+        break;
+
+      // Thêm các case khác ở đây trong tương lai (matching, ordering...)
+      
+      case 'multiple_choice':
+      default: // Mặc định sẽ là trắc nghiệm 4 lựa chọn
+        const answerOptions = ['A', 'B', 'C', 'D'];
+        answerBlockHtml = q.answers.map((ans, ansIdx) => {
+          const option = answerOptions[ansIdx];
+          return `
+            <label class="answer" for="ans-${q.id}-${option}">
+              <input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}">
+              <span>${escapeHtml(ans)}</span>
+            </label>
+          `;
+        }).join('');
+        break;
+    }
+
+    // ----- BƯỚC 3: LẮP RÁP THÀNH THẺ CÂU HỎI HOÀN CHỈNH -----
     const questionCardHtml = `
-      <div class="q-card" id="card-${q.id}">
+      <div class="q-card" id="card-${q.id}" data-question-type="${questionType}">
         <div class="q-head">
           <div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div>
           <div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div>
         </div>
-        <div class="answers">${answersHtml}</div>
+        
+        ${imageHtml}
+        ${audioHtml}
+        
+        <div class="answers">${answerBlockHtml}</div>
+
         <div class="explain-block" id="exp-${q.id}" hidden>
           <strong>Giải thích:</strong>
-          <span class="explain">${escapeHtml(q.explain)}</span>
+          <span class="explain"></span>
         </div>
       </div>
     `;
+    
     questionsContainer.insertAdjacentHTML('beforeend', questionCardHtml);
 
+    // Tạo navigator item (giữ nguyên)
     if(navigatorContainer){
         const navItemHtml = `<div class="nav-item" data-qid="${q.id}">${idx + 1}</div>`;
         navigatorContainer.insertAdjacentHTML('beforeend', navItemHtml);
     }
   });
+  // =========================================================
   
-  attachDynamicListeners();
+  attachDynamicListeners(); // Gọi lại hàm để gắn event cho các input mới
 }
 
 function attachDynamicListeners() {
-  $$('.q-card input[type="radio"]').forEach(input => {
+  // Gắn sự kiện cho các câu hỏi trắc nghiệm
+  $$('.q-card[data-question-type="multiple_choice"] input[type="radio"]').forEach(input => {
     input.addEventListener('change', (e) => {
       const qid = e.target.name;
       state.answers[qid] = e.target.value;
       handleAnswered(qid);
       paintNavigator();
       updateAnsweredCount();
+    });
+  });
+
+  // Gắn sự kiện cho các câu hỏi điền khuyết
+  $$('.q-card[data-question-type="fill_blank"] input[type="text"]').forEach(input => {
+    // Sự kiện 'blur' được kích hoạt khi người dùng click ra ngoài ô input
+    input.addEventListener('blur', (e) => {
+      const qid = e.target.name;
+      const value = e.target.value.trim();
+      if (value) { // Chỉ lưu nếu có nội dung
+        state.answers[qid] = value;
+        handleAnswered(qid);
+        paintNavigator();
+        updateAnsweredCount();
+      } else { // Nếu xóa hết nội dung thì cũng xóa câu trả lời đã lưu
+        delete state.answers[qid];
+        paintNavigator();
+        updateAnsweredCount();
+      }
     });
   });
 
