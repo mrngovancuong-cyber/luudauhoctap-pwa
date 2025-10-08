@@ -122,6 +122,15 @@ async function loadExam(examId) {
     }
     
     console.log("Tải dữ liệu từ API thành công:", data);
+    // === LOGIC MỚI: CẬP NHẬT CHẾ ĐỘ ===
+    // Ưu tiên 1: Lấy mode từ URL
+    const urlMode = getParam('mode'); 
+    // Ưu tiên 2: Lấy mode từ cài đặt của giáo viên trên Sheet
+    const examDefaultMode = data.defaultMode || 'practice';
+    // Quyết định chế độ cuối cùng
+    state.mode = (urlMode === 'exam' || urlMode === 'practice') ? urlMode : examDefaultMode;
+    console.log(`Chế độ làm bài được xác định là: ${state.mode}`);
+    // ===================================    
     state.exam = data;
     state.questions = data.questions;
     state.timeLeft = (data.durationMinutes || 10) * 60; 
@@ -161,12 +170,6 @@ const LEVEL_CANON = {
   'nhan_biet':'nhan_biet','thong_hieu':'thong_hieu','van_dung':'van_dung','van_dung_cao':'van_dung_cao'
 };
 function levelKey(v){ return LEVEL_CANON[v] || 'khac'; }
-
-// ===== Mode (radio optional) =====
-function initMode(){
-  const urlMode = getParam('mode');
-  if (urlMode==='exam' || urlMode==='practice'){ state.mode = urlMode; }
-}
 
 // ===== Render =====
 function renderExam() {
@@ -622,9 +625,28 @@ function escapeHtml(str){
 }
 
 // ===== Boot =====
-document.addEventListener('DOMContentLoaded', ()=>{
-  initMode();
-  loadExam(getParam("examId","ps01"));
-  wireEvents();
-  // restoreLocal();
+document.addEventListener('DOMContentLoaded', () => {
+  // initMode(); // <-- Dòng này được xóa là ĐÚNG, vì logic đã chuyển vào loadExam
+
+  const examId = getParam("examId"); // Lấy examId từ URL
+
+  if (examId) {
+    loadExam(examId); // Chỉ tải đề khi có examId
+  } else {
+    // Xử lý trường hợp không có examId trên URL
+    const questionsContainer = document.getElementById('questions');
+    if (questionsContainer) {
+      questionsContainer.innerHTML = `
+        <div class="card" style="text-align: center;">
+          <h3>Lỗi: Không tìm thấy mã đề bài.</h3>
+          <p>Vui lòng kiểm tra lại đường link hoặc quay trở lại trang chủ.</p>
+          <a href="/" class="action-btn btn-start" style="text-decoration: none;">Về Trang chủ</a>
+        </div>
+      `;
+    }
+  }
+
+  wireEvents(); // <-- Dòng này BẮT BUỘC phải có để các nút hoạt động
+  
+  restoreLocal(); // Bạn có thể bật lại dòng này nếu muốn có tính năng phục hồi bài làm dở dang
 });
