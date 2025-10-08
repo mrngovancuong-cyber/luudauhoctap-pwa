@@ -1,89 +1,5 @@
 console.log("--- PHIÊN BẢN CODE MỚI NHẤT ĐÃ ĐƯỢC TẢI ---");
 
-
-// ===== BIẾN ĐIỀU KHIỂN =====
-// Đặt là `false` để dùng dữ liệu MOCK_EXAM có sẵn trong file (chế độ offline/debug).
-// Đặt là `true` để gọi API từ Google Sheet (chế độ online/production).
-const USE_API = true;
-
-// ===== Dataset: 14 questions (appE) =====
-const MOCK_EXAM = {
-  examId: 'MATH6-FRACTION-COMBINED-14-D',
-  durationMinutes: 10,
-  title: 'Luyện tập & Kiểm tra trực tuyến',
-  questions: [
-    { id:'q1', topic:'tính chất phân số', level:'Nhận biết',
-      question:'Phân số nào bằng 1/2?',
-      answers:['2/4','3/5','1/3','2/3'],
-      correct:'A',
-      explain:'Nhân cả tử và mẫu 1/2 với 2 ⇒ 2/4.' },
-    { id:'q2', topic:'tính chất phân số', level:'Thông hiểu',
-      question:'Rút gọn 6/8 bằng:',
-      answers:['3/4','2/3','4/6','5/6'],
-      correct:'A',
-      explain:'Chia cả tử và mẫu cho 2 ⇒ 6/8 = 3/4.' },
-    { id:'q3', topic:'tính chất phân số', level:'Vận dụng',
-      question:'So sánh 3/7 và 2/5',
-      answers:['3/7 > 2/5','3/7 < 2/5','3/7 = 2/5','Không so sánh được'],
-      correct:'A',
-      explain:'Quy đồng: 3/7 = 15/35 và 2/5 = 14/35 ⇒ 3/7 > 2/5.' },
-    { id:'q4', topic:'cộng trừ phân số', level:'Nhận biết',
-      question:'1/3 + 1/6 = ?',
-      answers:['1/2','2/3','1/6','1/9'],
-      correct:'A',
-      explain:'Quy đồng: 1/3 = 2/6 ⇒ 2/6 + 1/6 = 3/6 = 1/2.' },
-    { id:'q5', topic:'nhân chia phân số', level:'Thông hiểu',
-      question:'2/5 × 3/4 = ?',
-      answers:['6/20','6/9','3/10','5/8'],
-      correct:'C',
-      explain:'Nhân tử với tử, mẫu với mẫu: 2×3 / 5×4 = 6/20 = 3/10.' },
-    { id:'q6', topic:'tính chất phân số', level:'Vận dụng',
-      question:'1/4 của 36 là:',
-      answers:['7','9','8','6'],
-      correct:'B',
-      explain:'36 × 1/4 = 9.' },
-    { id:'q7', topic:'hỗn số', level:'Vận dụng',
-      question:'3 1/2 đổi thành phân số:',
-      answers:['5/2','7/2','3/5','2/7'],
-      correct:'B',
-      explain:'3 1/2 = (3×2 + 1)/2 = 7/2.' },
-    { id:'q8', topic:'tính chất phân số', level:'Nhận biết',
-      question:'Dấu đúng: 4/9 __ 5/9',
-      answers:['>','<','=','?'],
-      correct:'B',
-      explain:'Cùng mẫu 9, so sánh tử: 4 < 5 ⇒ 4/9 < 5/9.' },
-    { id:'q9', topic:'cộng trừ phân số', level:'Thông hiểu',
-      question:'5/6 - 1/3 = ?',
-      answers:['1/2','2/3','1/6','3/6'],
-      correct:'A',
-      explain:'1/3 = 2/6 ⇒ 5/6 - 2/6 = 3/6 = 1/2.' },
-    { id:'q10', topic:'nhân chia phân số', level:'Vận dụng',
-      question:'(3/4) ÷ (1/8) = ?',
-      answers:['24','6','3/32','2/3'],
-      correct:'B',
-      explain:'Chia phân số bằng nhân với nghịch đảo: 3/4 × 8/1 = 24/4 = 6.' },
-    { id:'q11', topic:'cộng trừ phân số', level:'Nhận biết',
-      question:'Giá trị của 1/2 + 1/3 là?',
-      answers:['5/6','2/5','1/6','1/5'],
-      correct:'A',
-      explain:'Quy đồng: 1/2 = 3/6, 1/3 = 2/6 ⇒ 5/6.' },
-    { id:'q12', topic:'tính chất phân số', level:'Nhận biết',
-      question:'Phân số nào bằng 2/3?',
-      answers:['4/6','6/8','3/5','8/10'],
-      correct:'A',
-      explain:'Nhân cả tử và mẫu 2/3 với 2 ⇒ 4/6.' },
-    { id:'q13', topic:'tính chất phân số', level:'Vận dụng',
-      question:'So sánh 7/9 và 3/4',
-      answers:['7/9 > 3/4','7/9 < 3/4','Bằng nhau','Không so sánh được'],
-      correct:'A',
-      explain:'Quy đồng: 7/9 = 28/36, 3/4 = 27/36 ⇒ 7/9 > 3/4.' },
-    { id:'q14', topic:'phương trình đơn giản', level:'Vận dụng cao',
-      question:'Tìm x: x/5 = 3/10',
-      answers:['x = 1.5','x = 1','x = 2','x = 3'],
-      correct:'A',
-      explain:'x = 5 × 3/10 = 15/10 = 1.5.' },
-  ]
-};
 const API_URL = "/api/";
 
 // ===== Utils =====
@@ -94,18 +10,8 @@ const getParam = (k, d=null)=> new URLSearchParams(location.search).get(k) ?? d;
 
 // THAY THẾ HÀM loadExam HIỆN TẠI BẰNG PHIÊN BẢN NÀY
 async function loadExam(examId) {
-  if (!USE_API || !examId) {
-    console.log("Chế độ DEBUG/Offline: Đang sử dụng dữ liệu mẫu (MOCK_EXAM).");
-    state.exam = MOCK_EXAM;
-    state.questions = MOCK_EXAM.questions || [];
-    state.timeLeft = (MOCK_EXAM.durationMinutes || 10) * 60;
-    renderExam();
-    return;
-  }
-
-  console.log(`Chế độ ONLINE: Đang gọi API để lấy đề thi ID: ${examId}`);
+  console.log(`Đang gọi API để lấy đề thi ID: ${examId}`);
   try {
-    // Sử dụng fetch chuẩn để gọi proxy
     const res = await fetch(`${API_URL}?action=getExamQuestions&examId=${examId}`);
     if (!res.ok) {
       throw new Error(`Server trả về lỗi HTTP: ${res.status}`);
@@ -122,15 +28,12 @@ async function loadExam(examId) {
     }
     
     console.log("Tải dữ liệu từ API thành công:", data);
-    // === LOGIC MỚI: CẬP NHẬT CHẾ ĐỘ ===
-    // Ưu tiên 1: Lấy mode từ URL
+    
     const urlMode = getParam('mode'); 
-    // Ưu tiên 2: Lấy mode từ cài đặt của giáo viên trên Sheet
     const examDefaultMode = data.defaultMode || 'practice';
-    // Quyết định chế độ cuối cùng
     state.mode = (urlMode === 'exam' || urlMode === 'practice') ? urlMode : examDefaultMode;
     console.log(`Chế độ làm bài được xác định là: ${state.mode}`);
-    // ===================================    
+        
     state.exam = data;
     state.questions = data.questions;
     state.timeLeft = (data.durationMinutes || 10) * 60; 
@@ -139,12 +42,18 @@ async function loadExam(examId) {
 
   } catch (err) {
     console.error("Lỗi khi tải đề từ API:", err);
-    alert(`Không thể tải đề thi từ máy chủ: ${err.message}. Vui lòng thử lại.`);
-    // Fallback về MOCK_EXAM nếu lỗi
-    state.exam = MOCK_EXAM;
-    state.questions = MOCK_EXAM.questions || [];
-    state.timeLeft = (MOCK_EXAM.durationMinutes || 10) * 60;
-    renderExam();
+    // HIỂN THỊ LỖI RÕ RÀNG CHO NGƯỜI DÙNG
+    const questionsContainer = document.getElementById('questions');
+    if (questionsContainer) {
+      questionsContainer.innerHTML = `
+        <div class="card" style="text-align: center; color: var(--bad);">
+          <h3>Không thể tải được đề bài</h3>
+          <p>Lỗi: ${err.message}</p>
+          <p>Vui lòng kiểm tra lại đường link hoặc kết nối mạng và thử lại.</p>
+          <a href="/" class="action-btn btn-guide" style="text-decoration: none;">Quay về Trang chủ</a>
+        </div>
+      `;
+    }
   }
 }
 
@@ -275,6 +184,14 @@ function renderExam() {
   // =========================================================
   
   attachDynamicListeners(); // Gọi lại hàm để gắn event cho các input mới
+// === THÊM ĐOẠN MÃ NÀY VÀO CUỐI HÀM ===
+  // Kiểm tra xem MathJax đã được tải và sẵn sàng chưa
+  if (typeof MathJax !== 'undefined' && MathJax.typeset) {
+    console.log("Kích hoạt MathJax để vẽ lại công thức...");
+    // Ra lệnh cho MathJax quét toàn bộ trang và vẽ lại công thức
+    MathJax.typeset();
+  }
+  // =====================================
 }
 
 function attachDynamicListeners() {
