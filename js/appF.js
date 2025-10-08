@@ -111,164 +111,127 @@ function renderExam() {
   const totalCountEl = document.getElementById('totalCount');
   if(totalCountEl) totalCountEl.textContent = exam.questions.length;
 
-  // === THAY THẾ TOÀN BỘ VÒNG LẶP forEach BẰNG ĐOẠN NÀY ===
+  // Vòng lặp forEach để tạo HTML (toàn bộ phần này của bạn đã đúng, giữ nguyên)
   exam.questions.forEach((q, idx) => {
-
-    // ----- BƯỚC 1: LẮP RÁP CÁC LINH KIỆN MEDIA (NẾU CÓ) -----
-    
-    // Tạo HTML cho hình ảnh
-    const imageHtml = q.imageUrl 
-      ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>`
-      : '';
-      
-    // Tạo HTML cho âm thanh
-    const audioHtml = q.audioUrl
-      ? ` <div class="media-container">
-            <p class="media-instruction">Nghe đoạn âm thanh sau:</p>
-            <audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio>
-          </div>`
-      : '';
-
-    // ----- BƯỚC 2: LẮP RÁP LINH KIỆN CÂU TRẢ LỜI (DỰA VÀO LOẠI CÂU HỎI) -----
+    // ... toàn bộ logic tạo imageHtml, audioHtml, answerBlockHtml, questionCardHtml ...
+    // ... và insertAdjacentHTML ...
+    const imageHtml = q.imageUrl ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>` : '';
+    const audioHtml = q.audioUrl ? ` <div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` : '';
     let answerBlockHtml = '';
-    const questionType = q.questionType || 'multiple_choice'; // Mặc định là trắc nghiệm
-
+    const questionType = q.questionType || 'multiple_choice';
     switch (questionType) {
-      
       case 'fill_blank':
-        answerBlockHtml = `
-          <div class="answer-container-fill-blank">
-            <input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời...">
-          </div>
-        `;
+        answerBlockHtml = `<div class="answer-container-fill-blank"><input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời..."></div>`;
         break;
-
-      // Thêm các case khác ở đây trong tương lai (matching, ordering...)
-      
       case 'multiple_choice':
-      default: // Mặc định sẽ là trắc nghiệm 4 lựa chọn
+      default:
         const answerOptions = ['A', 'B', 'C', 'D'];
         answerBlockHtml = q.answers.map((ans, ansIdx) => {
           const option = answerOptions[ansIdx];
-          return `
-            <label class="answer" for="ans-${q.id}-${option}">
-              <input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}">
-              <span>${escapeHtml(ans)}</span>
-            </label>
-          `;
+          return `<label class="answer" for="ans-${q.id}-${option}"><input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}"><span>${escapeHtml(ans)}</span></label>`;
         }).join('');
         break;
     }
-
-    // ----- BƯỚC 3: LẮP RÁP THÀNH THẺ CÂU HỎI HOÀN CHỈNH -----
-    const questionCardHtml = `
-      <div class="q-card" id="card-${q.id}" data-question-type="${questionType}">
-        <div class="q-head">
-          <div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div>
-          <div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div>
-        </div>
-        
-        ${imageHtml}
-        ${audioHtml}
-        
-        <div class="answers">${answerBlockHtml}</div>
-
-        <div class="explain-block" id="exp-${q.id}" hidden>
-          <strong>Giải thích:</strong>
-          <span class="explain"></span>
-        </div>
-      </div>
-    `;
-    
+    const questionCardHtml = `<div class="q-card" id="card-${q.id}" data-question-type="${questionType}"><div class="q-head"><div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div><div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div></div>${imageHtml}${audioHtml}<div class="answers">${answerBlockHtml}</div><div class="explain-block" id="exp-${q.id}" hidden><strong>Giải thích:</strong><span class="explain"></span></div></div>`;
     questionsContainer.insertAdjacentHTML('beforeend', questionCardHtml);
-
-    // Tạo navigator item (giữ nguyên)
     if(navigatorContainer){
         const navItemHtml = `<div class="nav-item" data-qid="${q.id}">${idx + 1}</div>`;
         navigatorContainer.insertAdjacentHTML('beforeend', navItemHtml);
     }
   });
-  // =========================================================
-  
-  attachDynamicListeners(); // Gọi lại hàm để gắn event cho các input mới
-  // --- LOGIC KÍCH HOẠT MATHJAX ĐƠN GIẢN HƠN ---
-  
-  // Chúng ta sẽ thử gọi MathJax. Nếu nó chưa sẵn sàng, nó sẽ báo lỗi,
-  // nhưng chúng ta sẽ bắt lỗi đó và thử lại sau một chút.
-  function typesetWithRetry() {
+
+  // --- PHIÊN BẢN SỬA LỖI ĐÚNG NẰM Ở ĐÂY ---
+  function finalizeRender() {
     try {
-      // Kiểm tra xem đối tượng MathJax và hàm typesetPromise có tồn tại không
+      // 1. Gắn listener TRƯỚC
+      attachDynamicListeners();
+
+      // 2. Sau đó mới render MathJax
       if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
         console.log("MathJax is available. Typesetting...");
-        // Gọi hàm và xử lý khi nó hoàn thành hoặc thất bại
         window.MathJax.typesetPromise().catch((err) => console.error('MathJax Typeset Promise failed:', err));
       } else {
-        // Nếu MathJax chưa được định nghĩa, hãy thử lại sau 150ms
-        console.log("MathJax not ready yet, retrying in 150ms...");
-        setTimeout(typesetWithRetry, 150);
+        console.log("MathJax not available yet.");
       }
     } catch (err) {
-      console.error("Error calling MathJax:", err);
+      console.error("Error during finalizeRender:", err);
     }
   }
 
-  // Bắt đầu lần thử đầu tiên
-  typesetWithRetry();
-}
+  // Chờ một chút để DOM ổn định rồi mới thực hiện các tác vụ cuối cùng
+  setTimeout(finalizeRender, 150);
+}  
+// --- KẾT THÚC HÀM renderExam Ở ĐÂY ---
+  
+// ===== EVENT HANDLING & DOM MANIPULATION =====
 
+/**
+ * Gắn tất cả các event listener cần thiết sau khi câu hỏi đã được render.
+ */
 function attachDynamicListeners() {
-  // Gắn sự kiện cho các câu hỏi trắc nghiệm
+  console.log("Attaching dynamic event listeners...");
+
+  // Trắc nghiệm
   $$('.q-card[data-question-type="multiple_choice"] input[type="radio"]').forEach(input => {
-    input.addEventListener('change', (e) => {
-      const qid = e.target.name;
-      state.answers[qid] = e.target.value;
-      handleAnswered(qid);
-      paintNavigator();
-      updateAnsweredCount();
-    });
+    input.addEventListener('change', handleAnswerChange);
   });
 
-  // Gắn sự kiện cho các câu hỏi điền khuyết
+  // Điền khuyết
   $$('.q-card[data-question-type="fill_blank"] input[type="text"]').forEach(input => {
-    // Sự kiện 'blur' được kích hoạt khi người dùng click ra ngoài ô input
-    input.addEventListener('blur', (e) => {
-      const qid = e.target.name;
-      const value = e.target.value.trim();
-      if (value) { // Chỉ lưu nếu có nội dung
-        state.answers[qid] = value;
-        handleAnswered(qid);
-        paintNavigator();
-        updateAnsweredCount();
-      } else { // Nếu xóa hết nội dung thì cũng xóa câu trả lời đã lưu
-        delete state.answers[qid];
-        paintNavigator();
-        updateAnsweredCount();
-      }
-    });
+    input.addEventListener('blur', handleAnswerChange);
   });
 
+  // Navigator
   $$('#navigator .nav-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      const qid = e.target.dataset.qid;
-      const card = document.getElementById(`card-${qid}`);
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        markCurrent(qid);
-        handleQuestionViewed(qid);
-      }
-    });
+    item.addEventListener('click', handleNavClick);
   });
 }
 
-function markCurrent(qid){ 
-  $$('#navigator .nav-item').forEach(el=>el.classList.toggle('current', el.dataset.qid===qid)); 
+/**
+ * Xử lý chung khi một câu trả lời được thay đổi (cho cả trắc nghiệm và điền khuyết).
+ */
+function handleAnswerChange(e) {
+  const input = e.target;
+  const qid = input.name;
+  let value;
+
+  if (input.type === 'radio') {
+    value = input.value;
+  } else if (input.type === 'text') {
+    value = input.value.trim();
+  }
+
+  if (value) {
+    state.answers[qid] = value;
+  } else {
+    delete state.answers[qid];
+  }
+
+  handleAnswered(qid); // Ghi nhận hành vi
+  paintNavigator();
+  updateAnsweredCount();
 }
 
-function handleQuestionViewed(qid){ 
-  const now = Date.now(); 
-  if (!state.perQuestion[qid]) state.perQuestion[qid]={}; 
-  if (!state.perQuestion[qid].firstSeen) state.perQuestion[qid].firstSeen = now; 
-  state.perQuestion[qid].start = now; 
+/**
+ * Xử lý khi người dùng nhấp vào một item trong navigator.
+ */
+function handleNavClick(e) {
+  const qid = e.target.dataset.qid;
+  const card = document.getElementById(`card-${qid}`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    markCurrent(qid); // Đánh dấu câu hiện tại
+    handleQuestionViewed(qid); // Ghi nhận hành vi xem câu hỏi
+  }
+}
+
+/**
+ * Đánh dấu câu hỏi hiện tại trong navigator.
+ */
+function markCurrent(qid){ 
+  $$('#navigator .nav-item').forEach(el => {
+    el.classList.toggle('current', el.dataset.qid === qid);
+  }); 
 }
 
 /**
