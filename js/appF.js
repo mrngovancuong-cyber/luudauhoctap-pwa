@@ -406,31 +406,25 @@ function restoreLocal() {
     state.started = data.started || false;
     state.startTime = data.startTime || null;
 
-    console.log("Đã khôi phục dữ liệu vào state từ Local Storage.", data);
+    console.log("Đã khôi phục dữ liệu từ Local Storage.", data);
 
-    // Bước 2: Dựa vào state đã cập nhật, quyết định hiển thị các thành phần giao diện
-    // Hiển thị phần thông tin học sinh NẾU có dữ liệu đã lưu
-    if (state.student.name || state.student.id || state.student.className || state.student.email) {
-        $('#student-info').hidden = false;
-    }
-
-    // Hiển thị các phần còn lại của bài thi NẾU bài thi đã bắt đầu
+    // Bước 2: Cập nhật giao diện từ state đã khôi phục.
+    // updateUIFromState sẽ điền dữ liệu vào các ô input (dù chúng đang ẩn hay hiện).
+    updateUIFromState();
+    
+    // Bước 3: Nếu bài thi đã bắt đầu, hãy hiển thị lại mọi thứ và khởi động timer.
+    // Nếu chưa, giao diện sẽ giữ nguyên trạng thái mặc định (chỉ nút "Bắt đầu" hiện ra).
     if (state.started) {
+      $('#student-info').hidden = false;
       $('#questions').hidden = false;
       $('#navigator').hidden = false;
       $('#timer').hidden = false;
       $('#answer-progress').hidden = false;
       $('#end-controls').hidden = false;
-    }
-
-    // Bước 3: SAU KHI đã đảm bảo các thành phần được hiển thị,
-    // gọi hàm để điền dữ liệu vào chúng.
-    updateUIFromState();
-
-    // Bước 4: Nếu bài thi đã bắt đầu, khởi động lại timer
-    if (state.started) {
       startTimer();
     }
+    // Nếu chưa bắt đầu, chúng ta không làm gì cả, để người dùng tự nhấn "Bắt đầu làm".
+    // Thông tin học sinh đã được điền sẵn vào các ô input bởi updateUIFromState().
 
   } catch(e) { console.warn('Restore failed', e); }
 }
@@ -635,13 +629,26 @@ function setButtonsDisabled(disabled) {
 
 // ===== Wire events =====
 function wireEvents(){
+  // <<<< THAY THẾ SỰ KIỆN CLICK CỦA #btn-start BẰNG PHIÊN BẢN NÀY >>>>
+
   $('#btn-start')?.addEventListener('click', ()=>{
+    // Đọc thông tin học sinh từ các ô input vào state
+    readStudent(); 
+
+    // Kiểm tra xem đã điền đủ thông tin chưa (ví dụ: tên và ID)
+    if (!state.student.name || !state.student.id) {
+        alert('Vui lòng điền Họ và tên và Mã số học sinh để bắt đầu.');
+        return; // Dừng lại nếu chưa điền
+    }
+
+    // Bây giờ mới hiển thị các thành phần và bắt đầu timer
     $('#student-info').hidden = false;
     $('#questions').hidden = false;
     $('#navigator').hidden = false;
     $('#timer').hidden = false;
     $('#answer-progress').hidden = false;
     $('#end-controls').hidden = false;
+    
     startTimer();
   });
 
