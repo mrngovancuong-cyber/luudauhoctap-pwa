@@ -369,6 +369,7 @@ function persistLocal(){
     mode: state.mode, student: state.student,
     answers: state.answers, perQuestion: state.perQuestion,
     timeLeft: state.timeLeft, started: state.started, startTime: state.startTime,
+    submitted: state.submitted, // <<--- THÊM DÒNG NÀY
     lastSave: new Date().toISOString()
   };
   try { localStorage.setItem(key, JSON.stringify(payload)); }
@@ -381,24 +382,35 @@ function persistLocal(){
 
 // <<<< THAY THẾ TOÀN BỘ HÀM restoreLocal() BẰNG PHIÊN BẢN NÀY >>>>
 
+// js/appF.js
+
+// <<<< THAY THẾ TOÀN BỘ CỤM 2 HÀM NÀY >>>>
+
 function restoreLocal() {
   if (!state.exam) return;
   
-  let key = STORAGE_KEY();
-  if (!state.student.id){
-    const pref = `${state.exam.examId}-${state.mode}-`;
-    const existing = Object.keys(localStorage).find(k=>k.startsWith(pref));
-    if (existing) key = existing;
-  }
-  
+  const key = STORAGE_KEY();
   const raw = localStorage.getItem(key);
+
+  // Nếu không có dữ liệu lưu, không làm gì cả.
   if (!raw) return;
 
   try {
     const data = JSON.parse(raw);
     if (data.examId !== state.exam.examId) return;
+    
+    // TRƯỜNG HỢP 1: BÀI THI ĐÃ NỘP
+    // Nếu có trạng thái 'submitted' và nó là true
+    if (data.submitted) {
+      console.log("Phát hiện bài thi đã được nộp. Hiển thị lại kết quả.");
+      state.submitted = true;
+      // Giả lập lại việc nộp bài để hiển thị kết quả
+      // (Trong tương lai, nên lưu kết quả và hiển thị trực tiếp)
+      submitExam(true); // Gọi submitExam ở chế độ auto để hiển thị lại kết quả
+      return; // Dừng hàm ở đây
+    }
 
-    // Bước 1: Cập nhật toàn bộ dữ liệu vào state TRƯỚC TIÊN
+    // TRƯỜNG HỢP 2: BÀI THI ĐANG LÀM DỞ
     state.student = data.student || { name:'', id:'', className:'', email:'' };
     state.answers = data.answers || {};
     state.perQuestion = data.perQuestion || {};
@@ -406,16 +418,16 @@ function restoreLocal() {
     state.started = data.started || false;
     state.startTime = data.startTime || null;
 
-    console.log("Đã khôi phục dữ liệu từ Local Storage.", data);
-
-    // Bước 2: Cập nhật giao diện từ state đã khôi phục.
-    // updateUIFromState sẽ điền dữ liệu vào các ô input (dù chúng đang ẩn hay hiện).
+    console.log("Đã khôi phục bài làm dở từ Local Storage.", data);
+    
+    // Luôn hiển thị form thông tin nếu có dữ liệu đã điền
+    if (state.student.name || state.student.id) {
+        $('#student-info').hidden = false;
+    }
+    
     updateUIFromState();
     
-    // Bước 3: Nếu bài thi đã bắt đầu, hãy hiển thị lại mọi thứ và khởi động timer.
-    // Nếu chưa, giao diện sẽ giữ nguyên trạng thái mặc định (chỉ nút "Bắt đầu" hiện ra).
     if (state.started) {
-      $('#student-info').hidden = false;
       $('#questions').hidden = false;
       $('#navigator').hidden = false;
       $('#timer').hidden = false;
@@ -423,9 +435,6 @@ function restoreLocal() {
       $('#end-controls').hidden = false;
       startTimer();
     }
-    // Nếu chưa bắt đầu, chúng ta không làm gì cả, để người dùng tự nhấn "Bắt đầu làm".
-    // Thông tin học sinh đã được điền sẵn vào các ô input bởi updateUIFromState().
-
   } catch(e) { console.warn('Restore failed', e); }
 }
 
@@ -434,13 +443,10 @@ function updateUIFromState() {
   Object.keys(state.answers).forEach(qid => {
     const answer = state.answers[qid];
     const radioInput = document.querySelector(`input[name="${qid}"][value="${answer}"]`);
-    if (radioInput) {
-      radioInput.checked = true;
-    }
+    if (radioInput) radioInput.checked = true;
+    
     const textInput = document.querySelector(`input[name="${qid}"]`);
-    if (textInput && textInput.type === 'text') {
-      textInput.value = answer;
-    }
+    if (textInput && textInput.type === 'text') textInput.value = answer;
   });
 
   // Cập nhật navigator và số câu đã trả lời
@@ -511,12 +517,38 @@ function getSimpleDeviceInfo(){
 
 // ===== Submit - PHIÊN BẢN CUỐI CÙNG =====
 async function submitExam(auto = false) {
+  // ===== BẮT ĐẦU KHỐI CODE MỚI ĐƯỢC THÊM VÀO =====
+  // Nếu hàm được gọi ở chế độ auto (tự động) VÀ state đã là submitted,
+  // nghĩa là chúng ta đang khôi phục lại trạng thái đã nộp.
+  if (state.submitted && auto) {
+      console.log("Đang hiển thị lại trạng thái đã nộp.");
+      const resultCard = $('#resultCard');
+      const endControls = $('#end-controls');
+      const btnStart = $('#btn-start');
+      const guidelines = $('#guidelines');
+
+      if(resultCard) {
+        resultCard.classList.remove('hidden');
+        resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Để làm lại, vui lòng sử dụng nút 'Xoá dữ liệu tạm' và tải lại trang.</p>";
+      }
+      // Ẩn các nút không cần thiết để tránh người dùng thao tác nhầm
+      if(endControls) endControls.hidden = true;
+      if(btnStart) btnStart.hidden = true;
+      if(guidelines) guidelines.hidden = true; // Ẩn luôn hướng dẫn
+      return; // Dừng hàm ngay tại đây
+  }
+  // ===== KẾT THÚC KHỐI CODE MỚI =====
+  
   if (state.submitted) return;
   if (!auto && !validateBeforeSubmit()) return;
 
   setButtonsDisabled(true);
   state.submitted = true;
   clearInterval(state.timerHandle);
+
+  // ===== THÊM DÒNG NÀY VÀO =====
+  // Lưu lại trạng thái `submitted: true` vào localStorage ngay lập tức
+  persistLocal(); 
 
   const resultCard = $('#resultCard');
   const resultSummary = $('#resultSummary');
@@ -597,8 +629,6 @@ async function submitExam(auto = false) {
         });
     }
     
-    clearLocal();
-
   } catch (error) {
     console.error('Lỗi khi nộp bài:', error);
     if (resultSummary) {
@@ -628,20 +658,13 @@ function setButtonsDisabled(disabled) {
 }
 
 // ===== Wire events =====
+// <<<< THAY THẾ TOÀN BỘ HÀM wireEvents() >>>>
 function wireEvents(){
-  // <<<< THAY THẾ SỰ KIỆN CLICK CỦA #btn-start BẰNG PHIÊN BẢN NÀY >>>>
-
   $('#btn-start')?.addEventListener('click', ()=>{
-    // Đọc thông tin học sinh từ các ô input vào state
+    // Luôn đọc thông tin học sinh khi nhấn nút
     readStudent(); 
 
-    // Kiểm tra xem đã điền đủ thông tin chưa (ví dụ: tên và ID)
-    if (!state.student.name || !state.student.id) {
-        alert('Vui lòng điền Họ và tên và Mã số học sinh để bắt đầu.');
-        return; // Dừng lại nếu chưa điền
-    }
-
-    // Bây giờ mới hiển thị các thành phần và bắt đầu timer
+    // Hiển thị các thành phần làm bài
     $('#student-info').hidden = false;
     $('#questions').hidden = false;
     $('#navigator').hidden = false;
@@ -649,12 +672,25 @@ function wireEvents(){
     $('#answer-progress').hidden = false;
     $('#end-controls').hidden = false;
     
+    // Ẩn chính nút "Bắt đầu làm" đi
+    $('#btn-start').hidden = true;
+    
     startTimer();
   });
 
   $('#btn-submit')?.addEventListener('click', ()=>{ submitExam(false); });
-  $('#btn-save')?.addEventListener('click', ()=>{ persistLocal(); alert('Đã lưu tạm.'); });
-  $('#btn-clear')?.addEventListener('click', ()=>{ clearLocal(); alert('Đã xoá dữ liệu tạm.'); });
+  $('#btn-save')?.addEventListener('click', ()=>{ 
+      readStudent(); // Đọc lại thông tin HS trước khi lưu
+      persistLocal(); 
+      alert('Đã lưu tạm.'); 
+  });
+  $('#btn-clear')?.addEventListener('click', ()=>{ 
+      if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài làm tạm và bắt đầu lại từ đầu?")) {
+          clearLocal(); 
+          alert('Đã xoá dữ liệu tạm. Tải lại trang để bắt đầu lại.');
+          location.reload(); // Tải lại trang sau khi xoá
+      }
+  });
   $('#btn-guidelines')?.addEventListener('click', ()=>{
     const g = $('#guidelines');
     if(g) g.hidden = !g.hidden;
