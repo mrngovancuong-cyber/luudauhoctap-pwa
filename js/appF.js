@@ -140,28 +140,46 @@ function renderExam() {
     }
   });
 
-  // === THAY ĐỔI CỐT LÕI NẰM Ở ĐÂY ===
+  // --- (Dán vào cuối hàm renderExam, thay thế cho đoạn code cũ) ---
 
-  // 1. Gắn Listener NGAY LẬP TỨC sau khi vòng lặp kết thúc
-  // Tại thời điểm này, tất cả các element input đã có trong DOM
-  attachDynamicListeners();
+  // === PHIÊN BẢN SỬA LỖI: Đợi DOM ổn định rồi mới gắn listener ===
 
-  // 2. Kích hoạt MathJax một cách độc lập
-  // Dùng lại hàm typesetWithRetry đáng tin cậy
-  function typesetWithRetry() {
-    try {
-      if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-        window.MathJax.typesetPromise().catch((err) => console.error('MathJax Typeset Promise failed:', err));
-      } else {
-        setTimeout(typesetWithRetry, 150);
-      }
-    } catch (err) {
-      console.error("Error calling MathJax:", err);
+  /**
+   * Hàm này sẽ render các công thức toán, và CHỈ SAU KHI hoàn thành,
+   * nó mới tiến hành gắn các trình lắng nghe sự kiện vào các phần tử DOM đã ổn định.
+   */
+  function renderMathAndAttachListeners() {
+    // Kiểm tra xem MathJax đã sẵn sàng chưa
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
+      
+      // MathJax.typesetPromise() trả về một Promise.
+      // Chúng ta sẽ đợi (await) cho Promise này hoàn thành.
+      window.MathJax.typesetPromise()
+        .then(() => {
+          // Chỉ thực thi code bên trong .then() KHI MathJax đã xong việc.
+          console.log("MathJax đã hoàn thành. Bắt đầu gắn các event listener...");
+          attachDynamicListeners();
+          console.log("Các event listener đã được gắn thành công vào DOM ổn định.");
+        })
+        .catch((err) => {
+          console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
+          // Fallback an toàn: Ngay cả khi MathJax lỗi, vẫn cố gắng gắn listener
+          // để các câu hỏi không có công thức toán vẫn hoạt động.
+          console.warn("Đã xảy ra lỗi với MathJax. Tiến hành gắn listener trên DOM hiện tại.");
+          attachDynamicListeners();
+        });
+    } else {
+      // Nếu MathJax chưa được tải, đợi 150ms rồi thử lại.
+      // Kỹ thuật này gọi là "polling".
+      setTimeout(renderMathAndAttachListeners, 150);
     }
   }
-  // Bắt đầu quá trình render công thức
-  typesetWithRetry();
-}  
+
+  // Bắt đầu chuỗi xử lý bất đồng bộ
+  renderMathAndAttachListeners();
+
+}
 // --- KẾT THÚC HÀM renderExam Ở ĐÂY ---
   
 // ===== EVENT HANDLING & DOM MANIPULATION =====
@@ -288,11 +306,9 @@ function startTimer(){
   state.started = true;
   state.startTime = new Date().toISOString();
   tick();
-  state.timerHandle = setInterval(tick,1000);
-  window.addEventListener('visibilitychange', onVisibility);
-  window.addEventListener('blur', onBlur);
+  // Chỉ cần bắt đầu bộ đếm thời gian. Các event listener đã được gắn ở ngoài.
+  state.timerHandle = setInterval(tick, 1000);
 }
-
 function tick(){
   state.timeLeft = Math.max(0, state.timeLeft-1);
   const t = $('#timer');

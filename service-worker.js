@@ -7,8 +7,8 @@ const urlsToCache = [
   '/css/styleD.css',
   '/js/appF.js',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 // Sự kiện 'install': Cache các file tĩnh cốt lõi để đảm bảo app có thể chạy offline lần đầu
