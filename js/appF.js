@@ -37,7 +37,7 @@ async function loadExam(examId) {
     state.exam = data;
     state.questions = data.questions;
     state.timeLeft = (data.durationMinutes || 10) * 60; 
-    
+    restoreLocal();
     renderExam();
 
   } catch (err) {
@@ -400,9 +400,50 @@ function restoreLocal(){
     const data = JSON.parse(raw);
     if (data.examId !== state.exam.examId) return; // So sánh với state.exam
 
-    // ... phần còn lại của hàm restoreLocal giữ nguyên ...
+    // Khôi phục dữ liệu vào state (giữ nguyên)
     state.student = data.student || state.student;
-    // ...
+    state.answers = data.answers || {};
+    state.perQuestion = data.perQuestion || {};
+    state.timeLeft = data.timeLeft || state.timeLeft;
+    state.started = data.started || false;
+    state.startTime = data.startTime || null;
+
+    console.log("Đã khôi phục bài làm từ Local Storage.", data);
+
+    // ====> THÊM CÁC DÒNG CẬP NHẬT GIAO DIỆN NÀY <====
+    // Cập nhật lại các ô input trên màn hình dựa trên state.answers đã khôi phục
+    Object.keys(state.answers).forEach(qid => {
+      const answer = state.answers[qid];
+      const radioInput = document.querySelector(`input[name="${qid}"][value="${answer}"]`);
+      if (radioInput) {
+        radioInput.checked = true;
+      }
+      const textInput = document.querySelector(`input[name="${qid}"]`);
+      if (textInput && textInput.type === 'text') {
+        textInput.value = answer;
+      }
+    });
+
+    // Cập nhật lại navigator và số câu đã trả lời
+    paintNavigator();
+    updateAnsweredCount();
+
+    // Cập nhật lại thông tin học sinh
+    if ($('#studentName')) $('#studentName').value = state.student.name;
+    if ($('#studentId')) $('#studentId').value = state.student.id;
+    if ($('#className')) $('#className').value = state.student.className;
+    if ($('#email')) $('#email').value = state.student.email;
+
+    // Nếu bài thi đã bắt đầu, hiển thị lại các thành phần
+    if (state.started) {
+      $('#student-info').hidden = false;
+      $('#questions').hidden = false;
+      $('#navigator').hidden = false;
+      $('#timer').hidden = false;
+      $('#answer-progress').hidden = false;
+      $('#end-controls').hidden = false;
+      startTimer(); // Khởi động lại timer với thời gian đã khôi phục
+    }
   }catch(e){ console.warn('Restore failed', e); }
 }
 
@@ -628,7 +669,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  wireEvents(); // <-- Dòng này BẮT BUỘC phải có để các nút hoạt động
-  
-  restoreLocal(); // Bạn có thể bật lại dòng này nếu muốn có tính năng phục hồi bài làm dở dang
+  wireEvents(); // <-- Dòng này BẮT BUỘC phải có để các nút hoạt động   
 });
