@@ -287,12 +287,21 @@ function updateAnsweredCount(){
 }
 
 function startTimer(){
-  if (state.started) return;
-  state.started = true;
-  state.startTime = new Date().toISOString();
-  tick();
-  // Chỉ cần bắt đầu bộ đếm thời gian. Các event listener đã được gắn ở ngoài.
+  // Nếu đã có một timer đang chạy, hãy xóa nó đi để tránh chạy nhiều timer cùng lúc
+  if (state.timerHandle) {
+    clearInterval(state.timerHandle);
+  }
+
+  // Nếu đây là LẦN ĐẦU TIÊN bắt đầu, hãy thiết lập trạng thái
+  if (!state.started) {
+    state.started = true;
+    state.startTime = new Date().toISOString();
+  }
+  
+  // Luôn luôn thực hiện việc đếm ngược khi hàm này được gọi
+  tick(); // Gọi tick() ngay lập tức để cập nhật giao diện
   state.timerHandle = setInterval(tick, 1000);
+  console.log("Timer đã bắt đầu hoặc được khởi động lại.");
 }
 function tick(){
   state.timeLeft = Math.max(0, state.timeLeft-1);
@@ -398,7 +407,7 @@ function restoreLocal() {
     // Cập nhật giao diện từ state
     updateUIFromState();
 
-    // Xử lý việc bắt đầu lại bài thi nếu cần
+    // Nếu bài thi đã bắt đầu, hiển thị MỌI THỨ và khởi động lại timer
     if (state.started) {
       $('#student-info').hidden = false;
       $('#questions').hidden = false;
@@ -407,6 +416,10 @@ function restoreLocal() {
       $('#answer-progress').hidden = false;
       $('#end-controls').hidden = false;
       startTimer();
+    } 
+    // Nếu chưa bắt đầu, nhưng có thông tin học sinh, thì chỉ hiển thị khu vực đó
+    else if (state.student && (state.student.name || state.student.id)) {
+        $('#student-info').hidden = false;
     }
   } catch(e) { console.warn('Restore failed', e); }
 }
