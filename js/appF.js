@@ -190,17 +190,19 @@ function renderExam() {
 function attachDynamicListeners() {
   console.log("Attaching dynamic event listeners...");
 
-  // Trắc nghiệm
-  $$('.q-card[data-question-type="multiple_choice"] input[type="radio"]').forEach(input => {
+  // Tìm TẤT CẢ các input radio bên trong khu vực câu hỏi
+  $$('#questions input[type="radio"]').forEach(input => {
     input.addEventListener('change', handleAnswerChange);
   });
 
-  // Điền khuyết
-  $$('.q-card[data-question-type="fill_blank"] input[type="text"]').forEach(input => {
-    input.addEventListener('blur', handleAnswerChange);
+  // Tìm TẤT CẢ các input text bên trong khu vực câu hỏi
+  $$('#questions input[type="text"]').forEach(input => {
+    // Sử dụng 'change' thay vì 'blur' cho nhất quán.
+    // Sự kiện 'change' cho text input sẽ kích hoạt khi người dùng nhập xong và bỏ focus ra khỏi ô.
+    input.addEventListener('change', handleAnswerChange);
   });
 
-  // Navigator
+  // Navigator (giữ nguyên, không thay đổi)
   $$('#navigator .nav-item').forEach(item => {
     item.addEventListener('click', handleNavClick);
   });
