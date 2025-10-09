@@ -37,7 +37,7 @@ async function loadExam(examId) {
     state.exam = data;
     state.questions = data.questions;
     state.timeLeft = (data.durationMinutes || 10) * 60; 
-    restoreLocal();
+    
     renderExam();
 
   } catch (err) {
@@ -88,6 +88,7 @@ const LEVEL_CANON = {
 function levelKey(v){ return LEVEL_CANON[v] || 'khac'; }
 
 // ===== Render =====
+// <<<< THAY THẾ TOÀN BỘ HÀM renderExam() BẰNG CÁI NÀY >>>>
 function renderExam() {
   const exam = state.exam;
   if (!exam || !exam.questions) {
@@ -111,10 +112,8 @@ function renderExam() {
   const totalCountEl = document.getElementById('totalCount');
   if(totalCountEl) totalCountEl.textContent = exam.questions.length;
 
-  // Vòng lặp forEach để tạo HTML (toàn bộ phần này của bạn đã đúng, giữ nguyên)
+  // Vòng lặp forEach để tạo HTML
   exam.questions.forEach((q, idx) => {
-    // ... toàn bộ logic tạo imageHtml, audioHtml, answerBlockHtml, questionCardHtml ...
-    // ... và insertAdjacentHTML ...
     const imageHtml = q.imageUrl ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>` : '';
     const audioHtml = q.audioUrl ? ` <div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` : '';
     let answerBlockHtml = '';
@@ -140,47 +139,31 @@ function renderExam() {
     }
   });
 
-  // --- (Dán vào cuối hàm renderExam, thay thế cho đoạn code cũ) ---
-
-  // === PHIÊN BẢN SỬA LỖI: Đợi DOM ổn định rồi mới gắn listener ===
-
-  /**
-   * Hàm này sẽ render các công thức toán, và CHỈ SAU KHI hoàn thành,
-   * nó mới tiến hành gắn các trình lắng nghe sự kiện vào các phần tử DOM đã ổn định.
-   */
-  function renderMathAndAttachListeners() {
-    // Kiểm tra xem MathJax đã sẵn sàng chưa
+  // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
+  function finalizeUI() {
     if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
       console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
       
-      // MathJax.typesetPromise() trả về một Promise.
-      // Chúng ta sẽ đợi (await) cho Promise này hoàn thành.
       window.MathJax.typesetPromise()
         .then(() => {
-          // Chỉ thực thi code bên trong .then() KHI MathJax đã xong việc.
-          console.log("MathJax đã hoàn thành. Bắt đầu gắn các event listener...");
+          console.log("MathJax đã hoàn thành.");
+          console.log("Bắt đầu khôi phục dữ liệu vào giao diện...");
+          restoreLocal();
+          console.log("Bắt đầu gắn các event listener...");
           attachDynamicListeners();
-          console.log("Các event listener đã được gắn thành công vào DOM ổn định.");
+          console.log("Giao diện đã sẵn sàng.");
         })
         .catch((err) => {
           console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
-          // Fallback an toàn: Ngay cả khi MathJax lỗi, vẫn cố gắng gắn listener
-          // để các câu hỏi không có công thức toán vẫn hoạt động.
-          console.warn("Đã xảy ra lỗi với MathJax. Tiến hành gắn listener trên DOM hiện tại.");
+          restoreLocal();
           attachDynamicListeners();
         });
     } else {
-      // Nếu MathJax chưa được tải, đợi 150ms rồi thử lại.
-      // Kỹ thuật này gọi là "polling".
-      setTimeout(renderMathAndAttachListeners, 150);
+      setTimeout(finalizeUI, 150);
     }
   }
-
-  // Bắt đầu chuỗi xử lý bất đồng bộ
-  renderMathAndAttachListeners();
-
+  finalizeUI();
 }
-// --- KẾT THÚC HÀM renderExam Ở ĐÂY ---
   
 // ===== EVENT HANDLING & DOM MANIPULATION =====
 
@@ -383,10 +366,11 @@ function persistLocal(){
   catch(e){ console.warn(e); }
 }
 
-function restoreLocal(){
-  if (!state.exam) return; // Không phục hồi nếu chưa có đề
+// <<<< THAY THẾ HÀM restoreLocal() CŨ BẰNG CỤM 2 HÀM NÀY >>>>
+
+function restoreLocal() {
+  if (!state.exam) return;
   
-  // Logic tìm key không thay đổi nhiều, nhưng cần examId từ state
   let key = STORAGE_KEY();
   if (!state.student.id){
     const pref = `${state.exam.examId}-${state.mode}-`;
@@ -396,11 +380,12 @@ function restoreLocal(){
   
   const raw = localStorage.getItem(key);
   if (!raw) return;
-  try{
-    const data = JSON.parse(raw);
-    if (data.examId !== state.exam.examId) return; // So sánh với state.exam
 
-    // Khôi phục dữ liệu vào state (giữ nguyên)
+  try {
+    const data = JSON.parse(raw);
+    if (data.examId !== state.exam.examId) return;
+
+    // Chỉ cập nhật dữ liệu vào state
     state.student = data.student || state.student;
     state.answers = data.answers || {};
     state.perQuestion = data.perQuestion || {};
@@ -408,33 +393,12 @@ function restoreLocal(){
     state.started = data.started || false;
     state.startTime = data.startTime || null;
 
-    console.log("Đã khôi phục bài làm từ Local Storage.", data);
+    console.log("Đã khôi phục dữ liệu vào state từ Local Storage.", data);
 
-    // ====> THÊM CÁC DÒNG CẬP NHẬT GIAO DIỆN NÀY <====
-    // Cập nhật lại các ô input trên màn hình dựa trên state.answers đã khôi phục
-    Object.keys(state.answers).forEach(qid => {
-      const answer = state.answers[qid];
-      const radioInput = document.querySelector(`input[name="${qid}"][value="${answer}"]`);
-      if (radioInput) {
-        radioInput.checked = true;
-      }
-      const textInput = document.querySelector(`input[name="${qid}"]`);
-      if (textInput && textInput.type === 'text') {
-        textInput.value = answer;
-      }
-    });
+    // Cập nhật giao diện từ state
+    updateUIFromState();
 
-    // Cập nhật lại navigator và số câu đã trả lời
-    paintNavigator();
-    updateAnsweredCount();
-
-    // Cập nhật lại thông tin học sinh
-    if ($('#studentName')) $('#studentName').value = state.student.name;
-    if ($('#studentId')) $('#studentId').value = state.student.id;
-    if ($('#className')) $('#className').value = state.student.className;
-    if ($('#email')) $('#email').value = state.student.email;
-
-    // Nếu bài thi đã bắt đầu, hiển thị lại các thành phần
+    // Xử lý việc bắt đầu lại bài thi nếu cần
     if (state.started) {
       $('#student-info').hidden = false;
       $('#questions').hidden = false;
@@ -442,9 +406,34 @@ function restoreLocal(){
       $('#timer').hidden = false;
       $('#answer-progress').hidden = false;
       $('#end-controls').hidden = false;
-      startTimer(); // Khởi động lại timer với thời gian đã khôi phục
+      startTimer();
     }
-  }catch(e){ console.warn('Restore failed', e); }
+  } catch(e) { console.warn('Restore failed', e); }
+}
+
+function updateUIFromState() {
+  // Cập nhật các ô input
+  Object.keys(state.answers).forEach(qid => {
+    const answer = state.answers[qid];
+    const radioInput = document.querySelector(`input[name="${qid}"][value="${answer}"]`);
+    if (radioInput) {
+      radioInput.checked = true;
+    }
+    const textInput = document.querySelector(`input[name="${qid}"]`);
+    if (textInput && textInput.type === 'text') {
+      textInput.value = answer;
+    }
+  });
+
+  // Cập nhật navigator và số câu đã trả lời
+  paintNavigator();
+  updateAnsweredCount();
+
+  // Cập nhật thông tin học sinh
+  if ($('#studentName')) $('#studentName').value = state.student.name;
+  if ($('#studentId')) $('#studentId').value = state.student.id;
+  if ($('#className')) $('#className').value = state.student.className;
+  if ($('#email')) $('#email').value = state.student.email;
 }
 
 function clearLocal() {
