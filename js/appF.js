@@ -377,6 +377,10 @@ function persistLocal(){
 
 // <<<< THAY THẾ HÀM restoreLocal() CŨ BẰNG CỤM 2 HÀM NÀY >>>>
 
+// js/appF.js
+
+// <<<< THAY THẾ TOÀN BỘ HÀM restoreLocal() BẰNG PHIÊN BẢN NÀY >>>>
+
 function restoreLocal() {
   if (!state.exam) return;
   
@@ -394,8 +398,8 @@ function restoreLocal() {
     const data = JSON.parse(raw);
     if (data.examId !== state.exam.examId) return;
 
-    // Chỉ cập nhật dữ liệu vào state
-    state.student = data.student || state.student;
+    // Bước 1: Cập nhật toàn bộ dữ liệu vào state TRƯỚC TIÊN
+    state.student = data.student || { name:'', id:'', className:'', email:'' };
     state.answers = data.answers || {};
     state.perQuestion = data.perQuestion || {};
     state.timeLeft = data.timeLeft || state.timeLeft;
@@ -404,23 +408,30 @@ function restoreLocal() {
 
     console.log("Đã khôi phục dữ liệu vào state từ Local Storage.", data);
 
-    // Cập nhật giao diện từ state
-    updateUIFromState();
+    // Bước 2: Dựa vào state đã cập nhật, quyết định hiển thị các thành phần giao diện
+    // Hiển thị phần thông tin học sinh NẾU có dữ liệu đã lưu
+    if (state.student.name || state.student.id || state.student.className || state.student.email) {
+        $('#student-info').hidden = false;
+    }
 
-    // Nếu bài thi đã bắt đầu, hiển thị MỌI THỨ và khởi động lại timer
+    // Hiển thị các phần còn lại của bài thi NẾU bài thi đã bắt đầu
     if (state.started) {
-      $('#student-info').hidden = false;
       $('#questions').hidden = false;
       $('#navigator').hidden = false;
       $('#timer').hidden = false;
       $('#answer-progress').hidden = false;
       $('#end-controls').hidden = false;
-      startTimer();
-    } 
-    // Nếu chưa bắt đầu, nhưng có thông tin học sinh, thì chỉ hiển thị khu vực đó
-    else if (state.student && (state.student.name || state.student.id)) {
-        $('#student-info').hidden = false;
     }
+
+    // Bước 3: SAU KHI đã đảm bảo các thành phần được hiển thị,
+    // gọi hàm để điền dữ liệu vào chúng.
+    updateUIFromState();
+
+    // Bước 4: Nếu bài thi đã bắt đầu, khởi động lại timer
+    if (state.started) {
+      startTimer();
+    }
+
   } catch(e) { console.warn('Restore failed', e); }
 }
 
