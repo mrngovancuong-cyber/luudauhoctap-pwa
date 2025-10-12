@@ -8,11 +8,18 @@
   <link rel="stylesheet" href="css/styleD.css">
 
 <!-- ===== BẮT ĐẦU THÊM CODE MỚI CHO KATEX ===== -->
-<!-- 1. Thêm CSS chính của KaTeX -->
+<!-- 1. Tải CSS của KaTeX (bắt buộc) -->
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 
-<!-- 2. Thêm JS chính của KaTeX. Thuộc tính 'defer' rất quan trọng. -->
-<script defer src="vendor/katex/katex.min.js"></script>
+<!-- 2. Tải JS chính của KaTeX (bắt buộc, không defer) -->
+<script src="vendor/katex/katex.min.js"></script>
+
+<!-- 3. Tải extension mhchem (bắt buộc cho Hóa học, không defer) -->
+<script src="vendor/katex/contrib/mhchem.min.js"></script>
+
+<!-- 4. Tải và kích hoạt auto-render SAU CÙNG -->
+<!-- Thuộc tính 'defer' ở đây đảm bảo nó chạy sau khi DOM đã sẵn sàng -->
+<script defer src="vendor/katex/contrib/auto-render.min.js"></script>
 <!-- ===== KẾT THÚC THÊM CODE MỚI CHO KATEX ===== -->
 
 <link rel="manifest" href="/manifest.json" />
