@@ -142,25 +142,24 @@ function renderExam() {
   // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
   function finalizeUI() {
   try {
-    // Kiểm tra xem KaTeX và extension auto-render đã sẵn sàng chưa
+    // Chờ cho đến khi hàm renderMathInElement từ auto-render.js sẵn sàng
     if (window.renderMathInElement) {
       console.log("Bắt đầu xử lý công thức bằng KaTeX auto-render...");
       
       const questionsContainer = document.getElementById('questions');
 
-      // Gọi API của KaTeX để render công thức
+      // **ĐIỀU CHỈNH QUAN TRỌNG**
+      // Một số phiên bản auto-render không tự động nhận macro từ mhchem.
+      // Chúng ta sẽ "vá" lại các macro mặc định để đảm bảo \ce hoạt động.
+      // Lấy các delimiters mặc định và thêm macro của chúng ta vào.
+      const defaultOptions = window.renderMathInElement.defaultOptions;
+      defaultOptions.macros = defaultOptions.macros || {};
+      Object.assign(defaultOptions.macros, { "\\ce": "\\化学" });
+
+      // Gọi API của KaTeX để render công thức.
+      // Nó sẽ tự động sử dụng defaultOptions đã được "vá" ở trên.
       window.renderMathInElement(questionsContainer, {
-        delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '$', right: '$', display: false},
-          {left: '\\(', right: '\\)', display: false},
-          {left: '\\[', right: '\\]', display: true}
-        ],
-        // Cấu hình macro vẫn cần thiết để kích hoạt mhchem
-        macros: {
-          "\\ce": "\\化学"
-        },
-        throwOnError: false
+          throwOnError: false
       });
 
       console.log("KaTeX auto-render đã hoàn thành.");
@@ -171,10 +170,12 @@ function renderExam() {
       console.log("Giao diện đã sẵn sàng.");
 
     } else {
+      // Nếu thư viện chưa tải xong, đợi một chút rồi thử lại
       setTimeout(finalizeUI, 50);
     }
   } catch (err) {
     console.error("Lỗi xảy ra trong quá trình KaTeX xử lý:", err);
+    // Fallback an toàn
     restoreLocal();
     attachDynamicListeners();
   }
