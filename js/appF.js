@@ -141,62 +141,23 @@ function renderExam() {
 
   // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
   function finalizeUI() {
-    try {
-        // Chờ cho đến khi thư viện KaTeX chính sẵn sàng
-        if (window.katex) {
-            console.log("Bắt đầu xử lý công thức bằng KaTeX (chế độ thủ công)...");
-
-            // Tìm tất cả các phần tử có thể chứa công thức
-            const elementsToRender = document.querySelectorAll('.q-title, .answer span');
-
-            elementsToRender.forEach(element => {
-                // Tách nội dung thành các phần text và math
-                const fragments = splitWithDelimiters(element.textContent);
-                
-                // Chỉ xử lý nếu tìm thấy ít nhất một công thức
-                if (fragments.length > 1 || (fragments.length === 1 && fragments[0].type === 'math')) {
-                    // Xóa nội dung cũ để xây dựng lại
-                    element.innerHTML = ''; 
-
-                    fragments.forEach(fragment => {
-                        if (fragment.type === 'text') {
-                            // Nếu là text thường, chỉ cần thêm vào dưới dạng text node
-                            element.appendChild(document.createTextNode(fragment.data));
-                        } else {
-                            // Nếu là công thức, render nó bằng KaTeX
-                            const span = document.createElement('span');
-                            try {
-                                window.katex.render(fragment.data, span, {
-                                    throwOnError: false,
-                                    displayMode: fragment.display,
-                                    // Kích hoạt mhchem nội bộ
-                                    macros: { "\\ce": "\\化学" }
-                                });
-                                element.appendChild(span);
-                            } catch (e) {
-                                console.warn("Lỗi render KaTeX:", e, "cho chuỗi:", fragment.raw);
-                                // Nếu lỗi, trả lại text gốc để người dùng không mất nội dung
-                                element.appendChild(document.createTextNode(fragment.raw));
-                            }
-                        }
-                    });
-                }
-            });
-
-            console.log("KaTeX (Thủ công) đã hoàn thành.");
-            
-            // Các bước tiếp theo không đổi, thực thi sau khi render xong
-            restoreLocal();
-            attachDynamicListeners();
-
-        } else {
-            setTimeout(finalizeUI, 50);
-        }
-    } catch (err) {
-        console.error("Lỗi nghiêm trọng trong quá trình KaTeX xử lý:", err);
-        // Fallback an toàn
-        restoreLocal();
-        attachDynamicListeners();
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
+      
+      window.MathJax.typesetPromise()
+        .then(() => {
+          console.log("MathJax đã hoàn thành.");
+          restoreLocal();
+          attachDynamicListeners();
+          console.log("Giao diện đã sẵn sàng.");
+        })
+        .catch((err) => {
+          console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
+          restoreLocal();
+          attachDynamicListeners();
+        });
+    } else {
+      setTimeout(finalizeUI, 150);
     }
 }
 // Bắt đầu chuỗi hoàn thiện giao diện
@@ -695,43 +656,6 @@ function setButtonsDisabled(disabled) {
   });
 }
 
-// <<<< DÁN HÀM NÀY VÀO TRƯỚC HÀM wireEvents() >>>>
-
-/**
- * Tách một chuỗi thành các phần text và math.
- * @param {string} text - Chuỗi đầu vào.
- * @returns {Array<{type: string, data: string, raw?: string, display?: boolean}>}
- */
-function splitWithDelimiters(text) {
-    const fragments = [];
-    let lastIndex = 0;
-    // Sử dụng regex để tìm các khối $...$ hoặc $$...$$
-    text.replace(/\$\$([\s\S]*?)\$\$|\$([\s\S]*?)\$/g, (match, display, inline, offset) => {
-        // Lấy phần text nằm trước khối công thức
-        if (offset > lastIndex) {
-            fragments.push({ type: 'text', data: text.slice(lastIndex, offset) });
-        }
-        // Thêm khối công thức vào mảng
-        fragments.push({
-            type: 'math',
-            data: display || inline, // Nội dung công thức
-            raw: match,              // Chuỗi gốc bao gồm cả $
-            display: !!display       // Là display mode (true) hay inline mode (false)
-        });
-        lastIndex = offset + match.length;
-    });
-
-    // Lấy phần text còn lại sau khối công thức cuối cùng
-    if (lastIndex < text.length) {
-        fragments.push({ type: 'text', data: text.slice(lastIndex) });
-    }
-
-    // Nếu không tìm thấy công thức nào, trả về mảng chỉ chứa text gốc
-    if (fragments.length === 0) {
-      fragments.push({ type: 'text', data: text });
-    }
-    return fragments;
-}
 
 // ===== Wire events =====
 // <<<< THAY THẾ TOÀN BỘ HÀM wireEvents() >>>>

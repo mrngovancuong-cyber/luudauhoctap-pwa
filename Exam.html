@@ -7,9 +7,16 @@
   <!-- Liên kết CSS mới -->
   <link rel="stylesheet" href="css/styleD.css">
 
-<!-- <<<< THÊM CÁC DÒNG KATEX TỐI GIẢN >>>> -->
-<link rel="stylesheet" href="vendor/katex/katex.min.css">
-<script defer src="vendor/katex/katex.min.js"></script>
+<!-- <<<< THÊM LẠI SCRIPT CỦA MATHJAX, SỬ DỤNG PHIÊN BẢN TEX-ALL >>>> -->
+<!-- Phiên bản này bao gồm hầu hết các extension phổ biến, trong đó có mhchem -->
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Để đảm bảo mhchem được nạp, chúng ta cấu hình MathJax ngay tại đây -->
+<script>
+window.MathJax = {
+  loader: {load: ['[tex]/mhchem']},
+  tex: {packages: {'[+]': ['mhchem']}}
+};
 
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
