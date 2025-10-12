@@ -141,44 +141,24 @@ function renderExam() {
 
   // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
   function finalizeUI() {
-  try {
-    // Chờ cho đến khi hàm renderMathInElement từ auto-render.js sẵn sàng
-    if (window.renderMathInElement) {
-      console.log("Bắt đầu xử lý công thức bằng KaTeX auto-render...");
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
       
-      const questionsContainer = document.getElementById('questions');
-
-      // **ĐIỀU CHỈNH QUAN TRỌNG**
-      // Một số phiên bản auto-render không tự động nhận macro từ mhchem.
-      // Chúng ta sẽ "vá" lại các macro mặc định để đảm bảo \ce hoạt động.
-      // Lấy các delimiters mặc định và thêm macro của chúng ta vào.
-      const defaultOptions = window.renderMathInElement.defaultOptions;
-      defaultOptions.macros = defaultOptions.macros || {};
-      Object.assign(defaultOptions.macros, { "\\ce": "\\化学" });
-
-      // Gọi API của KaTeX để render công thức.
-      // Nó sẽ tự động sử dụng defaultOptions đã được "vá" ở trên.
-      window.renderMathInElement(questionsContainer, {
-          throwOnError: false
-      });
-
-      console.log("KaTeX auto-render đã hoàn thành.");
-
-      // Các bước tiếp theo không đổi
-      restoreLocal();
-      attachDynamicListeners();
-      console.log("Giao diện đã sẵn sàng.");
-
+      window.MathJax.typesetPromise()
+        .then(() => {
+          console.log("MathJax đã hoàn thành.");
+          restoreLocal();
+          attachDynamicListeners();
+          console.log("Giao diện đã sẵn sàng.");
+        })
+        .catch((err) => {
+          console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
+          restoreLocal();
+          attachDynamicListeners();
+        });
     } else {
-      // Nếu thư viện chưa tải xong, đợi một chút rồi thử lại
-      setTimeout(finalizeUI, 50);
+      setTimeout(finalizeUI, 150);
     }
-  } catch (err) {
-    console.error("Lỗi xảy ra trong quá trình KaTeX xử lý:", err);
-    // Fallback an toàn
-    restoreLocal();
-    attachDynamicListeners();
-  }
 }
 
 // Bắt đầu chuỗi hoàn thiện giao diện
