@@ -141,28 +141,53 @@ function renderExam() {
 
   // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
   function finalizeUI() {
-    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-      console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
+  try {
+    // Kiểm tra xem KaTeX và extension auto-render đã sẵn sàng chưa
+    if (window.renderMathInElement) {
+      console.log("Bắt đầu xử lý công thức bằng KaTeX...");
       
-      window.MathJax.typesetPromise()
-        .then(() => {
-          console.log("MathJax đã hoàn thành.");
-          console.log("Bắt đầu khôi phục dữ liệu vào giao diện...");
-          restoreLocal();
-          console.log("Bắt đầu gắn các event listener...");
-          attachDynamicListeners();
-          console.log("Giao diện đã sẵn sàng.");
-        })
-        .catch((err) => {
-          console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
-          restoreLocal();
-          attachDynamicListeners();
-        });
+      // Lấy element chứa tất cả các câu hỏi
+      const questionsContainer = document.getElementById('questions');
+
+      // Gọi API của KaTeX để render công thức
+      window.renderMathInElement(questionsContainer, {
+        // Cấu hình cho KaTeX
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\(', right: '\\)', display: false},
+          {left: '\\[', right: '\\]', display: true}
+        ],
+        // Bật extension mhchem nếu bạn đã thêm nó
+        macros: {
+          "\\ce": "\\化学"
+        },
+        throwOnError: false
+      });
+
+      console.log("KaTeX đã hoàn thành.");
+
+      // Các bước tiếp theo không đổi: khôi phục và gắn listener
+      console.log("Bắt đầu khôi phục dữ liệu vào giao diện...");
+      restoreLocal();
+      console.log("Bắt đầu gắn các event listener...");
+      attachDynamicListeners();
+      console.log("Giao diện đã sẵn sàng.");
+
     } else {
-      setTimeout(finalizeUI, 150);
+      // Nếu KaTeX chưa tải xong, đợi một chút rồi thử lại
+      setTimeout(finalizeUI, 50); // Giảm thời gian chờ vì KaTeX rất nhanh
     }
+  } catch (err) {
+    console.error("Lỗi xảy ra trong quá trình KaTeX xử lý:", err);
+    // Fallback: Vẫn chạy restore và attach nếu KaTeX lỗi
+    restoreLocal();
+    attachDynamicListeners();
   }
-  finalizeUI();
+}
+
+// Bắt đầu chuỗi hoàn thiện giao diện
+finalizeUI();
 }
   
 // ===== EVENT HANDLING & DOM MANIPULATION =====
