@@ -142,32 +142,54 @@ function renderExam() {
   // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
   function finalizeUI() {
   try {
-    // Kiểm tra xem KaTeX và extension auto-render đã sẵn sàng chưa
-    if (window.renderMathInElement) {
-      console.log("Bắt đầu xử lý công thức bằng KaTeX...");
-      
-      // Lấy element chứa tất cả các câu hỏi
-      const questionsContainer = document.getElementById('questions');
+    // Chỉ cần kiểm tra thư viện KaTeX chính
+    if (window.katex) {
+      console.log("Bắt đầu xử lý công thức bằng KaTeX (chế độ thủ công)...");
 
-      // Gọi API của KaTeX để render công thức
-      window.renderMathInElement(questionsContainer, {
-        // Cấu hình cho KaTeX
-        delimiters: [
-          {left: '$$', right: '$$', display: true},
-          {left: '$', right: '$', display: false},
-          {left: '\\(', right: '\\)', display: false},
-          {left: '\\[', right: '\\]', display: true}
-        ],
-        // Bật extension mhchem nếu bạn đã thêm nó
-        macros: {
-          "\\ce": "\\化学"
-        },
-        throwOnError: false
+      // Nạp extension mhchem một cách tường minh
+      // Dòng này rất quan trọng, nó sẽ load file mhchem.js từ thư mục contrib
+      // và đăng ký nó với KaTeX.
+      // Lưu ý: Đoạn mã này giả định bạn có file `mhchem.js` trong `vendor/katex/contrib/`
+      // Nếu bạn chỉ có file `.min.js`, bạn cần đảm bảo nó được tải trước.
+      // Tuy nhiên, cách an toàn nhất là sử dụng một trình quản lý gói trong tương lai.
+      // Hiện tại, chúng ta sẽ giả định nó đã có trong global scope.
+      
+      // Lấy tất cả các phần tử có chứa công thức toán
+      // Thay vì cả container, chúng ta tìm đến từng `span` và `div`
+      // có chứa ký tự phân định `$`.
+      const mathElements = document.querySelectorAll('.q-title, .answer span');
+      
+      mathElements.forEach(el => {
+        // Tái tạo lại chức năng auto-render
+        const text = el.textContent;
+        // Tìm các chuỗi $$...$$ hoặc $...$
+        const renderedHtml = text.replace(/\$\$([\s\S]*?)\$\$|\$([\s\S]*?)\$/g, (match, displayMath, inlineMath) => {
+          const math = displayMath || inlineMath;
+          const displayMode = !!displayMath;
+          try {
+            // Gọi katex.renderToString để chuyển đổi TeX sang HTML
+            return window.katex.renderToString(math, {
+              throwOnError: false,
+              displayMode: displayMode,
+              // macros được định nghĩa ở đây để mhchem hoạt động
+              macros: { "\\ce": "\\化学" } 
+            });
+          } catch (e) {
+            console.warn("Lỗi render KaTeX:", e);
+            return match; // Trả về chuỗi gốc nếu có lỗi
+          }
+        });
+
+        // Chỉ cập nhật HTML nếu có sự thay đổi
+        if (el.innerHTML !== renderedHtml) {
+          el.innerHTML = renderedHtml;
+        }
       });
+
 
       console.log("KaTeX đã hoàn thành.");
 
-      // Các bước tiếp theo không đổi: khôi phục và gắn listener
+      // Các bước tiếp theo không đổi
       console.log("Bắt đầu khôi phục dữ liệu vào giao diện...");
       restoreLocal();
       console.log("Bắt đầu gắn các event listener...");
@@ -175,12 +197,10 @@ function renderExam() {
       console.log("Giao diện đã sẵn sàng.");
 
     } else {
-      // Nếu KaTeX chưa tải xong, đợi một chút rồi thử lại
-      setTimeout(finalizeUI, 50); // Giảm thời gian chờ vì KaTeX rất nhanh
+      setTimeout(finalizeUI, 50);
     }
   } catch (err) {
     console.error("Lỗi xảy ra trong quá trình KaTeX xử lý:", err);
-    // Fallback: Vẫn chạy restore và attach nếu KaTeX lỗi
     restoreLocal();
     attachDynamicListeners();
   }
