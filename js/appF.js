@@ -1,457 +1,729 @@
-// ==========================================================
-// === START OF CLEANED AND FINAL appF.js FILE ===
-// ==========================================================
-
 console.log("--- PHIÊN BẢN CODE MỚI NHẤT ĐÃ ĐƯỢC TẢI ---");
 
 const API_URL = "/api/";
 
 // ===== Utils =====
-const $ = (s) => document.querySelector(s);
-const $$ = (s) => Array.from(document.querySelectorAll(s));
-const fmtTime = (sec) => `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
-const getParam = (k, d = null) => new URLSearchParams(location.search).get(k) ?? d;
+const $ = (s)=>document.querySelector(s);
+const $$ = (s)=>Array.from(document.querySelectorAll(s));
+const fmtTime = (sec)=>`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
+const getParam = (k, d=null)=> new URLSearchParams(location.search).get(k) ?? d;
 
+// THAY THẾ HÀM loadExam HIỆN TẠI BẰNG PHIÊN BẢN NÀY
 async function loadExam(examId) {
-    console.log(`Đang gọi API để lấy đề thi ID: ${examId}`);
-    try {
-        const res = await fetch(`${API_URL}?action=getExamQuestions&examId=${examId}`);
-        if (!res.ok) throw new Error(`Server trả về lỗi HTTP: ${res.status}`);
-        
-        const response = await res.json();
-        if (!response.success) throw new Error(response.message || "Lỗi không xác định từ API.");
-        
-        const data = response.data;
-        if (!data || !data.questions) throw new Error("Dữ liệu trả về từ API không hợp lệ.");
-        
-        console.log("Tải dữ liệu từ API thành công:", data);
-        
-        const urlMode = getParam('mode');
-        const examDefaultMode = data.defaultMode || 'practice';
-        state.mode = (urlMode === 'exam' || urlMode === 'practice') ? urlMode : examDefaultMode;
-        console.log(`Chế độ làm bài được xác định là: ${state.mode}`);
-        
-        state.exam = data;
-        state.questions = data.questions;
-        state.timeLeft = (data.durationMinutes || 10) * 60;
-        
-        renderExam();
-    } catch (err) {
-        console.error("Lỗi khi tải đề từ API:", err);
-        const questionsContainer = document.getElementById('questions');
-        if (questionsContainer) {
-            questionsContainer.innerHTML = `
-                <div class="card" style="text-align: center; color: var(--bad);">
-                    <h3>Không thể tải được đề bài</h3>
-                    <p>Lỗi: ${err.message}</p>
-                    <p>Vui lòng kiểm tra lại đường link hoặc kết nối mạng và thử lại.</p>
-                    <a href="/" class="action-btn btn-guide" style="text-decoration: none;">Quay về Trang chủ</a>
-                </div>`;
-        }
+  console.log(`Đang gọi API để lấy đề thi ID: ${examId}`);
+  try {
+    const res = await fetch(`${API_URL}?action=getExamQuestions&examId=${examId}`);
+    if (!res.ok) {
+      throw new Error(`Server trả về lỗi HTTP: ${res.status}`);
     }
+    
+    const response = await res.json();
+    if (!response.success) {
+      throw new Error(response.message || "Lỗi không xác định từ API.");
+    }
+    
+    const data = response.data;
+    if (!data || !data.questions) {
+      throw new Error("Dữ liệu trả về từ API không hợp lệ.");
+    }
+    
+    console.log("Tải dữ liệu từ API thành công:", data);
+    
+    const urlMode = getParam('mode'); 
+    const examDefaultMode = data.defaultMode || 'practice';
+    state.mode = (urlMode === 'exam' || urlMode === 'practice') ? urlMode : examDefaultMode;
+    console.log(`Chế độ làm bài được xác định là: ${state.mode}`);
+        
+    state.exam = data;
+    state.questions = data.questions;
+    state.timeLeft = (data.durationMinutes || 10) * 60; 
+    
+    renderExam();
+
+  } catch (err) {
+    console.error("Lỗi khi tải đề từ API:", err);
+    // HIỂN THỊ LỖI RÕ RÀNG CHO NGƯỜI DÙNG
+    const questionsContainer = document.getElementById('questions');
+    if (questionsContainer) {
+      questionsContainer.innerHTML = `
+        <div class="card" style="text-align: center; color: var(--bad);">
+          <h3>Không thể tải được đề bài</h3>
+          <p>Lỗi: ${err.message}</p>
+          <p>Vui lòng kiểm tra lại đường link hoặc kết nối mạng và thử lại.</p>
+          <a href="/" class="action-btn btn-guide" style="text-decoration: none;">Quay về Trang chủ</a>
+        </div>
+      `;
+    }
+  }
 }
 
 // ===== State =====
 let state = {
-    exam: null,
-    questions: [],
-    mode: 'practice',
-    started: false,
-    timeLeft: 0,
-    answers: {},
-    perQuestion: {},
-    leaveCount: 0,
-    timerHandle: null,
-    startTime: null,
-    student: { name: '', id: '', className: '', email: '' },
-    submitted: false,
-    leaveTimestamps: [],
+  exam: null, // Khởi tạo exam là null
+  questions: [], // Khởi tạo questions là mảng rỗng
+  mode: 'practice', // Mặc định là practice
+  started: false,
+  timeLeft: 0, // Khởi tạo là 0, sẽ được cập nhật sau
+  answers: {},
+  perQuestion: {},
+  leaveCount: 0,
+  timerHandle: null,
+  startTime: null,   
+  student: { name:'', id:'', className:'', email:'' },
+  submitted: false, 
+  leaveTimestamps: [],
 };
 
+// Sửa lại hàm này để nó lấy examId từ state
 const STORAGE_KEY = () => {
-    if (!state.exam) return null;
-    return `${state.exam.examId}-${state.mode}-${state.student.id || 'UNKNOWN'}`;
+  if (!state.exam) return null; // Trả về null nếu chưa có đề
+  return `${state.exam.examId}-${state.mode}-${state.student.id || 'UNKNOWN'}`;
 };
+
+// ===== Level helpers =====
+const LEVEL_CANON = {
+  'Nhận biết':'nhan_biet', 'Thông hiểu':'thong_hieu', 'Vận dụng':'van_dung', 'Vận dụng cao':'van_dung_cao',
+  'nhan_biet':'nhan_biet','thong_hieu':'thong_hieu','van_dung':'van_dung','van_dung_cao':'van_dung_cao'
+};
+function levelKey(v){ return LEVEL_CANON[v] || 'khac'; }
 
 // ===== Render =====
+// <<<< THAY THẾ TOÀN BỘ HÀM renderExam() BẰNG CÁI NÀY >>>>
 function renderExam() {
-    const exam = state.exam;
-    if (!exam || !exam.questions) {
-        document.getElementById('questions').innerHTML = "<p>Lỗi: Không tải được câu hỏi.</p>";
-        return;
+  const exam = state.exam;
+  if (!exam || !exam.questions) {
+    document.getElementById('questions').innerHTML = "<p>Lỗi: Không tải được câu hỏi.</p>";
+    return;
+  }
+
+   // Cập nhật tiêu đề trang và tiêu đề chính
+  const pageTitle = exam.title || 'Luyện tập và Kiểm tra';
+  document.title = pageTitle;
+  const examTitleEl = document.getElementById('examTitle');
+  if (examTitleEl) {
+    examTitleEl.textContent = pageTitle;
+  }
+ 
+  const questionsContainer = document.getElementById('questions');
+  const navigatorContainer = document.getElementById('navigator-items');
+  questionsContainer.innerHTML = "";
+  if(navigatorContainer) navigatorContainer.innerHTML = "";
+
+  const totalCountEl = document.getElementById('totalCount');
+  if(totalCountEl) totalCountEl.textContent = exam.questions.length;
+
+  // Vòng lặp forEach để tạo HTML
+  exam.questions.forEach((q, idx) => {
+    const imageHtml = q.imageUrl ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>` : '';
+    const audioHtml = q.audioUrl ? ` <div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` : '';
+    let answerBlockHtml = '';
+    const questionType = q.questionType || 'multiple_choice';
+    switch (questionType) {
+      case 'fill_blank':
+        answerBlockHtml = `<div class="answer-container-fill-blank"><input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời..."></div>`;
+        break;
+      case 'multiple_choice':
+      default:
+        const answerOptions = ['A', 'B', 'C', 'D'];
+        answerBlockHtml = q.answers.map((ans, ansIdx) => {
+          const option = answerOptions[ansIdx];
+          return `<label class="answer" for="ans-${q.id}-${option}"><input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}"><span>${escapeHtml(ans)}</span></label>`;
+        }).join('');
+        break;
     }
+    const questionCardHtml = `<div class="q-card" id="card-${q.id}" data-question-type="${questionType}"><div class="q-head"><div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div><div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div></div>${imageHtml}${audioHtml}<div class="answers">${answerBlockHtml}</div><div class="explain-block" id="exp-${q.id}" hidden><strong>Giải thích:</strong><span class="explain"></span></div></div>`;
+    questionsContainer.insertAdjacentHTML('beforeend', questionCardHtml);
+    if(navigatorContainer){
+        const navItemHtml = `<div class="nav-item" data-qid="${q.id}">${idx + 1}</div>`;
+        navigatorContainer.insertAdjacentHTML('beforeend', navItemHtml);
+    }
+  });
 
-    const pageTitle = exam.title || 'Luyện tập và Kiểm tra';
-    document.title = pageTitle;
-    $('#examTitle').textContent = pageTitle;
-    
-    const questionsContainer = $('#questions');
-    const navigatorContainer = $('#navigator-items');
-    questionsContainer.innerHTML = "";
-    if (navigatorContainer) navigatorContainer.innerHTML = "";
-    if ($('#totalCount')) $('#totalCount').textContent = exam.questions.length;
-
-    exam.questions.forEach((q, idx) => {
-        const imageHtml = q.imageUrl ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>` : '';
-        const audioHtml = q.audioUrl ? `<div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` : '';
-        let answerBlockHtml = '';
-        const questionType = q.questionType || 'multiple_choice';
-        switch (questionType) {
-            case 'fill_blank':
-                answerBlockHtml = `<div class="answer-container-fill-blank"><input type="text" name="${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời..."></div>`;
-                break;
-            default:
-                answerBlockHtml = q.answers.map((ans, ansIdx) => {
-                    const option = ['A', 'B', 'C', 'D'][ansIdx];
-                    return `<label class="answer"><input type="radio" name="${q.id}" value="${option}"><span>${escapeHtml(ans)}</span></label>`;
-                }).join('');
-                break;
-        }
-        const questionCardHtml = `<div class="q-card" id="card-${q.id}" data-question-type="${questionType}"><div class="q-head"><div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div><div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div></div>${imageHtml}${audioHtml}<div class="answers">${answerBlockHtml}</div><div class="explain-block" id="exp-${q.id}" hidden><strong>Giải thích:</strong><span class="explain"></span></div></div>`;
-        questionsContainer.insertAdjacentHTML('beforeend', questionCardHtml);
-        if (navigatorContainer) {
-            navigatorContainer.insertAdjacentHTML('beforeend', `<div class="nav-item" data-qid="${q.id}">${idx + 1}</div>`);
-        }
-    });
-
-    finalizeUI();
-}
-
-function finalizeUI() {
+  // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
+  function finalizeUI() {
     if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-        console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
-        window.MathJax.typesetPromise()
-            .then(() => {
-                console.log("MathJax đã hoàn thành.");
-                restoreLocal();
-                attachDynamicListeners();
-                console.log("Giao diện đã sẵn sàng.");
-            })
-            .catch((err) => {
-                console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
-                restoreLocal();
-                attachDynamicListeners();
-            });
+      console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
+      
+      window.MathJax.typesetPromise()
+        .then(() => {
+          console.log("MathJax đã hoàn thành.");
+          restoreLocal();
+          attachDynamicListeners();
+          console.log("Giao diện đã sẵn sàng.");
+        })
+        .catch((err) => {
+          console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
+          restoreLocal();
+          attachDynamicListeners();
+        });
     } else {
-        setTimeout(finalizeUI, 150);
+      setTimeout(finalizeUI, 150);
     }
 }
 
-// ===== Event Handling & DOM Manipulation =====
+// Bắt đầu chuỗi hoàn thiện giao diện
+finalizeUI();
+}
+  
+// ===== EVENT HANDLING & DOM MANIPULATION =====
+
+/**
+ * Gắn tất cả các event listener cần thiết sau khi câu hỏi đã được render.
+ */
 function attachDynamicListeners() {
-    console.log("Attaching dynamic event listeners...");
-    $$('#questions input[type="radio"]').forEach(input => input.addEventListener('change', handleAnswerChange));
-    $$('#questions input[type="text"]').forEach(input => input.addEventListener('change', handleAnswerChange));
-    $$('#navigator .nav-item').forEach(item => item.addEventListener('click', handleNavClick));
+  console.log("Attaching dynamic event listeners...");
+
+  // Tìm TẤT CẢ các input radio bên trong khu vực câu hỏi
+  $$('#questions input[type="radio"]').forEach(input => {
+    input.addEventListener('change', handleAnswerChange);
+  });
+
+  // Tìm TẤT CẢ các input text bên trong khu vực câu hỏi
+  $$('#questions input[type="text"]').forEach(input => {
+    // Sử dụng 'change' thay vì 'blur' cho nhất quán.
+    // Sự kiện 'change' cho text input sẽ kích hoạt khi người dùng nhập xong và bỏ focus ra khỏi ô.
+    input.addEventListener('change', handleAnswerChange);
+  });
+
+  // Navigator (giữ nguyên, không thay đổi)
+  $$('#navigator .nav-item').forEach(item => {
+    item.addEventListener('click', handleNavClick);
+  });
 }
 
+/**
+ * Xử lý chung khi một câu trả lời được thay đổi (cho cả trắc nghiệm và điền khuyết).
+ */
 function handleAnswerChange(e) {
-    const input = e.target;
-    const qid = input.name;
-    let value = (input.type === 'radio') ? input.value : input.value.trim();
-    if (value) state.answers[qid] = value;
-    else delete state.answers[qid];
-    handleAnswered(qid);
-    paintNavigator();
-    updateAnsweredCount();
+  const input = e.target;
+  const qid = input.name;
+  let value;
+
+  if (input.type === 'radio') {
+    value = input.value;
+  } else if (input.type === 'text') {
+    value = input.value.trim();
+  }
+
+  if (value) {
+    state.answers[qid] = value;
+  } else {
+    delete state.answers[qid];
+  }
+
+  handleAnswered(qid); // Ghi nhận hành vi
+  paintNavigator();
+  updateAnsweredCount();
 }
 
+/**
+ * Xử lý khi người dùng nhấp vào một item trong navigator.
+ */
 function handleNavClick(e) {
-    const qid = e.target.dataset.qid;
-    const card = $(`#card-${qid}`);
-    if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        $$('#navigator .nav-item').forEach(el => el.classList.toggle('current', el.dataset.qid === qid));
-    }
+  const qid = e.target.dataset.qid;
+  const card = document.getElementById(`card-${qid}`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    markCurrent(qid); // Đánh dấu câu hiện tại
+    handleQuestionViewed(qid); // Ghi nhận hành vi xem câu hỏi
+  }
 }
 
+/**
+ * Đánh dấu câu hỏi hiện tại trong navigator.
+ */
+function markCurrent(qid){ 
+  $$('#navigator .nav-item').forEach(el => {
+    el.classList.toggle('current', el.dataset.qid === qid);
+  }); 
+}
+
+/**
+ * Ghi nhận hành vi khi học sinh trả lời một câu hỏi.
+ * PHIÊN BẢN TỐI ƯU HÓA
+ */
 function handleAnswered(qid) {
-    const now = Date.now();
-    const pq = state.perQuestion[qid] || (state.perQuestion[qid] = { firstSeen: now, start: now, answerCount: 0, timeSpent: 0 });
-    pq.answerTime = now;
-    pq.answerCount++;
-    const spentSeconds = Math.max(1, Math.floor((now - pq.start) / 1000));
-    pq.timeSpent += spentSeconds;
-    pq.start = now;
+  const now = Date.now();
+  const pq = state.perQuestion[qid] || (state.perQuestion[qid] = {});
+
+  // Khởi tạo các giá trị thời gian nếu chưa có
+  if (!pq.firstSeen) pq.firstSeen = now;
+  if (!pq.start) pq.start = now;
+  
+  // Ghi lại thời điểm trả lời (quan trọng cho suy luận "rời đi -> trả lời ngay")
+  pq.answerTime = now;
+
+  // Đếm tổng số lần chọn đáp án cho câu này
+  pq.answerCount = (pq.answerCount || 0) + 1;
+  
+  // Từ answerCount, ta có thể suy ra số lần thay đổi
+  // Không cần logic 'prev' phức tạp nữa.
+  if (pq.answerCount > 1) {
+    pq.changedAnswers = pq.answerCount - 1;
+  } else {
+    pq.changedAnswers = 0;
+  }
+  
+  // Tính và cộng dồn thời gian suy nghĩ (tính từ lần tương tác gần nhất)
+  const spentSeconds = Math.max(1, Math.floor((now - pq.start) / 1000));
+  pq.timeSpent = (pq.timeSpent || 0) + spentSeconds;
+  
+  // Reset lại thời gian bắt đầu cho lần tương tác tiếp theo với câu hỏi này
+  pq.start = now;
 }
 
-function paintNavigator() {
-    const answered = new Set(Object.keys(state.answers));
-    $$('#navigator .nav-item').forEach(el => el.classList.toggle('answered', answered.has(el.dataset.qid)));
+function paintNavigator(){ 
+  const answered = new Set(Object.keys(state.answers)); 
+  $$('#navigator .nav-item').forEach(el=>{ 
+    const done = answered.has(el.dataset.qid); 
+    el.classList.toggle('answered', done); 
+  }); 
 }
 
-function updateAnsweredCount() {
-    const el = $('#answeredCount');
-    if (el) el.textContent = Object.keys(state.answers).length;
+function updateAnsweredCount(){ 
+  const el = $('#answeredCount'); 
+  if (!el) return; 
+  el.textContent = Object.keys(state.answers).length; 
 }
 
-function startTimer() {
-    if (state.timerHandle) clearInterval(state.timerHandle);
-    if (!state.started) {
-        state.started = true;
-        state.startTime = new Date().toISOString();
-    }
-    tick();
-    state.timerHandle = setInterval(tick, 1000);
-    console.log("Timer đã bắt đầu hoặc được khởi động lại.");
+function startTimer(){
+  // Nếu đã có một timer đang chạy, hãy xóa nó đi để tránh chạy nhiều timer cùng lúc
+  if (state.timerHandle) {
+    clearInterval(state.timerHandle);
+  }
+
+  // Nếu đây là LẦN ĐẦU TIÊN bắt đầu, hãy thiết lập trạng thái
+  if (!state.started) {
+    state.started = true;
+    state.startTime = new Date().toISOString();
+  }
+  
+  // Luôn luôn thực hiện việc đếm ngược khi hàm này được gọi
+  tick(); // Gọi tick() ngay lập tức để cập nhật giao diện
+  state.timerHandle = setInterval(tick, 1000);
+  console.log("Timer đã bắt đầu hoặc được khởi động lại.");
+}
+function tick(){
+  state.timeLeft = Math.max(0, state.timeLeft-1);
+  const t = $('#timer');
+  if (t) t.textContent = fmtTime(state.timeLeft);
+  const warn = $('#timeWarn');
+  if (warn && state.timeLeft === 300) warn.hidden = false;
+  if (state.timeLeft === 0) submitExam(true);
 }
 
-function tick() {
-    state.timeLeft = Math.max(0, state.timeLeft - 1);
-    const t = $('#timer');
-    if (t) t.textContent = fmtTime(state.timeLeft);
-    if (state.timeLeft === 300 && $('#timeWarn')) $('#timeWarn').hidden = false;
-    if (state.timeLeft === 0) submitExam(true);
-}
-
-// ===== Leave Tracking =====
+// ===== LOGIC THEO DÕI RỜI CỬA SỔ (PHIÊN BẢN NÂNG CẤP) =====
 let leaveStartTime = 0;
-function handleLeave() { if (leaveStartTime === 0) leaveStartTime = Date.now(); }
-function handleReturn() {
-    if (leaveStartTime > 0) {
-        const leaveDuration = Date.now() - leaveStartTime;
-        if (leaveDuration > 2000) {
-            state.leaveCount++;
-            state.leaveTimestamps.push({ start: new Date(leaveStartTime).toISOString(), durationSeconds: Math.round(leaveDuration / 1000) });
-        }
-        leaveStartTime = 0;
-    }
+
+function handleLeave() {
+  // Chỉ ghi nhận nếu chưa có lần rời đi nào đang được tính
+  if (leaveStartTime === 0) {
+    leaveStartTime = Date.now();
+    // console.log("Bắt đầu rời cửa sổ...");
+  }
 }
+
+function handleReturn() {
+  // Chỉ ghi nhận nếu có một lần rời đi đang được tính
+  if (leaveStartTime > 0) {
+    const leaveDuration = Date.now() - leaveStartTime;
+    // console.log(`Quay lại sau ${leaveDuration}ms`);
+
+    // CHỈ TÍNH LÀ "RỜI ĐI" THỰC SỰ NẾU THỜI GIAN VẮNG MẶT > 2 GIÂY
+    if (leaveDuration > 2000) { 
+      state.leaveCount++;
+      state.leaveTimestamps.push({ 
+        start: new Date(leaveStartTime).toISOString(),
+        durationSeconds: Math.round(leaveDuration / 1000)
+      });
+      // console.log("Ghi nhận một lần rời cửa sổ hợp lệ. Tổng số: ", state.leaveCount);
+    } else {
+      // console.log("Rời đi quá ngắn, không tính.");
+    }
+    
+    // Reset lại để có thể theo dõi lần tiếp theo
+    leaveStartTime = 0;
+  }
+}
+
+// Gắn sự kiện
+// 'blur' và 'visibilitychange' khi ẩn trang -> Bắt đầu tính giờ
 window.addEventListener('blur', handleLeave);
-document.addEventListener('visibilitychange', () => document.hidden ? handleLeave() : handleReturn());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    handleLeave();
+  } else {
+    handleReturn();
+  }
+});
+
+// 'focus' khi quay lại trang -> Dừng tính giờ
 window.addEventListener('focus', handleReturn);
 
-// ===== Local Storage =====
-function persistLocal() {
-    const key = STORAGE_KEY();
-    if (!key) return;
-    const payload = { ...state, exam: undefined, questions: undefined }; // Don't save full exam data
-    try { localStorage.setItem(key, JSON.stringify(payload)); }
-    catch (e) { console.warn(e); }
+function persistLocal(){
+  const key = STORAGE_KEY();
+  if (!key) return; // Không lưu nếu chưa có key
+
+  const payload = {
+    examId: state.exam.examId, // Dùng state.exam
+    mode: state.mode, student: state.student,
+    answers: state.answers, perQuestion: state.perQuestion,
+    timeLeft: state.timeLeft, started: state.started, startTime: state.startTime,
+    submitted: state.submitted, // <<--- THÊM DÒNG NÀY
+    lastSave: new Date().toISOString()
+  };
+  try { localStorage.setItem(key, JSON.stringify(payload)); }
+  catch(e){ console.warn(e); }
 }
 
+// <<<< THAY THẾ HÀM restoreLocal() CŨ BẰNG CỤM 2 HÀM NÀY >>>>
+
+// js/appF.js
+
+// <<<< THAY THẾ TOÀN BỘ HÀM restoreLocal() BẰNG PHIÊN BẢN NÀY >>>>
+
+// js/appF.js
+
+// <<<< THAY THẾ TOÀN BỘ CỤM 2 HÀM NÀY >>>>
+
 function restoreLocal() {
-    if (!state.exam) return;
-    const key = STORAGE_KEY();
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
+  if (!state.exam) return;
+  
+  const key = STORAGE_KEY();
+  const raw = localStorage.getItem(key);
 
-    try {
-        const data = JSON.parse(raw);
-        if (data.examId !== state.exam.examId) return;
+  // Nếu không có dữ liệu lưu, không làm gì cả.
+  if (!raw) return;
 
-        if (data.submitted) {
-            console.log("Phát hiện bài thi đã được nộp. Hiển thị lại kết quả.");
-            state.submitted = true;
-            submitExam(true);
-            return;
-        }
+  try {
+    const data = JSON.parse(raw);
+    if (data.examId !== state.exam.examId) return;
+    
+    // TRƯỜNG HỢP 1: BÀI THI ĐÃ NỘP
+    // Nếu có trạng thái 'submitted' và nó là true
+    if (data.submitted) {
+      console.log("Phát hiện bài thi đã được nộp. Hiển thị lại kết quả.");
+      state.submitted = true;
+      // Giả lập lại việc nộp bài để hiển thị kết quả
+      // (Trong tương lai, nên lưu kết quả và hiển thị trực tiếp)
+      submitExam(true); // Gọi submitExam ở chế độ auto để hiển thị lại kết quả
+      return; // Dừng hàm ở đây
+    }
 
-        Object.assign(state, data); // Restore state
-        console.log("Đã khôi phục bài làm dở.", data);
-        
-        if (state.student.name || state.student.id) $('#student-info').hidden = false;
-        
-        updateUIFromState();
-        
-        if (state.started) {
-            $('#questions').hidden = false;
-            $('#navigator').hidden = false;
-            $('#timer').hidden = false;
-            $('#answer-progress').hidden = false;
-            $('#end-controls').hidden = false;
-            $('#btn-start').hidden = true;
-            startTimer();
-        }
-    } catch (e) { console.warn('Restore failed', e); }
+    // TRƯỜNG HỢP 2: BÀI THI ĐANG LÀM DỞ
+    state.student = data.student || { name:'', id:'', className:'', email:'' };
+    state.answers = data.answers || {};
+    state.perQuestion = data.perQuestion || {};
+    state.timeLeft = data.timeLeft || state.timeLeft;
+    state.started = data.started || false;
+    state.startTime = data.startTime || null;
+
+    console.log("Đã khôi phục bài làm dở từ Local Storage.", data);
+    
+    // Luôn hiển thị form thông tin nếu có dữ liệu đã điền
+    if (state.student.name || state.student.id) {
+        $('#student-info').hidden = false;
+    }
+    
+    updateUIFromState();
+    
+    if (state.started) {
+      $('#questions').hidden = false;
+      $('#navigator').hidden = false;
+      $('#timer').hidden = false;
+      $('#answer-progress').hidden = false;
+      $('#end-controls').hidden = false;
+      startTimer();
+    }
+  } catch(e) { console.warn('Restore failed', e); }
 }
 
 function updateUIFromState() {
-    Object.keys(state.answers).forEach(qid => {
-        const answer = state.answers[qid];
-        const radioInput = $(`input[name="${qid}"][value="${answer}"]`);
-        if (radioInput) radioInput.checked = true;
-        const textInput = $(`input[name="${qid}"]`);
-        if (textInput && textInput.type === 'text') textInput.value = answer;
-    });
-    paintNavigator();
-    updateAnsweredCount();
-    if ($('#studentName')) $('#studentName').value = state.student.name;
-    if ($('#studentId')) $('#studentId').value = state.student.id;
-    if ($('#className')) $('#className').value = state.student.className;
-    if ($('#email')) $('#email').value = state.student.email;
+  // Cập nhật các ô input
+  Object.keys(state.answers).forEach(qid => {
+    const answer = state.answers[qid];
+    const radioInput = document.querySelector(`input[name="${qid}"][value="${answer}"]`);
+    if (radioInput) radioInput.checked = true;
+    
+    const textInput = document.querySelector(`input[name="${qid}"]`);
+    if (textInput && textInput.type === 'text') textInput.value = answer;
+  });
+
+  // Cập nhật navigator và số câu đã trả lời
+  paintNavigator();
+  updateAnsweredCount();
+
+  // Cập nhật thông tin học sinh
+  if ($('#studentName')) $('#studentName').value = state.student.name;
+  if ($('#studentId')) $('#studentId').value = state.student.id;
+  if ($('#className')) $('#className').value = state.student.className;
+  if ($('#email')) $('#email').value = state.student.email;
 }
 
 function clearLocal() {
-    if (!state.exam) return;
-    const prefix = state.exam.examId;
-    Object.keys(localStorage).forEach(k => {
-        if (k.startsWith(prefix)) localStorage.removeItem(k);
-    });
-}
+  if (!state.exam) return; // Không xóa nếu chưa có đề
 
-// ===== Student Info & Validation =====
-function readStudent() {
-    if ($('#studentName')) state.student.name = $('#studentName').value.trim();
-    if ($('#studentId')) state.student.id = $('#studentId').value.trim();
-    if ($('#className')) state.student.className = $('#className').value.trim();
-    if ($('#email')) state.student.email = $('#email').value.trim();
-}
-
-function validateBeforeSubmit() {
-    readStudent();
-    const missing = [];
-    if (!state.student.name) missing.push('Họ và tên');
-    if (!state.student.id) missing.push('Mã học sinh');
-    if (!state.student.className) missing.push('Lớp');
-    if (missing.length) {
-        alert('Vui lòng điền: ' + missing.join(', '));
-        return false;
+  try {
+    const prefix = state.exam.examId; // Dùng state.exam
+    for (let k in localStorage) {
+      if (k.startsWith(prefix)) localStorage.removeItem(k);
     }
-    const total = state.questions.length;
-    const answered = Object.keys(state.answers).length;
-    if (answered < total) {
-        return confirm(`Em còn ${total - answered} câu chưa trả lời. Em vẫn muốn nộp luôn?`);
-    }
-    return true;
+  } catch(e) {}
 }
 
-// ===== Submit =====
+function readStudent(){
+  if ($('#studentName')) state.student.name = $('#studentName').value.trim();
+  if ($('#studentId')) state.student.id = $('#studentId').value.trim();
+  if ($('#className')) state.student.className = $('#className').value.trim();
+  if ($('#email')) state.student.email = $('#email').value.trim();
+}
+
+function validateBeforeSubmit(){
+  readStudent();
+  const missing=[];
+  if (!state.student.name) missing.push('Họ và tên');
+  if (!state.student.id) missing.push('Mã học sinh');
+  if (!state.student.className) missing.push('Lớp');
+  if (missing.length){
+    alert('Vui lòng điền: '+missing.join(', '));
+    return false;
+  }
+  
+  // SỬA DÒNG NÀY: Dùng state.exam.questions thay vì MOCK_EXAM.questions
+  const total = state.exam.questions.length;
+  const answered = Object.keys(state.answers).length;
+  
+  if (answered < total){
+    return confirm(`Em còn ${total - answered} câu chưa trả lời. Em vẫn muốn nộp luôn?`);
+  }
+  return true;
+}
+
+
+function getSimpleDeviceInfo(){
+  const ua = navigator.userAgent || '';
+  let os = 'khác', browser = 'khác';
+  if (/Windows/i.test(ua)) os='Windows';
+  else if (/Android/i.test(ua)) os='Android';
+  else if (/iPhone|iPad|iOS/i.test(ua)) os='iOS';
+  else if (/Mac OS X/i.test(ua)) os='macOS';
+  else if (/Linux/i.test(ua)) os='Linux';
+  if (/Edg\//i.test(ua)) browser='Edge';
+  else if (/Chrome\//i.test(ua)) browser='Chrome';
+  else if (/Safari\//i.test(ua) && !/Chrome\//i.test(ua)) browser='Safari';
+  else if (/Firefox\//i.test(ua)) browser='Firefox';
+  return `${browser} trên ${os}`;
+}
+
+// ===== Submit - PHIÊN BẢN CUỐI CÙNG =====
 async function submitExam(auto = false) {
-    if (state.submitted && auto) {
-        console.log("Đang hiển thị lại trạng thái đã nộp.");
-        $('#resultCard').classList.remove('hidden');
-        $('#resultCard').innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Để làm lại, vui lòng sử dụng nút 'Xoá dữ liệu tạm' và tải lại trang.</p>";
-        $('#end-controls').hidden = true;
-        $('#btn-start').hidden = true;
-        $('#guidelines').hidden = true;
-        return;
+  // ===== BẮT ĐẦU KHỐI CODE MỚI ĐƯỢC THÊM VÀO =====
+  // Nếu hàm được gọi ở chế độ auto (tự động) VÀ state đã là submitted,
+  // nghĩa là chúng ta đang khôi phục lại trạng thái đã nộp.
+  if (state.submitted && auto) {
+      console.log("Đang hiển thị lại trạng thái đã nộp.");
+      const resultCard = $('#resultCard');
+      const endControls = $('#end-controls');
+      const btnStart = $('#btn-start');
+      const guidelines = $('#guidelines');
+
+      if(resultCard) {
+        resultCard.classList.remove('hidden');
+        resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Để làm lại, vui lòng sử dụng nút 'Xoá dữ liệu tạm' và tải lại trang.</p>";
+      }
+      // Ẩn các nút không cần thiết để tránh người dùng thao tác nhầm
+      if(endControls) endControls.hidden = true;
+      if(btnStart) btnStart.hidden = true;
+      if(guidelines) guidelines.hidden = true; // Ẩn luôn hướng dẫn
+      return; // Dừng hàm ngay tại đây
+  }
+  // ===== KẾT THÚC KHỐI CODE MỚI =====
+  
+  if (state.submitted) return;
+  if (!auto && !validateBeforeSubmit()) return;
+
+  setButtonsDisabled(true);
+  state.submitted = true;
+  clearInterval(state.timerHandle);
+
+  // ===== THÊM DÒNG NÀY VÀO =====
+  // Lưu lại trạng thái `submitted: true` vào localStorage ngay lập tức
+  persistLocal(); 
+
+  const resultCard = $('#resultCard');
+  const resultSummary = $('#resultSummary');
+  const feedbackEl = $('#feedback');
+  
+  if(resultSummary) resultSummary.innerHTML = '<p>Đang nộp bài và chấm điểm, vui lòng chờ...</p>';
+  resultCard.classList.remove('hidden');
+  resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Thu thập dữ liệu để gửi đi (giữ nguyên)
+  const elapsed = (state.exam.durationMinutes * 60 - state.timeLeft);
+  const device = getSimpleDeviceInfo();
+  const submissionPayload = {
+    examId: state.exam.examId,
+    student: state.student,
+    answers: state.answers,
+    perQuestion: state.perQuestion,
+    leaveCount: state.leaveCount,
+    leaveTimestamps: state.leaveTimestamps,
+    timeSpent: elapsed,
+    device: device,
+    startTime: state.startTime
+  };
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      // KHÔNG CÒN 'mode: no-cors' nữa
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(submissionPayload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Lỗi mạng: ${response.statusText}`);
     }
-    if (state.submitted) return;
-    if (!auto && !validateBeforeSubmit()) return;
+    
+    const result = await response.json(); // Bây giờ có thể đọc được JSON
+    if (!result.success) {
+      throw new Error(result.message || "Server trả về lỗi không xác định.");
+    }
+    
+    const serverData = result.data;
+    console.log("Kết quả chi tiết từ server:", serverData);
+    
+    // Hiển thị điểm số
+    if (resultSummary) {
+      resultSummary.innerHTML = `
+        <p>Điểm: <strong>${serverData.score}/10</strong> (${serverData.correctCount}/${serverData.totalQuestions} câu đúng)</p>
+      `;
+    }
 
-    setButtonsDisabled(true);
-    state.submitted = true;
-    clearInterval(state.timerHandle);
-    persistLocal();
+    // Hiển thị nhận xét chi tiết
+    if (feedbackEl) {
+      feedbackEl.innerHTML = serverData.feedback;
+    }
+    
+    // Hiển thị đáp án và lời giải
+    if (serverData.fullQuestionsData) {
+        const questionsData = serverData.fullQuestionsData;
+        Object.keys(questionsData).forEach(qId => {
+            const qData = questionsData[qId];
+            const exp = document.getElementById(`exp-${qId}`);
+            const card = document.getElementById(`card-${qId}`);
+            if (!exp || !card) return;
 
-    const resultCard = $('#resultCard');
-    resultCard.classList.remove('hidden');
-    resultCard.scrollIntoView({ behavior: 'smooth' });
-    $('#resultSummary').innerHTML = '<p>Đang nộp bài và chấm điểm, vui lòng chờ...</p>';
-
-    const submissionPayload = {
-        examId: state.exam.examId,
-        student: state.student,
-        answers: state.answers,
-        perQuestion: state.perQuestion,
-        leaveCount: state.leaveCount,
-        leaveTimestamps: state.leaveTimestamps,
-        timeSpent: (state.exam.durationMinutes * 60) - state.timeLeft,
-        startTime: state.startTime,
-    };
-
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(submissionPayload),
+            exp.hidden = false;
+            const studentAnswer = state.answers[qId];
+            
+            if (studentAnswer === qData.correct) {
+                exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
+                card.classList.add('correct');
+            } else if (studentAnswer) {
+                exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+                card.classList.add('incorrect');
+            } else {
+                exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+            }
         });
-        if (!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message || "Lỗi server không xác định.");
-        
-        const serverData = result.data;
-        $('#resultSummary').innerHTML = `<p>Điểm: <strong>${serverData.score}/10</strong> (${serverData.correctCount}/${serverData.totalQuestions} câu đúng)</p>`;
-        $('#feedback').innerHTML = serverData.feedback;
-
-        if (serverData.fullQuestionsData) {
-            Object.keys(serverData.fullQuestionsData).forEach(qId => {
-                const qData = serverData.fullQuestionsData[qId];
-                const card = $(`#card-${qId}`);
-                const exp = $(`#exp-${qId}`);
-                if (!exp || !card) return;
-                
-                exp.hidden = false;
-                const studentAnswer = state.answers[qId];
-                if (studentAnswer === qData.correct) {
-                    exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
-                    card.classList.add('correct');
-                } else if (studentAnswer) {
-                    exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-                    card.classList.add('incorrect');
-                } else {
-                    exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Lỗi khi nộp bài:', error);
-        $('#resultSummary').innerHTML = `<h3>Có lỗi xảy ra!</h3><p>Không thể nộp bài. Lỗi: ${error.message}</p>`;
-        setButtonsDisabled(false);
-        state.submitted = false;
     }
+    
+  } catch (error) {
+    console.error('Lỗi khi nộp bài:', error);
+    if (resultSummary) {
+      resultSummary.innerHTML = `
+        <h3>Có lỗi xảy ra!</h3>
+        <p>Không thể nộp bài của em. Lỗi: ${error.message}</p>
+        <p>Vui lòng kiểm tra lại kết nối mạng và thử lại.</p>
+      `;
+    }
+    setButtonsDisabled(false); // Cho phép thử lại nếu lỗi
+    state.submitted = false;
+  }
 }
 
+// Dán hàm này vào ngay sau hàm submitExam
 function setButtonsDisabled(disabled) {
-    $$('#btn-submit, #btn-save, #btn-clear, #btn-start').forEach(el => el.disabled = disabled);
+  ['#btn-submit', '#btn-save', '#btn-clear', '#btn-start'].forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) {
+      if (disabled) {
+        el.setAttribute('disabled', 'disabled');
+      } else {
+        el.removeAttribute('disabled');
+      }
+    }
+  });
 }
 
 // ===== Wire events =====
-function wireEvents() {
-    $('#btn-start')?.addEventListener('click', () => {
-        readStudent();
-        $('#student-info').hidden = false;
-        $('#questions').hidden = false;
-        $('#navigator').hidden = false;
-        $('#timer').hidden = false;
-        $('#answer-progress').hidden = false;
-        $('#end-controls').hidden = false;
-        $('#btn-start').hidden = true;
-        startTimer();
-    });
+// <<<< THAY THẾ TOÀN BỘ HÀM wireEvents() >>>>
+function wireEvents(){
+  $('#btn-start')?.addEventListener('click', ()=>{
+    // Luôn đọc thông tin học sinh khi nhấn nút
+    readStudent(); 
 
-    $('#btn-submit')?.addEventListener('click', () => submitExam(false));
-    $('#btn-save')?.addEventListener('click', () => {
-        readStudent();
-        persistLocal();
-        alert('Đã lưu tạm.');
-    });
-    $('#btn-clear')?.addEventListener('click', () => {
-        if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài làm tạm và bắt đầu lại từ đầu?")) {
-            clearLocal();
-            alert('Đã xoá dữ liệu tạm. Trang sẽ được tải lại.');
-            location.reload();
-        }
-    });
-    $('#btn-guidelines')?.addEventListener('click', () => {
-        $('#guidelines').hidden = !$('#guidelines').hidden;
-    });
+    // Hiển thị các thành phần làm bài
+    $('#student-info').hidden = false;
+    $('#questions').hidden = false;
+    $('#navigator').hidden = false;
+    $('#timer').hidden = false;
+    $('#answer-progress').hidden = false;
+    $('#end-controls').hidden = false;
+    
+    // Ẩn chính nút "Bắt đầu làm" đi
+    $('#btn-start').hidden = true;
+    
+    startTimer();
+  });
+
+  $('#btn-submit')?.addEventListener('click', ()=>{ submitExam(false); });
+  $('#btn-save')?.addEventListener('click', ()=>{ 
+      readStudent(); // Đọc lại thông tin HS trước khi lưu
+      persistLocal(); 
+      alert('Đã lưu tạm.'); 
+  });
+  $('#btn-clear')?.addEventListener('click', ()=>{ 
+      if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài làm tạm và bắt đầu lại từ đầu?")) {
+          clearLocal(); 
+          alert('Đã xoá dữ liệu tạm. Tải lại trang để bắt đầu lại.');
+          location.reload(); // Tải lại trang sau khi xoá
+      }
+  });
+  $('#btn-guidelines')?.addEventListener('click', ()=>{
+    const g = $('#guidelines');
+    if(g) g.hidden = !g.hidden;
+  });
 }
 
-function escapeHtml(str) {
-    if (typeof str !== 'string') return '';
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-    return str.replace(/[&<>"']/g, (m) => map[m]);
+function escapeHtml(str){
+  if (typeof str !== 'string') return '';
+  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+  return str.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 // ===== Boot =====
 document.addEventListener('DOMContentLoaded', () => {
-    const examId = getParam("examId");
-    if (examId) {
-        loadExam(examId);
-    } else {
-        const questionsContainer = $('#questions');
-        if(questionsContainer) questionsContainer.innerHTML = `
-            <div class="card" style="text-align: center;">
-                <h3>Lỗi: Không tìm thấy mã đề bài.</h3>
-                <p>Vui lòng kiểm tra lại đường link hoặc quay trở lại trang chủ.</p>
-                <a href="/" class="action-btn btn-start" style="text-decoration: none;">Về Trang chủ</a>
-            </div>`;
-    }
-    wireEvents();
-});
+  // initMode(); // <-- Dòng này được xóa là ĐÚNG, vì logic đã chuyển vào loadExam
 
-// ========================================================
-// === END OF CLEANED AND FINAL appF.js FILE ===
-// ========================================================
+  const examId = getParam("examId"); // Lấy examId từ URL
+
+  if (examId) {
+    loadExam(examId); // Chỉ tải đề khi có examId
+  } else {
+    // Xử lý trường hợp không có examId trên URL
+    const questionsContainer = document.getElementById('questions');
+    if (questionsContainer) {
+      questionsContainer.innerHTML = `
+        <div class="card" style="text-align: center;">
+          <h3>Lỗi: Không tìm thấy mã đề bài.</h3>
+          <p>Vui lòng kiểm tra lại đường link hoặc quay trở lại trang chủ.</p>
+          <a href="/" class="action-btn btn-start" style="text-decoration: none;">Về Trang chủ</a>
+        </div>
+      `;
+    }
+  }
+
+  wireEvents(); // <-- Dòng này BẮT BUỘC phải có để các nút hoạt động   
+});
