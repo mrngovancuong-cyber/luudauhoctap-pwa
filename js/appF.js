@@ -752,8 +752,11 @@ function wireEvents(){
     }
 
     // Nếu đã điền đủ, ẩn nút "Bắt đầu làm" và "Hướng dẫn"
-    $('#btn-start').hidden = true;
-    $('#btn-guidelines').hidden = true;
+    // Ẩn toàn bộ thanh control-bar đi
+    const controlBar = document.querySelector('.control-bar');
+    if (controlBar) {
+        controlBar.hidden = true;
+    }
 
     // Hiển thị các thành phần làm bài
     $('#questions').hidden = false;
