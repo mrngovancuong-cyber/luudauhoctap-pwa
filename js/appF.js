@@ -114,7 +114,9 @@ function renderExam() {
 
   // Vòng lặp forEach để tạo HTML
   exam.questions.forEach((q, idx) => {
-    const imageHtml = q.imageUrl ? `<div class="media-container"><img src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image"></div>` : '';
+    const imageHtml = q.imageUrl 
+  ? `<div class="media-container"><img data-src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image lazy-image"></div>` 
+  : '';
     const audioHtml = q.audioUrl ? ` <div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` : '';
     let answerBlockHtml = '';
     const questionType = q.questionType || 'multiple_choice';
@@ -151,12 +153,16 @@ function renderExam() {
           restoreLocal();
           console.log("Bắt đầu gắn các event listener...");
           attachDynamicListeners();
+          // ===> THÊM LỜI GỌI HÀM MỚI TẠI ĐÂY <===
+          console.log("Kích hoạt Lazy Loading cho hình ảnh...");
+          activateLazyLoading();          
           console.log("Giao diện đã sẵn sàng.");
         })
         .catch((err) => {
           console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
           restoreLocal();
           attachDynamicListeners();
+          activateLazyLoading(); // <--- Thêm vào đây nữa
         });
     } else {
       setTimeout(finalizeUI, 150);
@@ -609,24 +615,38 @@ async function submitExam(auto = false) {
     if (serverData.fullQuestionsData) {
         const questionsData = serverData.fullQuestionsData;
         Object.keys(questionsData).forEach(qId => {
-            const qData = questionsData[qId];
-            const exp = document.getElementById(`exp-${qId}`);
-            const card = document.getElementById(`card-${qId}`);
-            if (!exp || !card) return;
+    const qData = questionsData[qId];
+    const card = document.getElementById(`card-${qId}`);
+    if (!card) return;
 
-            exp.hidden = false;
-            const studentAnswer = state.answers[qId];
-            
-            if (studentAnswer === qData.correct) {
-                exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
-                card.classList.add('correct');
-            } else if (studentAnswer) {
-                exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-                card.classList.add('incorrect');
-            } else {
-                exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-            }
-        });
+    const exp = card.querySelector(`#exp-${qId}`);
+    const qTitleEl = card.querySelector('.q-title'); // Tìm đến tiêu đề câu hỏi
+    
+    if (!exp || !qTitleEl) return;
+
+    exp.hidden = false;
+    const studentAnswer = state.answers[qId];
+    
+    // Ngăn việc chèn biểu tượng lặp lại nếu hàm được gọi nhiều lần
+    if (qTitleEl.querySelector('.result-icon')) {
+        // Đã có biểu tượng rồi, không cần làm gì thêm
+    } else {
+        // CHƯA có biểu tượng, tiến hành chèn
+        if (studentAnswer === qData.correct) {
+            exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
+            card.classList.add('correct');
+            qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
+        } else if (studentAnswer) {
+            exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+            card.classList.add('incorrect');
+            qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
+        } else {
+            exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+            // Không thêm class màu cho câu chưa trả lời
+            qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
+        }
+    }
+});
     }
     
   } catch (error) {
@@ -701,6 +721,64 @@ function escapeHtml(str){
   if (typeof str !== 'string') return '';
   const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
   return str.replace(/[&<>"']/g, (m) => map[m]);
+}
+
+// Dán hàm này vào gần cuối file appF.js
+
+/**
+ * Tìm tất cả các hình ảnh có class 'lazy-image' và chỉ tải chúng
+ * khi người dùng cuộn đến gần.
+ */
+function activateLazyLoading() {
+  // Tìm tất cả các hình ảnh được đánh dấu để lazy load
+  const lazyImages = $$('.lazy-image');
+
+  // Nếu trình duyệt không hỗ trợ IntersectionObserver, tải tất cả hình ảnh để đảm bảo an toàn.
+  if (!("IntersectionObserver" in window)) {
+    console.warn("Trình duyệt không hỗ trợ IntersectionObserver, đang tải tất cả hình ảnh.");
+    lazyImages.forEach(image => {
+      if (image.dataset.src) {
+        image.src = image.dataset.src;
+      }
+    });
+    return;
+  }
+
+  // Cấu hình cho Observer: bắt đầu tải hình ảnh khi nó còn cách viewport 200px ở phía dưới.
+  const observerOptions = {
+    root: null, // Quan sát so với viewport của trình duyệt
+    rootMargin: '0px 0px 200px 0px', 
+    threshold: 0.01
+  };
+
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      // entry.isIntersecting là true khi phần tử đi vào vùng quan sát
+      if (entry.isIntersecting) {
+        const image = entry.target;
+        
+        console.log(`Đang tải lười hình ảnh: ${image.dataset.src}`);
+
+        // Gán URL thật từ data-src vào src để trình duyệt bắt đầu tải
+        if (image.dataset.src) {
+          image.src = image.dataset.src;
+        }
+        
+        // Xóa class lazy để tránh xử lý lại
+        image.classList.remove('lazy-image');
+        
+        // Dừng quan sát hình ảnh này vì nó đã được tải rồi
+        observer.unobserve(image);
+      }
+    });
+  }, observerOptions);
+
+  // Bắt đầu quan sát tất cả các hình ảnh đã tìm thấy
+  lazyImages.forEach(image => {
+    imageObserver.observe(image);
+  });
+  
+  console.log(`Đã kích hoạt Lazy Loading cho ${lazyImages.length} hình ảnh.`);
 }
 
 // ===== Boot =====
