@@ -6,19 +6,28 @@
   <title>Lưu Dấu Học Tập</title>
   <!-- Liên kết CSS mới -->
   <link rel="stylesheet" href="css/styleD.css">
-<!-- Bước 1: Khai báo cấu hình cho MathJax TRƯỚC KHI tải nó -->
-<script>
-  window.MathJax = {
-    loader: {load: ['[tex]/mhchem']},
-    tex: {packages: {'[+]': ['mhchem']}}
-  };
-</script>
-<!-- Bước 2: Tải MathJax như bình thường. Nó sẽ tự động đọc cấu hình ở trên. -->
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <meta name="theme-color" content="#0b1220" />
+
+<!-- <<<< THAY THẾ DÒNG SCRIPT MATHJAX CŨ BẰNG TOÀN BỘ KHỐI NÀY >>>> -->
+
+<!-- Bước 1: Khai báo cấu hình cho MathJax TRƯỚC KHI tải nó -->
+<script>
+  window.MathJax = {
+    loader: {
+      load: ['[tex]/ams', '[tex]/mhchem'] // Yêu cầu tải gói ams VÀ mhchem
+    },
+    tex: {
+      packages: {'[+]': ['ams', 'mhchem']} // Kích hoạt gói ams VÀ mhchem
+    }
+  };
+</script>
+
+<!-- Bước 2: Tải MathJax như bình thường. Nó sẽ tự động đọc cấu hình ở trên. -->
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- <<<< KẾT THÚC KHỐI MATHJAX >>>> -->
 
 </head>
 <body>

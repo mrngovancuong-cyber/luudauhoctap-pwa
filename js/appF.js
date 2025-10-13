@@ -127,11 +127,11 @@ function renderExam() {
         const answerOptions = ['A', 'B', 'C', 'D'];
         answerBlockHtml = q.answers.map((ans, ansIdx) => {
           const option = answerOptions[ansIdx];
-          return `<label class="answer" for="ans-${q.id}-${option}"><input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}"><span>${ans}</span></label>`;
+          return `<label class="answer" for="ans-${q.id}-${option}"><input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}"><span>${escapeHtml(ans)}</span></label>`;
         }).join('');
         break;
     }
-    const questionCardHtml = `<div class="q-card" id="card-${q.id}" data-question-type="${questionType}"><div class="q-head"><div class="q-title">Câu ${idx + 1}: ${q.question}</div><div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div></div>${imageHtml}${audioHtml}<div class="answers">${answerBlockHtml}</div><div class="explain-block" id="exp-${q.id}" hidden><strong>Giải thích:</strong><span class="explain"></span></div></div>`;
+    const questionCardHtml = `<div class="q-card" id="card-${q.id}" data-question-type="${questionType}"><div class="q-head"><div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div><div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div></div>${imageHtml}${audioHtml}<div class="answers">${answerBlockHtml}</div><div class="explain-block" id="exp-${q.id}" hidden><strong>Giải thích:</strong><span class="explain"></span></div></div>`;
     questionsContainer.insertAdjacentHTML('beforeend', questionCardHtml);
     if(navigatorContainer){
         const navItemHtml = `<div class="nav-item" data-qid="${q.id}">${idx + 1}</div>`;
@@ -147,7 +147,9 @@ function renderExam() {
       window.MathJax.typesetPromise()
         .then(() => {
           console.log("MathJax đã hoàn thành.");
+          console.log("Bắt đầu khôi phục dữ liệu vào giao diện...");
           restoreLocal();
+          console.log("Bắt đầu gắn các event listener...");
           attachDynamicListeners();
           console.log("Giao diện đã sẵn sàng.");
         })
@@ -159,10 +161,8 @@ function renderExam() {
     } else {
       setTimeout(finalizeUI, 150);
     }
-}
-
-// Bắt đầu chuỗi hoàn thiện giao diện
-finalizeUI();
+  }
+  finalizeUI();
 }
   
 // ===== EVENT HANDLING & DOM MANIPULATION =====
