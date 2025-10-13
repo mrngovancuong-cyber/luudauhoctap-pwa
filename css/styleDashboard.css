@@ -34,7 +34,7 @@ html {
   scroll-behavior: smooth;
 }
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
   margin: 0;
   background-color: var(--bg);
   color: var(--text);
@@ -176,7 +176,7 @@ body {
   /* CSS cho các panel sẽ được thêm sau */
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: 1fr;
 }
 .chart-container {
   background-color: var(--bg);
@@ -212,4 +212,44 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ------------------------------
+   Tinh chỉnh ApexCharts
+   ------------------------------ */
+/* Sửa màu text trong menu download */
+.apexcharts-menu-item {
+  color: #111827; /* Màu xám đậm cho dễ đọc */
+}
+.apexcharts-menu-item:hover {
+  color: #fff; /* Màu trắng khi hover */
+  background-color: var(--primary);
+}
+/* ------------------------------
+   Tinh chỉnh Bảng Lịch sử
+   ------------------------------ */
+#history-table {
+  width: 100%;
+  border-collapse: collapse; /* Gộp các đường viền lại */
+  margin-top: 1rem;
+}
+
+#history-table th,
+#history-table td {
+  border: 1px solid var(--border); /* Thêm đường viền cho tất cả các ô */
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+#history-table thead {
+  background-color: var(--bg-elev); /* Màu nền cho hàng tiêu đề */
+}
+
+#history-table th {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+#history-table tbody tr:hover {
+  background-color: var(--bg); /* Hiệu ứng hover cho các hàng */
 }

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreTrendChartContainer = document.getElementById('score-trend-chart');
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanels = document.querySelectorAll('.tab-panel');
-    const historyTableBody = document.querySelector('#history-table tbody');
+    const historyTableBody = document.querySelector('#history table tbody');
     // ... ngay sau historyTableBody ...
     const topicStrengthChartContainer = document.getElementById('topic-strength-chart');
     const levelStrengthChartContainer = document.getElementById('level-strength-chart');
@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: 'line',
                 height: 350,
                 foreColor: '#e5e7eb' // Màu chữ
+		zoom: { enabled: true }
             },
             series: [{
                 name: 'Điểm số',
@@ -218,7 +219,7 @@ function renderHistoryTable(historyData) {
  */
 function renderTopicStrengthChart(topicData) {
     const options = {
-        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' },
+        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true } },
         series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }],
         xaxis: { categories: topicData.map(item => item.topic) },
         yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } },
@@ -241,7 +242,7 @@ function renderLevelStrengthChart(levelData) {
     levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
 
     const options = {
-        chart: { type: 'radar', height: 350, foreColor: '#e5e7eb' },
+        chart: { type: 'radar', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true } },
         series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }],
         labels: levelData.map(item => item.level),
         yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } },
@@ -261,7 +262,7 @@ function renderLevelStrengthChart(levelData) {
  */
 function renderLeaveCountChart(leaveData) {
     const options = {
-        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' },
+        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true } },
         series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }],
         xaxis: { categories: leaveData.map(item => item.examTitle) },
         yaxis: { labels: { formatter: (val) => Math.round(val) } }, // Chỉ hiển thị số nguyên
@@ -279,7 +280,7 @@ function renderLeaveCountChart(leaveData) {
  */
 function renderDeviceUsageChart(deviceData) {
     const options = {
-        chart: { type: 'donut', height: 350, foreColor: '#e5e7eb' },
+        chart: { type: 'donut', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true }, toolbar: { show: true } },
         series: deviceData.map(item => item.count),
         labels: deviceData.map(item => item.device),
         title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
