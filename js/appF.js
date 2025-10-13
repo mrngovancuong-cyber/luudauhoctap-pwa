@@ -595,8 +595,7 @@ async function submitExam(auto = false) {
 
       if(resultCard) {
         resultCard.classList.remove('hidden');
-        resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3>
-	<p>Vui lòng quay lại <a href="/" class="action-btn-link">Trang Chủ</a> để chọn bài khác</p>";
+        resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Vui lòng quay lại <a href="/" class="action-btn-link">Trang Chủ</a> để chọn bài khác</p>";
       }
       // Ẩn các nút không cần thiết để tránh người dùng thao tác nhầm
       if(endControls) endControls.hidden = true;
