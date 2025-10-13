@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const levelStrengthChartContainer = document.getElementById('level-strength-chart');
     const leaveCountChartContainer = document.getElementById('leave-count-chart');
     const deviceUsageChartContainer = document.getElementById('device-usage-chart');
+    const behaviorModal = document.getElementById('behavior-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
 
     // Khai báo các biến để giữ đối tượng biểu đồ
     let topicStrengthChart = null;
@@ -190,26 +194,33 @@ function handleTabClick(event) {
  */
 function renderHistoryTable(historyData) {
     if (!historyTableBody) return;
-
-    // Xóa nội dung cũ của bảng
     historyTableBody.innerHTML = '';
-
     if (!historyData || historyData.length === 0) {
-        historyTableBody.innerHTML = '<tr><td colspan="5">Không có dữ liệu lịch sử.</td></tr>';
+        historyTableBody.innerHTML = '<tr><td colspan="6">Không có dữ liệu lịch sử.</td></tr>';
         return;
     }
 
-    // Tạo các hàng mới và chèn vào bảng
-    historyData.forEach(item => {
+    historyData.forEach((item, index) => {
         const row = document.createElement('tr');
+        // Thêm một cột mới cho nút "Hành động"
         row.innerHTML = `
             <td>${item.examTitle}</td>
             <td>${item.score.toFixed(2)}</td>
             <td>${item.timeSpent}</td>
             <td>${item.leaveCount}</td>
             <td>${item.submittedAt}</td>
+            <td><button class="action-btn-small" data-index="${index}">Xem chi tiết</button></td>
         `;
         historyTableBody.appendChild(row);
+    });
+
+    // Gắn sự kiện cho các nút "Xem chi tiết" vừa được tạo
+    document.querySelectorAll('.action-btn-small').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const itemIndex = event.target.dataset.index;
+            const behaviorData = historyData[itemIndex];
+            showBehaviorModal(behaviorData);
+        });
     });
 }
 
@@ -291,6 +302,27 @@ function renderDeviceUsageChart(deviceData) {
     else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
 }
 
+function showBehaviorModal(data) {
+    modalTitle.textContent = `Phân tích Hành vi: ${data.examTitle}`;
+    
+    let content = '<ul>';
+    if (data.behaviorDetails.fastWrong.length > 0) {
+        content += `<li>Làm ẩu (sai nhanh): <strong>Câu ${data.behaviorDetails.fastWrong.join(', ')}</strong></li>`;
+    }
+    if (data.behaviorDetails.slowWrong.length > 0) {
+        content += `<li>Lúng túng (sai chậm): <strong>Câu ${data.behaviorDetails.slowWrong.join(', ')}</strong></li>`;
+    }
+    if (data.behaviorDetails.changedAnswers.length > 0) {
+        content += `<li>Phân vân (đổi đáp án): <strong>Câu ${data.behaviorDetails.changedAnswers.join(', ')}</strong></li>`;
+    }
+    if (content === '<ul>') {
+        content += '<li>Không có ghi nhận hành vi nào đặc biệt.</li>';
+    }
+    content += '</ul>';
+    
+    modalBody.innerHTML = content;
+    behaviorModal.classList.remove('hidden');
+}
     // --- GẮN SỰ KIỆN ---
     searchBtn.addEventListener('click', searchStudent);
     
@@ -305,4 +337,15 @@ function renderDeviceUsageChart(deviceData) {
             searchStudent();
         }
     });
+
+// Dán vào khu vực GẮN SỰ KIỆN ở cuối file
+modalCloseBtn.addEventListener('click', () => {
+    behaviorModal.classList.add('hidden');
+});
+
+// Cho phép đóng modal khi click ra ngoài
+behaviorModal.addEventListener('click', (event) => {
+    if (event.target === behaviorModal) {
+        behaviorModal.classList.add('hidden');
+    }
 });
