@@ -379,3 +379,40 @@ kbd {
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* =================================
+   Thông báo Toast (Toast Notification)
+   ================================= */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: var(--bg-elev);
+  color: var(--text);
+  padding: 16px 24px;
+  border-radius: 8px;
+  border-left: 6px solid var(--primary); /* Màu mặc định là thông tin */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  
+  /* Hiệu ứng ban đầu (ẩn đi) */
+  opacity: 0;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* Trạng thái hiển thị */
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+  visibility: visible;
+}
+
+/* Các loại toast khác nhau */
+.toast.success {
+  border-left-color: var(--ok); /* Màu xanh lá */
+}
+.toast.error {
+  border-left-color: var(--bad); /* Màu đỏ */
+}

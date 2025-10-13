@@ -30,6 +30,31 @@ function hideLoader() {
   }
 }
 
+// ===== Hàm trợ giúp cho Toast Notification =====
+let toastTimeout; // Biến để quản lý việc tự động ẩn
+
+function showToast(message, type = 'info', duration = 3000) {
+  const toast = document.getElementById('toast');
+  const toastMessage = document.getElementById('toast-message');
+  if (!toast || !toastMessage) return;
+
+  // Xóa timeout cũ nếu có, để tránh việc toast biến mất sớm
+  clearTimeout(toastTimeout);
+
+  // Cập nhật nội dung và loại toast
+  toastMessage.textContent = message;
+  toast.className = 'toast'; // Reset class
+  toast.classList.add(type); // Thêm class loại (success, error, info)
+  
+  // Hiển thị toast
+  toast.classList.add('show');
+
+  // Tự động ẩn sau một khoảng thời gian
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, duration);
+}
+
 // THAY THẾ HÀM loadExam HIỆN TẠI BẰNG PHIÊN BẢN NÀY
 async function loadExam(examId) {
   console.log(`Đang gọi API để lấy đề thi ID: ${examId}`);
@@ -725,17 +750,19 @@ function wireEvents(){
 
   $('#btn-submit')?.addEventListener('click', ()=>{ submitExam(false); });
   $('#btn-save')?.addEventListener('click', ()=>{ 
-      readStudent(); // Đọc lại thông tin HS trước khi lưu
-      persistLocal(); 
-      alert('Đã lưu tạm.'); 
-  });
-  $('#btn-clear')?.addEventListener('click', ()=>{ 
-      if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài làm tạm và bắt đầu lại từ đầu?")) {
-          clearLocal(); 
-          alert('Đã xoá dữ liệu tạm. Tải lại trang để bắt đầu lại.');
-          location.reload(); // Tải lại trang sau khi xoá
-      }
-  });
+    readStudent();
+    persistLocal(); 
+    showToast('Đã lưu tạm thành công!', 'success'); // <<--- THAY THẾ
+});
+$('#btn-clear')?.addEventListener('click', ()=>{ 
+    if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài làm tạm và bắt đầu lại từ đầu?")) {
+        clearLocal(); 
+        // Chúng ta không cần toast ở đây nữa vì trang sẽ tải lại ngay lập tức.
+        // Nhưng nếu bạn muốn, có thể gọi toast trước khi reload.
+        // showToast('Đã xoá dữ liệu tạm. Đang tải lại...', 'info', 2000);
+        location.reload();
+    }
+});
   $('#btn-guidelines')?.addEventListener('click', ()=>{
     const g = $('#guidelines');
     if(g) g.hidden = !g.hidden;
