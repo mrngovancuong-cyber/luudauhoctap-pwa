@@ -44,37 +44,48 @@
     <span id="toast-message"></span>
   </div>  
 
-  <!-- Header cố định -->
-  <header class="sticky-header">
-    <div class="header-top">
-  <div class="header-left">
-    <a href="/" title="Quay về Trang chủ">
-      <img src="icons/logo.png" alt="Logo" class="logo">
-    </a>
-  </div>
-  <div class="header-center">
-    <h1 class="title" id="examTitle"></h1>
-  </div>
-  <div class="header-right">
-    <!-- Link về trang chủ -->
-    <a href="/" class="home-link-container">
-      <span>Lưu Dấu Học Tập</span>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/></svg>
-    </a>
-  </div>
-</div>
-<div class="header-bottom">
-  <!-- Navigator (vẫn ẩn lúc đầu) -->
-  <div id="navigator" hidden>
-    <div class="navigator-title">Trạng thái trả lời</div>
-    <div id="navigator-items"></div>
-  </div>
-  <!-- Timer và cảnh báo (chuyển xuống đây và ẩn lúc đầu) -->
-  <div id="timer-container" class="timer-container" hidden>
-    <span id="timer">00:00</span>
-    <span id="timeWarn" hidden></span>
-  </div>
-</div>  
+<!-- Header cố định -->
+<header class="sticky-header">
+
+  <!-- HÀNG TRÊN -->
+  <div class="header-top">
+    <!-- Cột trái: Logo -->
+    <div class="header-left">
+      <a href="/" title="Quay về Trang chủ">
+        <img src="icons/logo.png" alt="Logo" class="logo">
+      </a>
+    </div>
+
+    <!-- Cột giữa: Tên đề bài -->
+    <div class="header-center">
+      <!-- GIỮ NGUYÊN NỘI DUNG GỐC CỦA BẠN -->
+      <h1 class="title" id="examTitle">LƯU DẤU HỌC TẬP</h1> 
+    </div>
+
+    <!-- Cột phải: Link trang chủ -->
+    <div class="header-right">
+      <a href="/" class="home-link-container">
+        <span>Lưu Dấu Học Tập</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/></svg>
+      </a>
+    </div>
+  </div> <!-- Thẻ đóng của .header-top -->
+
+  <!-- HÀNG DƯỚI -->
+  <div class="header-bottom">
+    <!-- Navigator (giữa) -->
+    <div id="navigator" hidden>
+      <div class="navigator-title">Trạng thái trả lời</div>
+      <div id="navigator-items"></div>
+    </div>
+
+    <!-- Timer (phải) -->
+    <div id="timer-container" class="timer-container" hidden>
+      <span id="timer">00:00</span>
+      <span id="timeWarn" hidden></span>
+    </div>
+  </div> <!-- Thẻ đóng của .header-bottom -->
+
 </header>
 
   <!-- Thanh điều khiển -->

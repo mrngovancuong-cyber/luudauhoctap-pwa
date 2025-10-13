@@ -417,34 +417,10 @@ kbd {
   border-left-color: var(--bad); /* Màu đỏ */
 }
 
-/* CSS cho link hành động trong văn bản */
-.action-btn-link {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-.action-btn-link:hover {
-  background-color: var(--primary);
-  color: #fff;
-}
-
-/* =================================
-   Tinh chỉnh Header Layout Mới
-   ================================= */
-
-/* --- Hàng trên (Top Row) --- */
-.header-left a {
-  line-height: 0; /* Sửa lỗi khoảng trắng thừa dưới logo */
-}
-
 .header-right {
   display: flex;
   justify-content: flex-end;
 }
-
 .home-link-container {
   display: flex;
   align-items: center;
@@ -452,33 +428,9 @@ kbd {
   color: var(--muted);
   text-decoration: none;
   font-size: 16px;
-  font-weight: 600; /* <-- Làm đậm chữ */
+  font-weight: 600;
   transition: color 0.2s ease;
 }
-
 .home-link-container:hover {
   color: var(--primary);
-}
-
-/* --- Hàng dưới (Bottom Row) --- */
-.header-bottom {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr; /* 3 cột: Trái (dãn) - Giữa (tự động) - Phải (dãn) */
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-}
-
-/* Căn giữa Navigator vào cột giữa */
-#navigator {
-  grid-column: 2 / 3;
-}
-
-/* Căn phải Timer vào cột phải */
-.timer-container {
-  grid-column: 3 / 4;
-  justify-self: end; /* Đẩy vềสุดขอบขวา */
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--text);
 }

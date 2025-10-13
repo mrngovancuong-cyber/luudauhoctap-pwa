@@ -496,7 +496,7 @@ function restoreLocal() {
       $('#btn-guidelines').hidden = true;
       $('#questions').hidden = false;
       $('#navigator').hidden = false;
-      $('#timer-container').hidden = false; // <<--- SỬA THÀNH ĐÂY
+      $('#timer').hidden = false;
       $('#answer-progress').hidden = false;
       $('#end-controls').hidden = false;
       startTimer();
@@ -595,7 +595,7 @@ async function submitExam(auto = false) {
 
       if(resultCard) {
         resultCard.classList.remove('hidden');
-        resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Vui lòng quay lại <a href="/" class="action-btn-link">Trang Chủ</a> để chọn bài khác</p>";
+        resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Để làm lại, vui lòng sử dụng nút 'Xoá dữ liệu tạm' và tải lại trang.</p>";
       }
       // Ẩn các nút không cần thiết để tránh người dùng thao tác nhầm
       if(endControls) endControls.hidden = true;
@@ -751,16 +751,13 @@ function wireEvents(){
     }
 
     // Nếu đã điền đủ, ẩn nút "Bắt đầu làm" và "Hướng dẫn"
-    // Ẩn toàn bộ thanh control-bar đi
-    const controlBar = document.querySelector('.control-bar');
-    if (controlBar) {
-        controlBar.hidden = true;
-    }
+    $('#btn-start').hidden = true;
+    $('#btn-guidelines').hidden = true;
 
     // Hiển thị các thành phần làm bài
     $('#questions').hidden = false;
     $('#navigator').hidden = false;
-    $('#timer-container').hidden = false; // <<--- SỬA THÀNH ĐÂY
+    $('#timer').hidden = false;
     $('#answer-progress').hidden = false;
     $('#end-controls').hidden = false;
     
