@@ -491,3 +491,58 @@ kbd {
 /* =====================================================
    END: TINH CHỈNH LAYOUT HEADER MỚI
    ===================================================== */
+
+/* =====================================================
+   START: TINH CHỈNH KÍCH THƯỚC & MÀU SẮC HEADER
+   ===================================================== */
+
+/* --- 1. Cụm "Lưu Dấu Học Tập" + Icon Home (Hàng trên, bên phải) --- */
+.home-link-container {
+  /* Tăng kích thước font lên ~2 lần so với hiện tại (16px -> 32px)
+     Bạn có thể điều chỉnh con số này, ví dụ 28px hoặc 36px */
+  font-size: 32px;
+  font-weight: 700; /* Làm đậm hơn */
+
+  /* Đề xuất màu: Sử dụng màu --accent (xanh ngọc) để tạo điểm nhấn
+     nhưng không quá chói như màu --primary. */
+  color: var(--accent);
+}
+
+/* Tăng kích thước icon tương ứng với text */
+.home-link-container svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Đổi màu khi hover sang màu sáng hơn để có phản hồi tốt */
+.home-link-container:hover {
+  color: #ffffff; /* Màu trắng */
+}
+
+
+/* --- 2. Đồng hồ bấm giờ (Hàng dưới, bên phải) --- */
+.timer-container {
+  /* Tăng kích thước font lên 1.5 lần so với font cơ bản (ví dụ 16px -> 24px) */
+  font-size: 24px;
+  font-weight: 700; /* Đảm bảo chữ luôn đậm */
+  
+  /* Đề xuất màu: Sử dụng màu vàng cảnh báo, rất nổi bật và phù hợp
+     với chức năng của một đồng hồ đếm ngược. */
+  color: #facc15; /* Đây là màu vàng mà bạn đã dùng cho #timeWarn */
+  
+  /* Thêm một chút hiệu ứng đổ bóng để làm chữ nổi khối hơn */
+  text-shadow: 0 0 5px rgba(250, 204, 21, 0.3);
+}
+
+/* --- 3. Cảnh báo thời gian (5 phút cuối) --- */
+/* Chúng ta cũng cần làm cho cảnh báo nổi bật hơn */
+#timeWarn {
+  font-size: 16px; /* Giữ kích thước nhỏ hơn đồng hồ chính */
+  margin-left: 12px;
+  color: var(--bad); /* Dùng màu đỏ để tăng tính cấp bách */
+}
+
+
+/* =====================================================
+   END: TINH CHỈNH KÍCH THƯỚC & MÀU SẮC HEADER
+   ===================================================== */
