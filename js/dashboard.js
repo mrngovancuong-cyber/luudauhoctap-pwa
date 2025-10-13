@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentNameDisplay = document.getElementById('student-name-display');
     const studentClassDisplay = document.getElementById('student-class-display');
     const scoreTrendChartContainer = document.getElementById('score-trend-chart');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const historyTableBody = document.querySelector('#history-table tbody');
 
     // Khởi tạo biểu đồ, nhưng chưa có dữ liệu
     let scoreTrendChart = null;
@@ -81,8 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderScoreTrendChart(data.overview.scoreTrend);
         
         // (Trong các bước sau, chúng ta sẽ render các tab khác ở đây)
-
-        // 3. Hiển thị khu vực kết quả
+	// 3. Hiển thị bảng Lịch sử làm bài
+    	renderHistoryTable(data.history);
+        
+	// 4. Hiển thị khu vực kết quả
         resultSection.classList.remove('hidden');
     }
 
@@ -136,9 +141,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+/**
+ * Xử lý sự kiện khi click vào một nút tab
+ * @param {Event} event 
+ */
+function handleTabClick(event) {
+    // Xóa class 'active' khỏi tất cả các nút
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    // Thêm class 'active' vào nút vừa được click
+    event.target.classList.add('active');
+
+    // Lấy data-tab của nút được click (ví dụ: "history")
+    const targetTab = event.target.dataset.tab;
+
+    // Ẩn tất cả các panel nội dung
+    tabPanels.forEach(panel => {
+        if (panel.id === targetTab) {
+            panel.classList.remove('hidden'); // Hiển thị panel tương ứng
+        } else {
+            panel.classList.add('hidden');    // Ẩn các panel khác
+        }
+    });
+}
+
+/**
+ * Điền dữ liệu vào bảng Lịch sử làm bài
+ * @param {Array} historyData - Mảng dữ liệu lịch sử từ API
+ */
+function renderHistoryTable(historyData) {
+    if (!historyTableBody) return;
+
+    // Xóa nội dung cũ của bảng
+    historyTableBody.innerHTML = '';
+
+    if (!historyData || historyData.length === 0) {
+        historyTableBody.innerHTML = '<tr><td colspan="5">Không có dữ liệu lịch sử.</td></tr>';
+        return;
+    }
+
+    // Tạo các hàng mới và chèn vào bảng
+    historyData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.examTitle}</td>
+            <td>${item.score.toFixed(2)}</td>
+            <td>${item.timeSpent}</td>
+            <td>${item.leaveCount}</td>
+            <td>${item.submittedAt}</td>
+        `;
+        historyTableBody.appendChild(row);
+    });
+}
+
     // --- GẮN SỰ KIỆN ---
     searchBtn.addEventListener('click', searchStudent);
     
+    // Gắn sự kiện cho các nút tab
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', handleTabClick);
+    });
+
     // Cho phép nhấn Enter để tìm kiếm
     studentIdInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
