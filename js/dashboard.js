@@ -10,6 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanels = document.querySelectorAll('.tab-panel');
     const historyTableBody = document.querySelector('#history-table tbody');
+    // ... ngay sau historyTableBody ...
+    const topicStrengthChartContainer = document.getElementById('topic-strength-chart');
+    const levelStrengthChartContainer = document.getElementById('level-strength-chart');
+    const leaveCountChartContainer = document.getElementById('leave-count-chart');
+    const deviceUsageChartContainer = document.getElementById('device-usage-chart');
+
+    // Khai báo các biến để giữ đối tượng biểu đồ
+    let topicStrengthChart = null;
+    let levelStrengthChart = null;
+    let leaveCountChart = null;
+    let deviceUsageChart = null;
 
     // Khởi tạo biểu đồ, nhưng chưa có dữ liệu
     let scoreTrendChart = null;
@@ -76,18 +87,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Hiển thị thông tin cá nhân
+        // 1. Hiển thị thông tin cá nhân ----
         studentNameDisplay.textContent = data.profile.name;
         studentClassDisplay.textContent = `Lớp: ${data.profile.class}`;
 
-        // 2. Vẽ biểu đồ xu hướng điểm
+        // 2. Vẽ biểu đồ xu hướng điểm ----
         renderScoreTrendChart(data.overview.scoreTrend);
         
         // (Trong các bước sau, chúng ta sẽ render các tab khác ở đây)
-	// 3. Hiển thị bảng Lịch sử làm bài
+	// 3. Hiển thị bảng Lịch sử làm bài ----
     	renderHistoryTable(data.history);
         
-	// 4. Hiển thị khu vực kết quả
+	// 4. Tab Phân tích Năng lực ----
+ 	renderTopicStrengthChart(data.skills.byTopic);
+	renderLevelStrengthChart(data.skills.byLevel);
+
+        // 5. Tab Phân tích Hành vi ----
+	renderLeaveCountChart(data.behavior.leaveCountTrend);
+	renderDeviceUsageChart(data.behavior.deviceUsage);
+
+	// 6. Hiển thị khu vực kết quả
         resultSection.classList.remove('hidden');
     }
 
@@ -191,6 +210,84 @@ function renderHistoryTable(historyData) {
         `;
         historyTableBody.appendChild(row);
     });
+}
+
+/**
+ * Vẽ biểu đồ cột thể hiện độ vững kiến thức theo Chủ đề
+ * @param {Array} topicData - Mảng dữ liệu [{topic, accuracy}]
+ */
+function renderTopicStrengthChart(topicData) {
+    const options = {
+        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' },
+        series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }],
+        xaxis: { categories: topicData.map(item => item.topic) },
+        yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } },
+        plotOptions: { bar: { horizontal: true } }, // Biểu đồ cột ngang dễ đọc hơn khi có nhiều chủ đề
+        title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+        grid: { borderColor: '#374151' },
+        tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } }
+    };
+    if (topicStrengthChart) { topicStrengthChart.updateOptions(options); } 
+    else { topicStrengthChart = new ApexCharts(topicStrengthChartContainer, options); topicStrengthChart.render(); }
+}
+
+/**
+ * Vẽ biểu đồ radar thể hiện năng lực theo Cấp độ
+ * @param {Array} levelData - Mảng dữ liệu [{level, accuracy}]
+ */
+function renderLevelStrengthChart(levelData) {
+    // Sắp xếp lại cấp độ cho đúng logic: Nhận biết -> Vận dụng cao
+    const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
+    levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
+
+    const options = {
+        chart: { type: 'radar', height: 350, foreColor: '#e5e7eb' },
+        series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }],
+        labels: levelData.map(item => item.level),
+        yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } },
+        title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+        stroke: { width: 2 },
+        fill: { opacity: 0.1 },
+        markers: { size: 4 },
+        tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } }
+    };
+    if (levelStrengthChart) { levelStrengthChart.updateOptions(options); }
+    else { levelStrengthChart = new ApexCharts(levelStrengthChartContainer, options); levelStrengthChart.render(); }
+}
+
+/**
+ * Vẽ biểu đồ cột thể hiện số lần rời trang qua các bài
+ * @param {Array} leaveData - Mảng dữ liệu [{examTitle, count}]
+ */
+function renderLeaveCountChart(leaveData) {
+    const options = {
+        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' },
+        series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }],
+        xaxis: { categories: leaveData.map(item => item.examTitle) },
+        yaxis: { labels: { formatter: (val) => Math.round(val) } }, // Chỉ hiển thị số nguyên
+        title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+        grid: { borderColor: '#374151' },
+        tooltip: { theme: 'dark' }
+    };
+    if (leaveCountChart) { leaveCountChart.updateOptions(options); }
+    else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
+}
+
+/**
+ * Vẽ biểu đồ tròn thể hiện tỷ lệ sử dụng thiết bị
+ * @param {Array} deviceData - Mảng dữ liệu [{device, count}]
+ */
+function renderDeviceUsageChart(deviceData) {
+    const options = {
+        chart: { type: 'donut', height: 350, foreColor: '#e5e7eb' },
+        series: deviceData.map(item => item.count),
+        labels: deviceData.map(item => item.device),
+        title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+        legend: { position: 'bottom' },
+        tooltip: { theme: 'dark', y: { formatter: (val) => `${val} lần` } }
+    };
+    if (deviceUsageChart) { deviceUsageChart.updateOptions(options); }
+    else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
 }
 
     // --- GẮN SỰ KIỆN ---
