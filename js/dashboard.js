@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chart: {
                 type: 'line',
                 height: 350,
-                foreColor: '#e5e7eb' // Màu chữ
+                foreColor: '#e5e7eb', // Màu chữ
 		zoom: { enabled: true }
             },
             series: [{
