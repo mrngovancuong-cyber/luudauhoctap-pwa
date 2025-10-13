@@ -8,9 +8,32 @@ const $$ = (s)=>Array.from(document.querySelectorAll(s));
 const fmtTime = (sec)=>`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;
 const getParam = (k, d=null)=> new URLSearchParams(location.search).get(k) ?? d;
 
+// ===== Hàm trợ giúp cho Loading Overlay =====
+const loadingOverlay = $('#loading-overlay');
+const loadingText = $('#loading-text');
+
+function showLoader(text) {
+  // Chúng ta sẽ phải tìm lại các phần tử ở đây vì script có thể chạy trước khi DOM sẵn sàng
+  const overlay = document.getElementById('loading-overlay');
+  const textEl = document.getElementById('loading-text');
+  
+  if (overlay && textEl) {
+    textEl.textContent = text;
+    overlay.classList.remove('hidden');
+  }
+}
+
+function hideLoader() {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+  }
+}
+
 // THAY THẾ HÀM loadExam HIỆN TẠI BẰNG PHIÊN BẢN NÀY
 async function loadExam(examId) {
   console.log(`Đang gọi API để lấy đề thi ID: ${examId}`);
+  showLoader('Đang tải đề thi...'); // <<--- HIỂN THỊ	  
   try {
     const res = await fetch(`${API_URL}?action=getExamQuestions&examId=${examId}`);
     if (!res.ok) {
@@ -54,6 +77,8 @@ async function loadExam(examId) {
         </div>
       `;
     }
+  } finally {
+    hideLoader(); // <<--- ẨN
   }
 }
 
