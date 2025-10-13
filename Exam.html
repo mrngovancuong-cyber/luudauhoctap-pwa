@@ -12,19 +12,17 @@
 
 <!-- <<<< THAY THẾ DÒNG SCRIPT MATHJAX CŨ BẰNG TOÀN BỘ KHỐI NÀY >>>> -->
 
-<!-- Bước 1: Khai báo cấu hình cho MathJax TRƯỚC KHI tải nó -->
+<!-- Cấu hình MathJax tối ưu -->
 <script>
   window.MathJax = {
-    loader: {
-      load: ['[tex]/ams', '[tex]/mhchem'] // Yêu cầu tải gói ams VÀ mhchem
-    },
     tex: {
-      packages: {'[+]': ['ams', 'mhchem']} // Kích hoạt gói ams VÀ mhchem
+      // Yêu cầu sử dụng các gói 'ams' (cho toán nâng cao) và 'mhchem' (cho hóa học)
+      packages: {'[+]': ['ams', 'mhchem']}
     }
   };
 </script>
 
-<!-- Bước 2: Tải MathJax như bình thường. Nó sẽ tự động đọc cấu hình ở trên. -->
+<!-- Tải MathJax -->
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <!-- <<<< KẾT THÚC KHỐI MATHJAX >>>> -->

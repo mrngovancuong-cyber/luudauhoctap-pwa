@@ -434,3 +434,60 @@ kbd {
 .home-link-container:hover {
   color: var(--primary);
 }
+
+/* =====================================================
+   START: TINH CHỈNH LAYOUT HEADER MỚI
+   ===================================================== */
+
+/* --- 1. Sửa lỗi link bao quanh logo --- */
+.header-left a {
+  line-height: 0; 
+}
+
+/* --- 2. Tái cấu trúc Header Bottom thành Grid 3 cột --- */
+.header-bottom {
+  /* Ghi đè display: flex cũ */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* Cột trái | Cột giữa (tự động) | Cột phải */
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 36px; /* Giữ chiều cao tối thiểu cho hàng dưới */
+  overflow-x: initial; /* Bỏ overflow-x: auto cũ */
+  padding-bottom: 4px; /* Giữ lại padding */
+}
+
+/* --- 3. Đặt Navigator và Timer vào đúng vị trí --- */
+#navigator {
+  grid-column: 2 / 3; /* Đặt vào cột giữa */
+  justify-self: center; /* Căn giữa trong cột của nó */
+}
+
+.timer-container {
+  grid-column: 3 / 4; /* Đặt vào cột phải */
+  justify-self: end; /* Căn sát lề phải của cột */
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* --- 4. Tạo kiểu cho link "Lưu Dấu Học Tập" ở Header Top --- */
+.home-link-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.home-link-container:hover {
+  color: var(--primary);
+}
+
+
+/* =====================================================
+   END: TINH CHỈNH LAYOUT HEADER MỚI
+   ===================================================== */

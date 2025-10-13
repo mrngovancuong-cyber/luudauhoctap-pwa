@@ -496,7 +496,7 @@ function restoreLocal() {
       $('#btn-guidelines').hidden = true;
       $('#questions').hidden = false;
       $('#navigator').hidden = false;
-      $('#timer').hidden = false;
+      $('#timer-container').hidden = false;
       $('#answer-progress').hidden = false;
       $('#end-controls').hidden = false;
       startTimer();
@@ -757,7 +757,7 @@ function wireEvents(){
     // Hiển thị các thành phần làm bài
     $('#questions').hidden = false;
     $('#navigator').hidden = false;
-    $('#timer').hidden = false;
+    $('#timer-container').hidden = false;
     $('#answer-progress').hidden = false;
     $('#end-controls').hidden = false;
     
