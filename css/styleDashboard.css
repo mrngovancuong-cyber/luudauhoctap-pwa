@@ -1,0 +1,185 @@
+/* =====================================================
+   styleDashboard.css — Giao diện cho Bảng điều khiển Giáo viên
+   ===================================================== */
+
+/* ------------------------------
+   Biến màu mới cho Dashboard
+------------------------------ */
+:root {
+  /* Bảng màu nền Nâu-Cà phê mới */
+  --bg: #1e1a17;      /* Nền Nâu đen rất đậm, gần như màu socola đen */
+  --bg-elev: #2d2621;  /* Nâu đậm hơn một chút cho header */
+  --bg-card: #2d2621;  /* Dùng chung màu cho card */
+  --border: #443b35;  /* Nâu nhạt hơn cho đường viền */
+  
+  /* Giữ lại màu text và các màu nhấn */
+  /* Màu text trắng ngà sẽ hợp với nền nâu hơn */
+  --text: #f3e9e0;     
+  --muted: #a18f83;
+  
+  /* Các màu nhấn có thể cần điều chỉnh nhẹ để hợp nền, nhưng tạm thời giữ nguyên */
+  --primary: #818cf8; /* Màu Tím lavender sáng hơn để nổi trên nền nâu */
+  --accent: #2dd4bf;  /* Màu Xanh mòng két sáng hơn */
+  --ok: #4ade80;
+  --bad: #f87171;
+  --warn: #facc15;
+}
+/* ------------------------------
+   Reset & Body
+------------------------------ */
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* ------------------------------
+   Header
+------------------------------ */
+.dashboard-header {
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+/* ------------------------------
+   Layout chính và Card
+------------------------------ */
+.dashboard-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ------------------------------
+   Khu vực Tìm kiếm
+------------------------------ */
+.search-section h2 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+.search-bar {
+  display: flex;
+  gap: 1rem;
+}
+
+#student-id-input {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+#student-id-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+#search-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#search-btn:hover {
+  background-color: #4338ca; /* Tông đậm hơn của màu primary */
+}
+
+/* ------------------------------
+   Khu vực Kết quả
+------------------------------ */
+.student-profile {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+#student-name-display {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text);
+}
+#student-class-display {
+  font-size: 1.2rem;
+  color: var(--muted);
+}
+
+/* ------------------------------
+   Thanh điều hướng Tab
+------------------------------ */
+.tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.tab-btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+.tab-btn:hover {
+  color: var(--text);
+}
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ------------------------------
+   Nội dung Tab và Biểu đồ
+------------------------------ */
+.tab-panel {
+  /* CSS cho các panel sẽ được thêm sau */
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+.chart-container {
+  background-color: var(--bg);
+  padding: 1rem;
+  border-radius: 8px;
+}

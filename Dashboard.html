@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <!-- ... (head content: meta, title, link to a new CSS file like styleDashboard.css) ... -->
+    <title>Dashboard Giáo viên</title>
+    <!-- Link thư viện biểu đồ, ví dụ: ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="css/styleDashboard.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <h1>Bảng điều khiển Giáo viên</h1>
+        <!-- (Có thể thêm tên giáo viên, nút đăng xuất sau) -->
+    </header>
+
+    <main class="dashboard-main">
+        <!-- KHU VỰC TÌM KIẾM -->
+        <section class="card search-section">
+            <h2>Phân tích Chi tiết Học sinh</h2>
+            <div class="search-bar">
+                <input type="text" id="student-id-input" placeholder="Nhập Mã số học sinh...">
+                <button id="search-btn">Tìm kiếm</button>
+            </div>
+        </section>
+
+        <!-- KHU VỰC KẾT QUẢ (ẩn ban đầu) -->
+        <section id="result-section" class="hidden">
+            <!-- Thông tin cá nhân của học sinh sẽ hiện ở đây -->
+            <div class="student-profile">
+                <h3 id="student-name-display"></h3>
+                <span id="student-class-display"></span>
+            </div>
+
+            <!-- Thanh điều hướng Tab -->
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">Tổng quan</button>
+                <button class="tab-btn" data-tab="history">Lịch sử làm bài</button>
+                <button class="tab-btn" data-tab="skills">Phân tích Năng lực</button>
+                <button class="tab-btn" data-tab="behavior">Phân tích Hành vi</button>
+            </div>
+
+            <!-- Nội dung các Tab -->
+            <div class="tab-content">
+                <!-- Tab 1: Tổng quan -->
+                <div id="overview" class="tab-panel active">
+                    <div class="chart-container" id="score-trend-chart"></div>
+                    <!-- Các huy hiệu sẽ được thêm vào đây -->
+                </div>
+                <!-- Tab 2: Lịch sử làm bài -->
+                <div id="history" class="tab-panel hidden">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Tên bài</th>
+                                <th>Điểm</th>
+                                <th>Thời gian</th>
+                                <th>Rời trang</th>
+                                <th>Ngày nộp</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- Tab 3: Phân tích Năng lực -->
+                <div id="skills" class="tab-panel hidden">
+                    <div class="chart-container" id="topic-strength-chart"></div>
+                    <div class="chart-container" id="level-strength-chart"></div>
+                </div>
+                <!-- Tab 4: Phân tích Hành vi -->
+                <div id="behavior" class="tab-panel hidden">
+                     <div class="chart-container" id="leave-count-chart"></div>
+                     <div class="chart-container" id="device-usage-chart"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Khu vực Loading -->
+        <div id="loading-spinner" class="hidden">Đang tải dữ liệu...</div>
+    </main>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
