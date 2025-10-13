@@ -349,3 +349,4 @@ behaviorModal.addEventListener('click', (event) => {
         behaviorModal.classList.add('hidden');
     }
 });
+});
