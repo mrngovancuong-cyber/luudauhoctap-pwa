@@ -120,6 +120,7 @@ let state = {
   timerHandle: null,
   startTime: null,   
   student: { name:'', id:'', className:'', email:'' },
+  endTime: null, // <<--- THÊM DÒNG NÀY
   submitted: false, 
   leaveTimestamps: [],
 };
@@ -343,29 +344,34 @@ function updateAnsweredCount(){
 }
 
 function startTimer(){
-  // Nếu đã có một timer đang chạy, hãy xóa nó đi để tránh chạy nhiều timer cùng lúc
-  if (state.timerHandle) {
-    clearInterval(state.timerHandle);
-  }
+  if (state.timerHandle) clearInterval(state.timerHandle);
 
-  // Nếu đây là LẦN ĐẦU TIÊN bắt đầu, hãy thiết lập trạng thái
   if (!state.started) {
     state.started = true;
     state.startTime = new Date().toISOString();
+    // Tính toán và lưu thời điểm kết thúc
+    state.endTime = Date.now() + state.timeLeft * 1000;
   }
   
-  // Luôn luôn thực hiện việc đếm ngược khi hàm này được gọi
-  tick(); // Gọi tick() ngay lập tức để cập nhật giao diện
+  tick();
   state.timerHandle = setInterval(tick, 1000);
-  console.log("Timer đã bắt đầu hoặc được khởi động lại.");
+  console.log("Timer đã bắt đầu với cơ chế endTime.");
 }
+
 function tick(){
-  state.timeLeft = Math.max(0, state.timeLeft-1);
+  // Tính toán lại thời gian còn lại dựa trên endTime
+  const remainingMillis = state.endTime - Date.now();
+  state.timeLeft = Math.max(0, Math.floor(remainingMillis / 1000));
+  
   const t = $('#timer');
   if (t) t.textContent = fmtTime(state.timeLeft);
+  
   const warn = $('#timeWarn');
-  if (warn && state.timeLeft === 300) warn.hidden = false;
-  if (state.timeLeft === 0) submitExam(true);
+  if (warn && state.timeLeft <= 300 && state.timeLeft > 0) warn.hidden = false;
+  
+  if (state.timeLeft === 0) {
+    submitExam(true); // Tự động nộp bài
+  }
 }
 
 // ===== LOGIC THEO DÕI RỜI CỬA SỔ (PHIÊN BẢN NÂNG CẤP) =====
@@ -425,6 +431,7 @@ function persistLocal(){
     mode: state.mode, student: state.student,
     answers: state.answers, perQuestion: state.perQuestion,
     timeLeft: state.timeLeft, started: state.started, startTime: state.startTime,
+    endTime: state.endTime, // <<--- THÊM DÒNG NÀY
     submitted: state.submitted, // <<--- THÊM DÒNG NÀY
     lastSave: new Date().toISOString()
   };
@@ -467,6 +474,7 @@ function restoreLocal() {
     }
 
     // TRƯỜNG HỢP 2: BÀI THI ĐANG LÀM DỞ
+    state.endTime = data.endTime || null; // <<--- THÊM DÒNG NÀY
     state.student = data.student || { name:'', id:'', className:'', email:'' };
     state.answers = data.answers || {};
     state.perQuestion = data.perQuestion || {};
@@ -484,6 +492,8 @@ function restoreLocal() {
     updateUIFromState();
     
     if (state.started) {
+      $('#btn-start').hidden = true;
+      $('#btn-guidelines').hidden = true;
       $('#questions').hidden = false;
       $('#navigator').hidden = false;
       $('#timer').hidden = false;
@@ -734,8 +744,17 @@ function wireEvents(){
     // Luôn đọc thông tin học sinh khi nhấn nút
     readStudent(); 
 
+    // Kiểm tra 3 trường bắt buộc
+    if (!state.student.name || !state.student.id || !state.student.className) {
+        alert('Vui lòng điền đầy đủ Họ và tên, Mã số học sinh và Lớp để bắt đầu.');
+        return; // Dừng lại nếu chưa điền đủ
+    }
+
+    // Nếu đã điền đủ, ẩn nút "Bắt đầu làm" và "Hướng dẫn"
+    $('#btn-start').hidden = true;
+    $('#btn-guidelines').hidden = true;
+
     // Hiển thị các thành phần làm bài
-    $('#student-info').hidden = false;
     $('#questions').hidden = false;
     $('#navigator').hidden = false;
     $('#timer').hidden = false;
@@ -755,7 +774,7 @@ function wireEvents(){
     showToast('Đã lưu tạm thành công!', 'success'); // <<--- THAY THẾ
 });
 $('#btn-clear')?.addEventListener('click', ()=>{ 
-    if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài làm tạm và bắt đầu lại từ đầu?")) {
+    if (confirm("Bạn có chắc chắn muốn xoá toàn bộ bài vừa làm và bắt đầu lại từ đầu?")) {
         clearLocal(); 
         // Chúng ta không cần toast ở đây nữa vì trang sẽ tải lại ngay lập tức.
         // Nhưng nếu bạn muốn, có thể gọi toast trước khi reload.
