@@ -21,8 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBody = document.getElementById('modal-body');
     const behaviorWarningCard = document.getElementById('behavior-warning-card');
     const behaviorWarningContent = document.getElementById('behavior-warning-content');
-
-    // Khai báo các biến để giữ đối tượng biểu đồ
+    const performanceQuadrantChartContainer = document.getElementById('performance-quadrant-chart');
+    // Khai báo các biến để giữ đối tượng biểu đồ    
+    let performanceQuadrantChart = null;
     let topicStrengthChart = null;
     let levelStrengthChart = null;
     let leaveCountChart = null;
@@ -101,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Vẽ biểu đồ xu hướng điểm ----
         renderScoreTrendChart(data.overview.scoreTrend);
+	renderPerformanceQuadrantChart(data.overview.performanceQuadrant);
         
         // (Trong các bước sau, chúng ta sẽ render các tab khác ở đây)
 	// 3. Hiển thị bảng Lịch sử làm bài ----
@@ -406,6 +408,49 @@ function renderBehaviorWarnings(warningData) {
     } else {
         behaviorWarningCard.classList.add('hidden');
     }
+}
+
+/**
+ * Vẽ biểu đồ phân tán Tốc độ vs. Điểm số
+ * @param {Array} quadrantData - Mảng dữ liệu [{x, y, examTitle}]
+ */
+function renderPerformanceQuadrantChart(quadrantData) {
+    const options = {
+        chart: { type: 'scatter', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true } },
+        series: [{ name: "Bài làm", data: quadrantData.map(item => [item.x, item.y]) }],
+        xaxis: {
+            tickAmount: 10,
+            labels: { formatter: (val) => `${val.toFixed(0)}%` },
+            title: { text: '% Thời gian sử dụng' }
+        },
+        yaxis: {
+            tickAmount: 5,
+            min: 0,
+            max: 10,
+            title: { text: 'Điểm số' }
+        },
+        title: { text: 'Phân tích Phong cách làm bài', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+        grid: { borderColor: '#374151' },
+        tooltip: {
+            theme: 'dark',
+            custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                const data = quadrantData[dataPointIndex];
+                return `<div class="apexcharts-tooltip-title" style="font-size: 14px;">${data.examTitle}</div>` +
+                       `<div class="apexcharts-tooltip-series-group" style="padding: 5px;">` +
+                       `  <span>Điểm: <strong>${data.y.toFixed(2)}</strong></span><br>` +
+                       `  <span>Thời gian: <strong>${data.x.toFixed(0)}%</strong></span>` +
+                       `</div>`;
+            }
+        },
+        annotations: { // Thêm 4 vùng nền
+            xaxis: [{ x: 50, borderColor: '#9CA3AF', label: { borderColor: '#9CA3AF', style: { color: '#fff', background: '#9CA3AF' }, text: 'Nhanh | Chậm' }}],
+            yaxis: [{ y: 8, borderColor: '#9CA3AF' }, { y: 6, borderColor: '#9CA3AF' }],
+            points: []
+        }
+    };
+
+    if (performanceQuadrantChart) { performanceQuadrantChart.updateOptions(options); } 
+    else { performanceQuadrantChart = new ApexCharts(performanceQuadrantChartContainer, options); performanceQuadrantChart.render(); }
 }
 
     // --- GẮN SỰ KIỆN ---
