@@ -373,12 +373,39 @@ function renderBehaviorWarnings(warningData) {
 
     let content = '<ul>';
     warningData.forEach(item => {
-        content += `<li><strong>Bài thi "${item.examTitle}":</strong><br>${item.note}</li>`;
+        const analysis = item.analysis;
+        let notesHtml = '';
+
+        if (analysis.suspiciousCorrect >= 3) {
+            notesHtml += `<li>Có <strong>${analysis.suspiciousCorrect} lần</strong> trả lời đúng ngay sau khi rời trang (nghi vấn tham khảo đáp án).</li>`;
+        }
+        if (analysis.suspiciousIncorrect >= 3) {
+            notesHtml += `<li>Có <strong>${analysis.suspiciousIncorrect} lần</strong> trả lời sai ngay sau khi rời trang (dấu hiệu mất tập trung cao).</li>`;
+        }
+        if (analysis.stuckAndLeft) {
+            notesHtml += `<li>Hệ thống ghi nhận dấu hiệu "bế tắc" (suy nghĩ lâu ở một câu) và sau đó rời trang trong thời gian dài.</li>`;
+        }
+        if (analysis.periodicDistraction) {
+            notesHtml += `<li>Các lần rời trang xảy ra theo một chu kỳ đều đặn, cho thấy khả năng bị phân tâm có hệ thống.</li>`;
+        }
+        // Thông báo chung nếu không có gì đặc biệt nhưng vẫn rời đi nhiều
+        if (!notesHtml && analysis.totalLeaves >= 5) {
+            notesHtml += `<li>Có <strong>${analysis.totalLeaves} lần</strong> rời trang, cho thấy mức độ tập trung chưa cao.</li>`;
+        }
+
+        if (notesHtml) {
+             content += `<li><strong>Bài thi "${item.examTitle}":</strong><ul>${notesHtml}</ul></li>`;
+        }
     });
     content += '</ul>';
 
-    behaviorWarningContent.innerHTML = content;
-    behaviorWarningCard.classList.remove('hidden');
+    // Chỉ hiển thị card nếu thực sự có nội dung cần cảnh báo
+    if (content.includes('<li>')) {
+        behaviorWarningContent.innerHTML = content;
+        behaviorWarningCard.classList.remove('hidden');
+    } else {
+        behaviorWarningCard.classList.add('hidden');
+    }
 }
 
     // --- GẮN SỰ KIỆN ---
