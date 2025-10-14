@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const levelStrengthChartContainer = document.getElementById('level-strength-chart');
     const leaveCountChartContainer = document.getElementById('leave-count-chart');
     const deviceUsageChartContainer = document.getElementById('device-usage-chart');
+    const studyTimeChartContainer = document.getElementById('study-time-chart');
     const behaviorModal = document.getElementById('behavior-modal');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const modalTitle = document.getElementById('modal-title');
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let levelStrengthChart = null;
     let leaveCountChart = null;
     let deviceUsageChart = null;
+    let studyTimeChart = null;
 
     // Khởi tạo biểu đồ, nhưng chưa có dữ liệu
     let scoreTrendChart = null;
@@ -109,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 5. Tab Phân tích Hành vi ----
 	renderLeaveCountChart(data.behavior.leaveCountTrend);
 	renderDeviceUsageChart(data.behavior.deviceUsage);
+	renderStudyTimeChart(data.behavior.studyTimeDistribution);
 
 	// 6. Hiển thị khu vực kết quả
         resultSection.classList.remove('hidden');
@@ -323,6 +326,42 @@ function showBehaviorModal(data) {
     modalBody.innerHTML = content;
     behaviorModal.classList.remove('hidden');
 }
+
+/**
+ * Vẽ biểu đồ cột thể hiện phân bố thời gian làm bài trong ngày
+ * @param {Array} timeData - Mảng dữ liệu [{timeSlot, count}]
+ */
+function renderStudyTimeChart(timeData) {
+    const options = {
+        chart: { type: 'bar', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true } },
+        series: [{ name: 'Số bài làm', data: timeData.map(item => item.count) }],
+        xaxis: { categories: timeData.map(item => item.timeSlot) },
+        yaxis: { labels: { formatter: (val) => Math.round(val) } },
+        plotOptions: { 
+            bar: {
+                distributed: true, // Mỗi cột một màu
+                borderRadius: 4,
+                horizontal: false,
+            } 
+        },
+        colors: [ // Mảng màu tương ứng với các khung giờ
+            '#ef4444', // 0-5h (Khuya) - Đỏ cảnh báo
+            '#f59e0b', // 5-7h (Sáng sớm) - Vàng cam
+            '#22c55e', // 7-11h (Sáng) - Xanh lá (tốt)
+            '#f59e0b', // 11-14h (Trưa) - Vàng cam
+            '#14b8a6', // 14-18h (Chiều) - Xanh teal (tốt)
+            '#4f46e5', // 18-22h (Tối) - Tím (tốt)
+            '#ef4444'  // 22-24h (Đêm) - Đỏ cảnh báo
+        ],
+        legend: { show: false }, // Ẩn chú thích vì đã dùng màu distributed
+        title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+        grid: { borderColor: '#374151' },
+        tooltip: { theme: 'dark' }
+    };
+    if (studyTimeChart) { studyTimeChart.updateOptions(options); } 
+    else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
+}
+
     // --- GẮN SỰ KIỆN ---
     searchBtn.addEventListener('click', searchStudent);
     
