@@ -316,3 +316,28 @@ body {
 .action-btn-small:hover {
   background-color: #4338ca; /* Tông đậm hơn của màu primary */
 }
+
+/* ------------------------------
+   Card Cảnh báo Hành vi
+   ------------------------------ */
+.warning-card {
+  grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng của grid */
+  background-color: rgba(250, 204, 21, 0.1); /* Nền vàng mờ */
+  border: 1px solid var(--warn);
+}
+.warning-card h4 {
+  margin-top: 0;
+  color: var(--warn);
+}
+#behavior-warning-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+#behavior-warning-content li {
+  margin-bottom: 1rem;
+  border-left: 3px solid var(--warn);
+  padding-left: 1rem;
+}
+#behavior-warning-content strong {
+  color: var(--text);
+}

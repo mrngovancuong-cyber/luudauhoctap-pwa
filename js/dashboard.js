@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanels = document.querySelectorAll('.tab-panel');
     const historyTableBody = document.querySelector('#history table tbody');
-    // ... ngay sau historyTableBody ...
     const topicStrengthChartContainer = document.getElementById('topic-strength-chart');
     const levelStrengthChartContainer = document.getElementById('level-strength-chart');
     const leaveCountChartContainer = document.getElementById('leave-count-chart');
@@ -20,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalCloseBtn = document.getElementById('modal-close-btn');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
+    const behaviorWarningCard = document.getElementById('behavior-warning-card');
+    const behaviorWarningContent = document.getElementById('behavior-warning-content');
 
     // Khai báo các biến để giữ đối tượng biểu đồ
     let topicStrengthChart = null;
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Bắt đầu tìm kiếm dữ liệu cho học sinh có mã: ${studentId}`);
         showLoading(true); // Hiển thị spinner
         resultSection.classList.add('hidden'); // Ẩn kết quả cũ (nếu có)
+	behaviorWarningCard.classList.add('hidden');
 
         try {
             const response = await fetch(`${API_URL}?action=getStudentAnalytics&studentId=${studentId}`);
@@ -109,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	renderLevelStrengthChart(data.skills.byLevel);
 
         // 5. Tab Phân tích Hành vi ----
+	renderBehaviorWarnings(data.behavior.suspiciousNotes);
 	renderLeaveCountChart(data.behavior.leaveCountTrend);
 	renderDeviceUsageChart(data.behavior.deviceUsage);
 	renderStudyTimeChart(data.behavior.studyTimeDistribution);
@@ -360,6 +363,22 @@ function renderStudyTimeChart(timeData) {
     };
     if (studyTimeChart) { studyTimeChart.updateOptions(options); } 
     else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
+}
+
+function renderBehaviorWarnings(warningData) {
+    if (!warningData || warningData.length === 0) {
+        behaviorWarningCard.classList.add('hidden');
+        return;
+    }
+
+    let content = '<ul>';
+    warningData.forEach(item => {
+        content += `<li><strong>Bài thi "${item.examTitle}":</strong><br>${item.note}</li>`;
+    });
+    content += '</ul>';
+
+    behaviorWarningContent.innerHTML = content;
+    behaviorWarningCard.classList.remove('hidden');
 }
 
     // --- GẮN SỰ KIỆN ---
