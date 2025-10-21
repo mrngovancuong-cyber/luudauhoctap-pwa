@@ -139,7 +139,7 @@ const LEVEL_CANON = {
 function levelKey(v){ return LEVEL_CANON[v] || 'khac'; }
 
 // ===== Render =====
-// <<<< THAY THẾ TOÀN BỘ HÀM renderExam() BẰNG CÁI NÀY >>>>
+// <<<< THAY THẾ TOÀN BỘ HÀM renderExam() >>>>
 function renderExam() {
   const exam = state.exam;
   if (!exam || !exam.questions) {
@@ -175,6 +175,47 @@ function renderExam() {
       case 'fill_blank':
         answerBlockHtml = `<div class="answer-container-fill-blank"><input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời..."></div>`;
         break;
+      case 'matching':
+    	const colA = q.answers; // Tận dụng mảng answers cho Cột A
+    	const colB = q.options; // Dùng mảng options mới cho Cột B
+    
+    	// Xáo trộn Cột B để tăng độ khó
+    	const shuffledColB = [...colB].sort(() => Math.random() - 0.5);
+
+    	answerBlockHtml = `
+          <div class="matching-container">
+            <div class="matching-column">
+                <strong>Cột A</strong>
+                ${colA.map((item, index) => {
+                    const optionLetter = ['A', 'B', 'C', 'D'][index];
+                    return `<div class="matching-item-a">${optionLetter}. ${escapeHtml(item)}</div>`;
+                }).join('')}
+            </div>
+            <div class="matching-column">
+                <strong>Cột B</strong>
+                ${shuffledColB.map((item, index) => {
+                    const optionNumber = index + 1;
+                    return `<div class="matching-item-b">${optionNumber}. ${escapeHtml(item)}</div>`;
+                }).join('')}
+            </div>
+          </div>
+          <div class="matching-inputs">
+            ${colA.map((item, index) => {
+                const optionLetter = ['A', 'B', 'C', 'D'][index];
+                return `
+                    <div class="matching-input-row">
+                        <span>Ghép ${optionLetter} với:</span>
+                        <select class="matching-select" data-col-a-option="${optionLetter}">
+                            <option value="">Chọn...</option>
+                            ${colB.map((b_item, b_index) => `<option value="${b_index + 1}">${b_index + 1}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            }).join('')}
+          </div>
+    `;
+    break;
+
       case 'multiple_choice':
       default:
         const answerOptions = ['A', 'B', 'C', 'D'];
@@ -242,6 +283,11 @@ function attachDynamicListeners() {
     input.addEventListener('change', handleAnswerChange);
   });
 
+  // Thêm listener cho các select của câu hỏi ghép cặp
+  $$('.matching-select').forEach(select => {
+    select.addEventListener('change', handleMatchingChange);
+  });
+
   // Navigator (giữ nguyên, không thay đổi)
   $$('#navigator .nav-item').forEach(item => {
     item.addEventListener('click', handleNavClick);
@@ -271,6 +317,41 @@ function handleAnswerChange(e) {
   handleAnswered(qid); // Ghi nhận hành vi
   paintNavigator();
   updateAnsweredCount();
+}
+
+// Đặt hàm xử lý matching
+
+function handleMatchingChange(e) {
+  const selectElement = e.target;
+  const qCard = selectElement.closest('.q-card');
+  const qid = qCard.id.replace('card-', '');
+
+  // Thu thập tất cả các cặp đã chọn
+  const allSelects = qCard.querySelectorAll('.matching-select');
+  const pairs = [];
+  allSelects.forEach(sel => {
+    const colA = sel.dataset.colAOption;
+    const colB = sel.value;
+    if (colA && colB) {
+      pairs.push(`${colA}-${colB}`);
+    }
+  });
+
+  // Nếu đã ghép đủ tất cả các cặp, lưu lại câu trả lời
+  if (pairs.length === allSelects.length) {
+    state.answers[qid] = pairs.join(',');
+    handleAnswered(qid);
+    paintNavigator();
+    updateAnsweredCount();
+  } else {
+    // Nếu chưa ghép đủ, xóa câu trả lời cũ (nếu có)
+    if (state.answers[qid]) {
+      delete state.answers[qid];
+      handleAnswered(qid); // Vẫn gọi để cập nhật thời gian
+      paintNavigator();
+      updateAnsweredCount();
+    }
+  }
 }
 
 /**

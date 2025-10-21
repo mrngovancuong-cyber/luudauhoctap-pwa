@@ -546,3 +546,39 @@ kbd {
 /* =====================================================
    END: TINH CHỈNH KÍCH THƯỚC & MÀU SẮC HEADER
    ===================================================== */
+
+/* ===== STYLES FOR MATCHING QUESTIONS ===== */
+.matching-container { 
+    display: flex; 
+    gap: 20px; 
+    margin-bottom: 15px; 
+}
+.matching-column { 
+    flex: 1; 
+    padding: 10px;
+    background: var(--bg-elev);
+    border-radius: 6px;
+}
+.matching-item-a, .matching-item-b { 
+    margin-bottom: 8px; 
+}
+.matching-inputs { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    margin-top: 15px;
+}
+.matching-input-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    background: var(--bg-elev);
+    padding: 8px;
+    border-radius: 6px;
+}
+/* Responsive for smaller screens */
+@media (max-width: 480px) {
+    .matching-inputs {
+        grid-template-columns: 1fr;
+    }
+}
