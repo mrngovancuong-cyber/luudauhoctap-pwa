@@ -175,7 +175,10 @@ function renderExam() {
   // --- Vòng lặp chính để tạo HTML cho từng câu hỏi ---
   exam.questions.forEach((q, idx) => {
     
-let imageHtml = ''; // Khởi tạo là chuỗi rỗng
+    // ===== ĐẢM BẢO 3 DÒNG NÀY LUÔN CÓ Ở ĐÂY =====
+    let imageHtml = '';
+    let audioHtml = '';
+    let videoHtml = '';
 
 // Chỉ xử lý nếu q.imageUrl thực sự có giá trị
 if (q.imageUrl) {
