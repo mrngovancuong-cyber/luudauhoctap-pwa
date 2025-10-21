@@ -687,25 +687,44 @@ async function submitExam(auto = false) {
     exp.hidden = false;
     const studentAnswer = state.answers[qId];
     
-    // Ngăn việc chèn biểu tượng lặp lại nếu hàm được gọi nhiều lần
-    if (qTitleEl.querySelector('.result-icon')) {
-        // Đã có biểu tượng rồi, không cần làm gì thêm
-    } else {
-        // CHƯA có biểu tượng, tiến hành chèn
-        if (studentAnswer === qData.correct) {
-            exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
-            card.classList.add('correct');
-            qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
-        } else if (studentAnswer) {
-            exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-            card.classList.add('incorrect');
-            qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
-        } else {
-            exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${qData.correct}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-            // Không thêm class màu cho câu chưa trả lời
-            qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
+    // Ngăn việc chèn biểu tượng lặp lại
+if (qTitleEl.querySelector('.result-icon')) {
+    // Đã xử lý, không làm gì thêm
+} else {
+    const questionType = qData.questionType || 'multiple_choice';
+    let isCorrect = false;
+
+    // --- LOGIC KIỂM TRA ĐÁP ÁN MỚI ---
+    if (studentAnswer) {
+        if (questionType === 'fill_blank') {
+            const studentAnswerNormalized = studentAnswer.toLowerCase().trim();
+            const correctOptions = qData.correct.split('|').map(opt => opt.toLowerCase().trim());
+            if (correctOptions.includes(studentAnswerNormalized)) {
+                isCorrect = true;
+            }
+        } else { // Mặc định là trắc nghiệm
+            if (studentAnswer === qData.correct) {
+                isCorrect = true;
+            }
         }
     }
+
+    // --- LOGIC HIỂN THỊ DỰA TRÊN KẾT QUẢ `isCorrect` ---
+    if (isCorrect) {
+        exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
+        card.classList.add('correct');
+        qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
+    } else if (studentAnswer) {
+        const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
+        exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+        card.classList.add('incorrect');
+        qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
+    } else {
+        const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
+        exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+        qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
+    }
+}
 });
     }
     
