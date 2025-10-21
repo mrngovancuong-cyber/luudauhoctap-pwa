@@ -224,8 +224,6 @@ if (q.audioUrl) {
     `;
 }
     
-let videoHtml = ''; // Khởi tạo là chuỗi rỗng
-
 if (q.youtubeEmbedUrl) {
   // Ưu tiên 1: Nếu có link nhúng YouTube
   videoHtml = `
