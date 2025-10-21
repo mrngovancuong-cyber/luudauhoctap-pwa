@@ -612,7 +612,8 @@ kbd {
     border-radius: 8px;
     margin-top: 5px;
 }
-.q-video {
+
+.q-video, .q-video-iframe { /* Thêm .q-video-iframe vào đây */
     position: absolute;
     top: 0;
     left: 0;

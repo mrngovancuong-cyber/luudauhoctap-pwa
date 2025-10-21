@@ -182,9 +182,40 @@ function renderExam() {
     const audioHtml = q.audioUrl 
       ? `<div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` 
       : '';
-    const videoHtml = q.videoUrl
-      ? ` <div class="media-container"><p class="media-instruction">Xem đoạn video sau:</p><div class="video-wrapper"><video controls class="q-video"><source src="${q.videoUrl}" type="video/mp4">Trình duyệt của bạn không hỗ trợ phát video.</video></div></div>`
-      : '';
+    
+let videoHtml = ''; // Khởi tạo là chuỗi rỗng
+
+if (q.youtubeEmbedUrl) {
+  // Ưu tiên 1: Nếu có link nhúng YouTube
+  videoHtml = `
+    <div class="media-container">
+      <p class="media-instruction">Xem đoạn video sau:</p>
+      <div class="video-wrapper">
+        <iframe 
+          class="q-video-iframe" 
+          src="${q.youtubeEmbedUrl}" 
+          title="YouTube video player for question ${q.id}"
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  `;
+} else if (q.videoUrl) {
+  // Ưu tiên 2: Nếu có link file video trực tiếp
+  videoHtml = `
+    <div class="media-container">
+      <p class="media-instruction">Xem đoạn video sau:</p>
+      <div class="video-wrapper">
+        <video controls class="q-video">
+          <source src="${q.videoUrl}" type="video/mp4">
+          Trình duyệt của bạn không hỗ trợ phát video.
+        </video>
+      </div>
+    </div>
+  `;
+}
 
     // --- Tạo HTML cho khối câu trả lời dựa trên loại câu hỏi ---
     let answerBlockHtml = '';

@@ -73,3 +73,11 @@ Với Âm thanh/Video:
 Việc này khó hơn vì nhiều trang web cố tình che giấu link trực tiếp.
 Bạn có thể thử nhấp chuột phải vào trình phát và tìm tùy chọn "Copy Audio/Video Address".
 Nếu không được, cách tốt nhất vẫn là tải file đó về máy tính của bạn và tải lên Google Drive để có toàn quyền kiểm soát.
+3. Nhúng (Embed Code) từ YouTube
+Mở video bạn muốn sử dụng trên YouTube.
+Bên dưới video, nhấn vào nút Chia sẻ (Share).
+Một cửa sổ pop-up sẽ hiện ra. Hãy chọn tùy chọn đầu tiên: Nhúng (Embed).
+YouTube sẽ cung cấp cho bạn một đoạn mã HTML bắt đầu bằng <iframe ...>.
+Ví dụ: <iframe width="560" height="315" src="https://www.youtube.com/embed/H2_6cqa2cP4" ...></iframe>
+Quan trọng: Chúng ta chỉ cần URL bên trong thuộc tính src. Hãy sao chép nó.
+Trong ví dụ trên, URL cần lấy là: https://www.youtube.com/embed/H2_6cqa2cP4
