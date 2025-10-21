@@ -1,23 +1,20 @@
-https://script.google.com/macros/s/AKfycbz1h7vQGpITPiZ-JnQG6IhCSKFr6nPwWZr-7gcjzlmT0O-sXL6FG_GXQjpmCmj_KJHy/exec
+// Cách cập nhật file ở FrontEnd //
+1. Mở cmd
+2. Chuyển đến thư mục luudauhoctap
+3. Chạy 3 lệnh: git add ., git commit -m "Refactor: Improve logic for handleAnswered", và git push
 
-https://github.com/mrngovancuong-cyber/luudauhoctap-pwa.git
 
-https://luudauhoctapv1.netlify.app/?examId=TOAN6-XACSUAT-01
-
-lệnh cmd, chuyển đến thư mục luudauhoctap, chạy 3 lệnh: git add ., git commit -m "Refactor: Improve logic for handleAnswered", và git push
-
-Câu hỏi ĐIỀN KHUYẾT
+// Câu hỏi ĐIỀN KHUYẾT //
 1. Quy ước __ (Hai dấu gạch dưới)
-Ai cần biết? Giáo viên.
-Mục đích: Để soạn câu hỏi (questionContent) trên Google Sheet. Ký hiệu này giúp cho cả học sinh và hệ thống (trong tương lai) nhận biết được vị trí cần điền.
-Hệ thống có "tự biết" không? Không. Hệ thống không tự động làm gì với ký hiệu __. Nó chỉ đơn giản là hiển thị chuỗi văn bản này ra cho học sinh xem. Vai trò chính của nó là để giao tiếp giữa giáo viên và học sinh.
+Mục đích: Để soạn câu hỏi (questionContent) trên Google Sheet. Ký hiệu này giúp cho cả học sinh và hệ thống nhận biết được vị trí cần điền.
+Hệ thống không tự động làm gì với ký hiệu __. Nó chỉ đơn giản là hiển thị chuỗi văn bản này ra cho học sinh xem. Vai trò chính của nó là để giao tiếp giữa giáo viên và học sinh.
 2. Quy ước | (Dấu sổ thẳng)
-Ai cần biết? Giáo viên.
 Mục đích: Để cung cấp các phương án đáp án đúng cho hệ thống khi soạn cột correctAnswer trên Google Sheet.
 Hệ thống có "tự biết" không? Có! Đây chính là phần mà hệ thống "tự biết".
 Hàm gradeSubmission trên server đã được chúng ta lập trình để tìm ký tự |.
 Khi thấy ký tự này, nó sẽ tự động hiểu rằng chuỗi đó chứa nhiều đáp án được chấp nhận.
 Nó sẽ tách chuỗi tại các vị trí có dấu | để tạo ra một danh sách các đáp án đúng.
+
 Kết luận và Cách Hướng dẫn Giáo viên
 Khi bạn hướng dẫn một giáo viên khác sử dụng hệ thống, bạn cần chỉ cho họ cả hai quy ước này, nhưng với những lời giải thích khác nhau:
 Hướng dẫn cho Giáo viên:
@@ -31,7 +28,48 @@ Nếu có nhiều đáp án mà thầy/cô muốn chấp nhận, hãy liệt kê
 Ví dụ: nguyễn du|đại thi hào nguyễn du
 (Hệ thống sẽ tự động chấp nhận cả hai đáp án này từ học sinh).
 Hệ thống sẽ tự động xử lý việc chấm điểm dựa trên các đáp án mà thầy/cô cung cấp."
-Tóm lại:
-Giáo viên là người cung cấp quy tắc cho hệ thống thông qua các quy ước.
-Hệ thống là người thực thi các quy tắc đó một cách tự động.
-Việc giáo viên biết và sử dụng quy ước | là rất quan trọng để khai thác hết sự linh hoạt của dạng câu hỏi điền khuyết.
+
+
+// Cách lấy link âm thanh, hình ảnh để chèn vào đề thi //
+1. Sử dụng file từ Google Drive (Khuyến khích)
+Đây là lựa chọn tốt nhất vì nó ổn định, miễn phí và bạn có toàn quyền kiểm soát file.
+Loại link có thể dùng: Link Tải trực tiếp (Direct Download Link)
+Bạn không thể dùng link "Chia sẻ" thông thường. Bạn phải chuyển nó thành link tải trực tiếp.
+Cách lấy link Tải trực tiếp:
+Tải file lên Google Drive: Tải file hình ảnh (.jpg, .png, .gif) hoặc âm thanh (.mp3) của bạn lên.
+Lấy link Chia sẻ:
+Nhấp chuột phải vào file, chọn Chia sẻ (Share).
+Trong phần "Quyền truy cập chung" (General access), hãy đổi thành "Bất kỳ ai có đường liên kết" (Anyone with the link).
+Nhấn "Sao chép đường liên kết" (Copy link).
+Trích xuất FILE_ID:
+Đường link bạn vừa sao chép sẽ có dạng:
+https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=sharing
+Phần chữ và số ở giữa hai dấu / chính là FILE_ID. Hãy copy chuỗi này.
+Tạo link Tải trực tiếp:
+Sử dụng cấu trúc sau và dán FILE_ID của bạn vào:
+https://drive.google.com/uc?id=FILE_ID
+Ví dụ: https://drive.google.com/uc?id=1a2b3c4d5e6f7g8h9i0j
+Đây chính là link cuối cùng bạn sẽ dán vào cột imageUrl hoặc audioUrl trên Google Sheet. Khi trình duyệt truy cập link này, nó sẽ tải thẳng file về thay vì mở trang xem trước của Google Drive.
+Lưu ý cho Video:
+Đối với video trên Google Drive, quy trình tương tự. Link uc?id= vẫn hoạt động.
+Tuy nhiên, video thường có dung lượng lớn. Một lựa chọn tốt hơn là tải video lên YouTube dưới dạng "Không công khai" (Unlisted) và nhúng (embed) video đó vào. Nhưng để đơn giản, hiện tại chúng ta chỉ tập trung vào link trực tiếp.
+2. Sử dụng file từ các trang web khác
+Bạn hoàn toàn có thể dùng hình ảnh, âm thanh từ các trang web khác, nhưng cần phải tuân thủ một yêu cầu CỰC KỲ QUAN TRỌNG.
+Yêu cầu về Định dạng Link: Phải là Link Trực tiếp đến file
+Link phải trỏ thẳng đến file media, không phải là một trang web chứa file đó.
+Link đúng (Direct Link):
+Kết thúc bằng đuôi file như .jpg, .png, .gif, .mp3, .wav, .mp4.
+Khi bạn dán link này vào trình duyệt, nó sẽ chỉ hiển thị hình ảnh hoặc chỉ phát âm thanh, chứ không có giao diện của trang web nào khác.
+Ví dụ đúng: https://i.imgur.com/8X9Z1bH.jpg
+Link sai (Indirect Link):
+Là link đến một trang HTML chứa hình ảnh/âm thanh.
+Ví dụ sai: https://imgur.com/gallery/8X9Z1bH (Đây là link đến trang gallery của Imgur, không phải link trực tiếp đến file ảnh).
+Cách lấy link Trực tiếp từ web khác:
+Với Hình ảnh:
+Trên trang web, nhấp chuột phải vào hình ảnh bạn muốn.
+Chọn "Sao chép địa chỉ hình ảnh" (Copy Image Address) hoặc "Copy Image Link".
+Dán link vừa copy vào Google Sheet. Nó thường sẽ có đuôi .jpg, .png...
+Với Âm thanh/Video:
+Việc này khó hơn vì nhiều trang web cố tình che giấu link trực tiếp.
+Bạn có thể thử nhấp chuột phải vào trình phát và tìm tùy chọn "Copy Audio/Video Address".
+Nếu không được, cách tốt nhất vẫn là tải file đó về máy tính của bạn và tải lên Google Drive để có toàn quyền kiểm soát.

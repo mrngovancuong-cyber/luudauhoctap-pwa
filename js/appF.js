@@ -138,16 +138,25 @@ const LEVEL_CANON = {
 };
 function levelKey(v){ return LEVEL_CANON[v] || 'khac'; }
 
-// ===== Render =====
-// <<<< THAY THẾ TOÀN BỘ HÀM renderExam() >>>>
+// <<<< THAY THẾ TOÀN BỘ HÀM renderExam() BẰNG PHIÊN BẢN NÀY >>>>
+
 function renderExam() {
   const exam = state.exam;
   if (!exam || !exam.questions) {
-    document.getElementById('questions').innerHTML = "<p>Lỗi: Không tải được câu hỏi.</p>";
+    // Xử lý trường hợp không tải được đề
+    const questionsContainer = document.getElementById('questions');
+    if (questionsContainer) {
+      questionsContainer.innerHTML = `
+        <div class="card" style="text-align: center; color: var(--bad);">
+          <h3>Lỗi: Không tải được câu hỏi.</h3>
+          <p>Dữ liệu đề bài nhận về không hợp lệ.</p>
+        </div>
+      `;
+    }
     return;
   }
 
-   // Cập nhật tiêu đề trang và tiêu đề chính
+  // --- Cập nhật thông tin chung của trang ---
   const pageTitle = exam.title || 'Luyện tập và Kiểm tra';
   document.title = pageTitle;
   const examTitleEl = document.getElementById('examTitle');
@@ -163,103 +172,147 @@ function renderExam() {
   const totalCountEl = document.getElementById('totalCount');
   if(totalCountEl) totalCountEl.textContent = exam.questions.length;
 
-  // Vòng lặp forEach để tạo HTML
+  // --- Vòng lặp chính để tạo HTML cho từng câu hỏi ---
   exam.questions.forEach((q, idx) => {
+    
+    // --- Tạo HTML cho Media (Hình ảnh, Âm thanh, Video) ---
     const imageHtml = q.imageUrl 
-  ? `<div class="media-container"><img data-src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image lazy-image"></div>` 
-  : '';
-    const audioHtml = q.audioUrl ? ` <div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` : '';
+      ? `<div class="media-container"><img data-src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image lazy-image"></div>` 
+      : '';
+    const audioHtml = q.audioUrl 
+      ? `<div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` 
+      : '';
+    const videoHtml = q.videoUrl
+      ? ` <div class="media-container"><p class="media-instruction">Xem đoạn video sau:</p><div class="video-wrapper"><video controls class="q-video"><source src="${q.videoUrl}" type="video/mp4">Trình duyệt của bạn không hỗ trợ phát video.</video></div></div>`
+      : '';
+
+    // --- Tạo HTML cho khối câu trả lời dựa trên loại câu hỏi ---
     let answerBlockHtml = '';
     const questionType = q.questionType || 'multiple_choice';
+
     switch (questionType) {
       case 'fill_blank':
         answerBlockHtml = `<div class="answer-container-fill-blank"><input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời..."></div>`;
         break;
-      case 'matching':
-    	const colA = q.answers; // Tận dụng mảng answers cho Cột A
-    	const colB = q.options; // Dùng mảng options mới cho Cột B
-    
-    	// Xáo trộn Cột B để tăng độ khó
-    	const shuffledColB = [...colB].sort(() => Math.random() - 0.5);
 
-    	answerBlockHtml = `
-          <div class="matching-container">
-            <div class="matching-column">
-                <strong>Cột A</strong>
-                ${colA.map((item, index) => {
+      case 'matching':
+        const colA = q.answers;
+        const colB = q.options || []; // Đảm bảo an toàn nếu không có options
+        const shuffledColB = [...colB].sort(() => Math.random() - 0.5);
+
+        answerBlockHtml = `
+            <div class="matching-container">
+                <div class="matching-column">
+                    <strong>Cột A</strong>
+                    ${colA.map((item, index) => `<div class="matching-item-a">${['A', 'B', 'C', 'D'][index]}. ${escapeHtml(item)}</div>`).join('')}
+                </div>
+                <div class="matching-column">
+                    <strong>Cột B</strong>
+                    ${shuffledColB.map((item, index) => `<div class="matching-item-b">${index + 1}. ${escapeHtml(item)}</div>`).join('')}
+                </div>
+            </div>
+            <div class="matching-inputs">
+                ${colA.map((_, index) => {
                     const optionLetter = ['A', 'B', 'C', 'D'][index];
-                    return `<div class="matching-item-a">${optionLetter}. ${escapeHtml(item)}</div>`;
+                    return `
+                        <div class="matching-input-row">
+                            <span>Ghép ${optionLetter} với:</span>
+                            <select class="matching-select" data-col-a-option="${optionLetter}">
+                                <option value="">Chọn...</option>
+                                ${colB.map((_, b_index) => `<option value="${b_index + 1}">${b_index + 1}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
                 }).join('')}
             </div>
-            <div class="matching-column">
-                <strong>Cột B</strong>
-                ${shuffledColB.map((item, index) => {
-                    const optionNumber = index + 1;
-                    return `<div class="matching-item-b">${optionNumber}. ${escapeHtml(item)}</div>`;
+        `;
+        break;
+
+      case 'ordering':
+        const shuffledAnswers = [...q.answers].sort(() => Math.random() - 0.5);
+        const answerOptions = ['A', 'B', 'C', 'D'];
+        answerBlockHtml = `
+            <p class="ordering-instruction">Kéo và thả các mục dưới đây vào đúng thứ tự:</p>
+            <div class="ordering-container" id="ordering-container-${q.id}">
+                ${shuffledAnswers.map(ans => {
+                    const originalIndex = q.answers.indexOf(ans);
+                    const optionLetter = answerOptions[originalIndex];
+                    return `<div class="ordering-item" data-id="${optionLetter}">${escapeHtml(ans)}</div>`;
                 }).join('')}
             </div>
-          </div>
-          <div class="matching-inputs">
-            ${colA.map((item, index) => {
-                const optionLetter = ['A', 'B', 'C', 'D'][index];
-                return `
-                    <div class="matching-input-row">
-                        <span>Ghép ${optionLetter} với:</span>
-                        <select class="matching-select" data-col-a-option="${optionLetter}">
-                            <option value="">Chọn...</option>
-                            ${colB.map((b_item, b_index) => `<option value="${b_index + 1}">${b_index + 1}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
-            }).join('')}
-          </div>
-    `;
-    break;
+        `;
+        break;
 
       case 'multiple_choice':
       default:
-        const answerOptions = ['A', 'B', 'C', 'D'];
+        const mcOptions = ['A', 'B', 'C', 'D'];
         answerBlockHtml = q.answers.map((ans, ansIdx) => {
-          const option = answerOptions[ansIdx];
+          const option = mcOptions[ansIdx];
           return `<label class="answer" for="ans-${q.id}-${option}"><input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}"><span>${escapeHtml(ans)}</span></label>`;
         }).join('');
         break;
     }
-    const questionCardHtml = `<div class="q-card" id="card-${q.id}" data-question-type="${questionType}"><div class="q-head"><div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div><div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div></div>${imageHtml}${audioHtml}<div class="answers">${answerBlockHtml}</div><div class="explain-block" id="exp-${q.id}" hidden><strong>Giải thích:</strong><span class="explain"></span></div></div>`;
+
+    // --- Ghép tất cả các mảnh HTML lại ---
+    const questionCardHtml = `
+      <div class="q-card" id="card-${q.id}" data-question-type="${questionType}">
+        <div class="q-head">
+          <div class="q-title">Câu ${idx + 1}: ${escapeHtml(q.question)}</div>
+          <div class="q-meta">Chủ đề: ${escapeHtml(q.topic)} | Cấp độ: ${escapeHtml(q.level)}</div>
+        </div>
+        ${imageHtml}
+        ${audioHtml}
+	${videoHtml}
+        <div class="answers">${answerBlockHtml}</div>
+        <div class="explain-block" id="exp-${q.id}" hidden>
+          <strong>Giải thích:</strong>
+          <span class="explain"></span>
+        </div>
+      </div>
+    `;
+
     questionsContainer.insertAdjacentHTML('beforeend', questionCardHtml);
+
+    // --- Tạo item cho navigator ---
     if(navigatorContainer){
         const navItemHtml = `<div class="nav-item" data-qid="${q.id}">${idx + 1}</div>`;
         navigatorContainer.insertAdjacentHTML('beforeend', navItemHtml);
     }
   });
 
-  // === PHIÊN BẢN HOÀN CHỈNH: Điều phối tất cả theo đúng thứ tự ===
+  // --- Hàm điều phối các tác vụ sau khi render HTML ---
   function finalizeUI() {
     if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
       console.log("Bắt đầu xử lý công thức toán bằng MathJax...");
       
-      window.MathJax.typesetPromise()
-        .then(() => {
-          console.log("MathJax đã hoàn thành.");
+      const setupInteractions = () => {
           console.log("Bắt đầu khôi phục dữ liệu vào giao diện...");
           restoreLocal();
           console.log("Bắt đầu gắn các event listener...");
           attachDynamicListeners();
-          // ===> THÊM LỜI GỌI HÀM MỚI TẠI ĐÂY <===
           console.log("Kích hoạt Lazy Loading cho hình ảnh...");
-          activateLazyLoading();          
+          activateLazyLoading();
+          console.log("Kích hoạt câu hỏi sắp xếp...");
+          activateOrderingQuestions();
           console.log("Giao diện đã sẵn sàng.");
+      };
+
+      window.MathJax.typesetPromise()
+        .then(() => {
+          console.log("MathJax đã hoàn thành.");
+          setupInteractions();
         })
         .catch((err) => {
           console.error('Lỗi xảy ra trong quá trình MathJax xử lý:', err);
-          restoreLocal();
-          attachDynamicListeners();
-          activateLazyLoading(); // <--- Thêm vào đây nữa
+          setupInteractions(); 
         });
+
     } else {
       setTimeout(finalizeUI, 150);
     }
   }
+
+  // Bắt đầu chu trình
   finalizeUI();
 }
   
@@ -521,15 +574,6 @@ function persistLocal(){
 }
 
 // <<<< THAY THẾ HÀM restoreLocal() CŨ BẰNG CỤM 2 HÀM NÀY >>>>
-
-// js/appF.js
-
-// <<<< THAY THẾ TOÀN BỘ HÀM restoreLocal() BẰNG PHIÊN BẢN NÀY >>>>
-
-// js/appF.js
-
-// <<<< THAY THẾ TOÀN BỘ CỤM 2 HÀM NÀY >>>>
-
 function restoreLocal() {
   if (!state.exam) return;
   
@@ -834,6 +878,38 @@ function setButtonsDisabled(disabled) {
         el.removeAttribute('disabled');
       }
     }
+  });
+}
+
+// Hàm xử lý câu hỏi dạng Matching
+
+function activateOrderingQuestions() {
+  // Tìm tất cả các container của câu hỏi sắp xếp
+  const orderingContainers = $$('.ordering-container');
+  
+  orderingContainers.forEach(container => {
+    const qid = container.id.replace('ordering-container-', '');
+    
+    // Kích hoạt SortableJS trên mỗi container
+    new Sortable(container, {
+      animation: 150, // Hiệu ứng chuyển động
+      ghostClass: 'sortable-ghost', // Class cho "bóng ma" khi kéo
+      
+      // Sự kiện được gọi sau khi người dùng thả một mục
+      onEnd: function (evt) {
+        // Thu thập thứ tự mới của các mục
+        const items = Array.from(evt.target.children);
+        const newOrder = items.map(item => item.dataset.id); // Lấy ra các ID (A, B, C, D)
+        
+        // Lưu lại câu trả lời dưới dạng chuỗi
+        state.answers[qid] = newOrder.join(',');
+        
+        // Cập nhật giao diện và hành vi
+        handleAnswered(qid);
+        paintNavigator();
+        updateAnsweredCount();
+      }
+    });
   });
 }
 

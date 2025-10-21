@@ -582,3 +582,40 @@ kbd {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== STYLES FOR ORDERING QUESTIONS ===== */
+.ordering-instruction { font-style: italic; color: var(--muted); }
+.ordering-container { border: 1px dashed var(--border); border-radius: 8px; padding: 10px; }
+.ordering-item {
+    background: var(--bg-elev);
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    cursor: grab;
+    border: 1px solid var(--border);
+}
+.ordering-item:last-child { margin-bottom: 0; }
+/* Class được SortableJS tự động thêm vào khi đang kéo */
+.sortable-ghost {
+    opacity: 0.4;
+    background: var(--primary);
+}
+
+/* ===== STYLES FOR VIDEO ===== */
+.video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* Tỷ lệ 16:9 */
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+    background: #000;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+.q-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
