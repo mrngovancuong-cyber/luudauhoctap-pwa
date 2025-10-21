@@ -850,36 +850,57 @@ if (qTitleEl.querySelector('.result-icon')) {
     const questionType = qData.questionType || 'multiple_choice';
     let isCorrect = false;
 
-    // --- LOGIC KIỂM TRA ĐÁP ÁN MỚI ---
-    if (studentAnswer) {
-        if (questionType === 'fill_blank') {
+    let isCorrect = false;
+
+// --- LOGIC KIỂM TRA ĐÁP ÁN CHO TẤT CẢ CÁC DẠNG ---
+if (studentAnswer) {
+    switch (questionType) {
+        case 'fill_blank': {
             const studentAnswerNormalized = studentAnswer.toLowerCase().trim();
             const correctOptions = qData.correct.split('|').map(opt => opt.toLowerCase().trim());
             if (correctOptions.includes(studentAnswerNormalized)) {
                 isCorrect = true;
             }
-        } else { // Mặc định là trắc nghiệm
+            break;
+        }
+        case 'matching':
+        case 'ordering': {
+            // Chuẩn hóa bằng cách loại bỏ ký tự phân cách, viết hoa, sắp xếp để so sánh
+            const normalize = (str) => (str || "").replace(/[\s,-]/g, '').toUpperCase().split('').sort().join('');
+            
+            const studentNormalized = normalize(studentAnswer);
+            const correctNormalized = normalize(qData.correct);
+
+            if (studentNormalized === correctNormalized) {
+                isCorrect = true;
+            }
+            break;
+        }
+        case 'multiple_choice':
+        default: {
             if (studentAnswer === qData.correct) {
                 isCorrect = true;
             }
+            break;
         }
     }
+}
 
-    // --- LOGIC HIỂN THỊ DỰA TRÊN KẾT QUẢ `isCorrect` ---
-    if (isCorrect) {
-        exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
-        card.classList.add('correct');
-        qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
-    } else if (studentAnswer) {
-        const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
-        exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-        card.classList.add('incorrect');
-        qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
-    } else {
-        const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
-        exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-        qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
-    }
+// --- LOGIC HIỂN THỊ DỰA TRÊN KẾT QUẢ `isCorrect` (GIỮ NGUYÊN) ---
+if (isCorrect) {
+    exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
+    card.classList.add('correct');
+    qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
+} else if (studentAnswer) {
+    const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
+    exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+    card.classList.add('incorrect');
+    qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
+} else {
+    const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
+    exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+    qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
+}
 }
 });
     }
