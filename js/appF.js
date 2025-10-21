@@ -985,13 +985,16 @@ function setButtonsDisabled(disabled) {
 
 // Hàm xử lý câu hỏi dạng Matching
 
+// <<<< THAY THẾ TOÀN BỘ HÀM NÀY >>>>
 function activateOrderingQuestions() {
+  // Tìm tất cả các container của câu hỏi sắp xếp
   const orderingQuestions = $$('.q-card[data-question-type="ordering"]');
   
   orderingQuestions.forEach(qCard => {
+    // ===== SỬA LỖI: KHAI BÁO `qid` Ở ĐÂY =====
     const qid = qCard.id.replace('card-', '');
     const slots = qCard.querySelectorAll('.ordering-slot');
-    const sourceContainer = qCard.querySelector(`#ordering-source-${qId}`);
+    const sourceContainer = qCard.querySelector(`#ordering-source-${qid}`); // Sửa lại tên biến cho đúng
 
     if (!slots.length || !sourceContainer) return;
 
@@ -999,13 +1002,10 @@ function activateOrderingQuestions() {
     const handleSortEnd = () => {
       const itemsInSlots = qCard.querySelectorAll('.ordering-slots .ordering-item');
       
-      // Chỉ lưu nếu tất cả các khe đã được lấp đầy
       if (itemsInSlots.length === slots.length) {
-        // Sắp xếp các item theo vị trí thực tế của chúng trong DOM
         const sortedItems = Array.from(itemsInSlots).sort((a, b) => {
           const slotA = a.closest('.ordering-slot');
           const slotB = b.closest('.ordering-slot');
-          // So sánh index của các khe cắm cha
           return Array.from(slots).indexOf(slotA) - Array.from(slots).indexOf(slotB);
         });
         
@@ -1023,8 +1023,8 @@ function activateOrderingQuestions() {
     // --- Kích hoạt Sortable cho Cột Phải (Nguồn) ---
     new Sortable(sourceContainer, {
       group: {
-        name: `group-${qid}`,
-        pull: true, // 'clone' để item không bị xóa khỏi cột nguồn
+        name: `group-${qid}`, // Bây giờ biến `qid` đã tồn tại
+        pull: true,
         put: true
       },
       animation: 150,
@@ -1035,22 +1035,19 @@ function activateOrderingQuestions() {
     slots.forEach(slot => {
       new Sortable(slot, {
         group: {
-          name: `group-${qid}`,
+          name: `group-${qid}`, // Bây giờ biến `qid` đã tồn tại
           pull: true,
           put: true
         },
         animation: 150,
         ghostClass: 'sortable-ghost',
-        
-        // Logic quan trọng: Chỉ cho phép MỘT item trong mỗi khe
         onAdd: function (evt) {
           if (slot.getElementsByClassName('ordering-item').length > 1) {
-            // Nếu đã có item, đẩy item cũ về lại cột nguồn
             const oldItem = (evt.from === sourceContainer) ? slot.children[0] : slot.children[1];
             sourceContainer.appendChild(oldItem);
           }
         },
-        onEnd: handleSortEnd // Gọi hàm xử lý chung khi kết thúc
+        onEnd: handleSortEnd
       });
     });
   });
