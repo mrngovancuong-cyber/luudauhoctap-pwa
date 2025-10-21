@@ -850,8 +850,6 @@ if (qTitleEl.querySelector('.result-icon')) {
     const questionType = qData.questionType || 'multiple_choice';
     let isCorrect = false;
 
-    let isCorrect = false;
-
 // --- LOGIC KIỂM TRA ĐÁP ÁN CHO TẤT CẢ CÁC DẠNG ---
 if (studentAnswer) {
     switch (questionType) {
