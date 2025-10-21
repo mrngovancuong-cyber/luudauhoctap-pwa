@@ -175,13 +175,51 @@ function renderExam() {
   // --- Vòng lặp chính để tạo HTML cho từng câu hỏi ---
   exam.questions.forEach((q, idx) => {
     
-    // --- Tạo HTML cho Media (Hình ảnh, Âm thanh, Video) ---
-    const imageHtml = q.imageUrl 
-      ? `<div class="media-container"><img data-src="${q.imageUrl}" alt="Hình ảnh minh họa" class="q-image lazy-image"></div>` 
-      : '';
-    const audioHtml = q.audioUrl 
-      ? `<div class="media-container"><p class="media-instruction">Nghe đoạn âm thanh sau:</p><audio controls src="${q.audioUrl}" class="q-audio">Trình duyệt không hỗ trợ.</audio></div>` 
-      : '';
+let imageHtml = ''; // Khởi tạo là chuỗi rỗng
+
+// Chỉ xử lý nếu q.imageUrl thực sự có giá trị
+if (q.imageUrl) {
+    const imageUrlFromData = q.imageUrl;
+    
+    // Kiểm tra xem nó có phải là một URL đầy đủ hay không
+    const isFullUrl = imageUrlFromData.startsWith('http://') || imageUrlFromData.startsWith('https://');
+    
+    // Xây dựng src dựa trên kết quả kiểm tra
+    const imageSrc = isFullUrl
+      ? imageUrlFromData 
+      : `/api/gdrive-proxy/${imageUrlFromData}`;
+
+    // Tạo HTML hoàn chỉnh, vẫn giữ nguyên cơ chế lazy loading
+    imageHtml = `
+        <div class="media-container">
+            <img data-src="${imageSrc}" alt="Hình ảnh minh họa cho câu hỏi" class="q-image lazy-image">
+        </div>
+    `;
+}
+
+// Chỉ xử lý nếu q.audioUrl thực sự có giá trị
+if (q.audioUrl) {
+    const audioUrlFromData = q.audioUrl;
+    
+    // Kiểm tra xem nó có phải là một URL đầy đủ hay không
+    const isFullUrl = audioUrlFromData.startsWith('http://') || audioUrlFromData.startsWith('https://');
+    
+    // Xây dựng src dựa trên kết quả kiểm tra
+    const audioSrc = isFullUrl
+      ? audioUrlFromData 
+      : `/api/gdrive-proxy/${audioUrlFromData}`;
+
+    // Tạo HTML hoàn chỉnh
+    audioHtml = `
+        <div class="media-container">
+            <p class="media-instruction">Nghe đoạn âm thanh sau:</p>
+            <audio controls class="q-audio" preload="metadata">
+                <source src="${audioSrc}" type="audio/mpeg">
+                Trình duyệt của bạn không hỗ trợ phát âm thanh.
+            </audio>
+        </div>
+    `;
+}
     
 let videoHtml = ''; // Khởi tạo là chuỗi rỗng
 
@@ -260,19 +298,32 @@ if (q.youtubeEmbedUrl) {
         break;
 
       case 'ordering':
-        const shuffledAnswers = [...q.answers].sort(() => Math.random() - 0.5);
-        const answerOptions = ['A', 'B', 'C', 'D'];
-        answerBlockHtml = `
-            <p class="ordering-instruction">Kéo và thả các mục dưới đây vào đúng thứ tự:</p>
-            <div class="ordering-container" id="ordering-container-${q.id}">
+    // Xáo trộn các lựa chọn để hiển thị ở cột bên phải
+    const shuffledAnswers = [...q.answers].sort(() => Math.random() - 0.5);
+    const answerOptions = ['A', 'B', 'C', 'D']; // Giả định ID của các mục
+
+    answerBlockHtml = `
+        <p class="ordering-instruction">Kéo và thả các mục từ cột phải vào đúng vị trí ở cột trái:</p>
+        <div class="ordering-layout">
+            <!-- Cột trái: Các khe cắm cố định -->
+            <div id="ordering-slots-${q.id}" class="ordering-slots">
+                ${q.answers.map((_, index) => `
+                    <div class="ordering-slot">
+                        <span class="ordering-slot-number">${index + 1}.</span>
+                    </div>
+                `).join('')}
+            </div>
+            <!-- Cột phải: Các mục có thể kéo -->
+            <div id="ordering-source-${q.id}" class="ordering-source-container">
                 ${shuffledAnswers.map(ans => {
                     const originalIndex = q.answers.indexOf(ans);
                     const optionLetter = answerOptions[originalIndex];
                     return `<div class="ordering-item" data-id="${optionLetter}">${escapeHtml(ans)}</div>`;
                 }).join('')}
             </div>
-        `;
-        break;
+        </div>
+    `;
+    break;
 
       case 'multiple_choice':
       default:
@@ -934,30 +985,59 @@ function setButtonsDisabled(disabled) {
 // Hàm xử lý câu hỏi dạng Matching
 
 function activateOrderingQuestions() {
-  // Tìm tất cả các container của câu hỏi sắp xếp
-  const orderingContainers = $$('.ordering-container');
+  // Tìm tất cả các câu hỏi dạng sắp xếp
+  const orderingQuestions = $$('.q-card[data-question-type="ordering"]');
   
-  orderingContainers.forEach(container => {
-    const qid = container.id.replace('ordering-container-', '');
-    
-    // Kích hoạt SortableJS trên mỗi container
-    new Sortable(container, {
-      animation: 150, // Hiệu ứng chuyển động
-      ghostClass: 'sortable-ghost', // Class cho "bóng ma" khi kéo
-      
-      // Sự kiện được gọi sau khi người dùng thả một mục
+  orderingQuestions.forEach(qCard => {
+    const qid = qCard.id.replace('card-', '');
+    const slotsContainer = qCard.querySelector(`#ordering-slots-${qid}`);
+    const sourceContainer = qCard.querySelector(`#ordering-source-${qid}`);
+
+    if (!slotsContainer || !sourceContainer) return;
+
+    // Kích hoạt SortableJS cho cả hai cột, và liên kết chúng với nhau
+    const commonOptions = {
+      group: `group-${qid}`, // Đặt cùng một group để có thể kéo qua lại
+      animation: 150,
+      ghostClass: 'sortable-ghost',
       onEnd: function (evt) {
-        // Thu thập thứ tự mới của các mục
-        const items = Array.from(evt.target.children);
-        const newOrder = items.map(item => item.dataset.id); // Lấy ra các ID (A, B, C, D)
+        // Sự kiện này sẽ được gọi mỗi khi có sự thay đổi
+        const itemsInSlots = Array.from(slotsContainer.querySelectorAll('.ordering-item'));
         
-        // Lưu lại câu trả lời dưới dạng chuỗi
-        state.answers[qid] = newOrder.join(',');
+        // Chỉ lưu câu trả lời nếu tất cả các khe đã được lấp đầy
+        if (itemsInSlots.length === slotsContainer.children.length) {
+          const newOrder = itemsInSlots.map(item => item.dataset.id);
+          state.answers[qid] = newOrder.join(',');
+        } else {
+          // Nếu chưa lấp đầy, xóa câu trả lời cũ
+          delete state.answers[qid];
+        }
         
         // Cập nhật giao diện và hành vi
         handleAnswered(qid);
         paintNavigator();
         updateAnsweredCount();
+      }
+    };
+
+    // Kích hoạt cho cột phải (nguồn)
+    new Sortable(sourceContainer, commonOptions);
+
+    // Kích hoạt cho cột trái (khe cắm)
+    new Sortable(slotsContainer, {
+      ...commonOptions,
+      // Thêm class cho khe khi một mục được kéo qua
+      onDragOver: function(evt) {
+          const targetSlot = evt.to.children[evt.newDraggableIndex];
+          if (targetSlot && targetSlot.classList.contains('ordering-slot')) {
+              targetSlot.classList.add('sortable-dragover');
+          }
+      },
+      onDragLeave: function(evt) {
+          const targetSlot = evt.from.children[evt.oldDraggableIndex];
+           if (targetSlot && targetSlot.classList.contains('ordering-slot')) {
+              targetSlot.classList.remove('sortable-dragover');
+          }
       }
     });
   });

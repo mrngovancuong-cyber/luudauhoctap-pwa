@@ -46,13 +46,10 @@ Trích xuất FILE_ID:
 https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=sharing
 Phần chữ và số ở giữa hai dấu / chính là FILE_ID. Hãy copy chuỗi này.
 Tạo link Tải trực tiếp:
-Sử dụng cấu trúc sau và dán FILE_ID của bạn vào:
-https://drive.google.com/uc?id=FILE_ID
-Ví dụ: https://drive.google.com/uc?id=1a2b3c4d5e6f7g8h9i0j
+Dán FILE_ID của bạn cột audio hoặc image tương ứng:
+Ví dụ: 1a2b3c4d5e6f7g8h9i0j
 Đây chính là link cuối cùng bạn sẽ dán vào cột imageUrl hoặc audioUrl trên Google Sheet. Khi trình duyệt truy cập link này, nó sẽ tải thẳng file về thay vì mở trang xem trước của Google Drive.
-Lưu ý cho Video:
-Đối với video trên Google Drive, quy trình tương tự. Link uc?id= vẫn hoạt động.
-Tuy nhiên, video thường có dung lượng lớn. Một lựa chọn tốt hơn là tải video lên YouTube dưới dạng "Không công khai" (Unlisted) và nhúng (embed) video đó vào. Nhưng để đơn giản, hiện tại chúng ta chỉ tập trung vào link trực tiếp.
+
 2. Sử dụng file từ các trang web khác
 Bạn hoàn toàn có thể dùng hình ảnh, âm thanh từ các trang web khác, nhưng cần phải tuân thủ một yêu cầu CỰC KỲ QUAN TRỌNG.
 Yêu cầu về Định dạng Link: Phải là Link Trực tiếp đến file
@@ -73,6 +70,7 @@ Với Âm thanh/Video:
 Việc này khó hơn vì nhiều trang web cố tình che giấu link trực tiếp.
 Bạn có thể thử nhấp chuột phải vào trình phát và tìm tùy chọn "Copy Audio/Video Address".
 Nếu không được, cách tốt nhất vẫn là tải file đó về máy tính của bạn và tải lên Google Drive để có toàn quyền kiểm soát.
+
 3. Nhúng (Embed Code) từ YouTube
 Mở video bạn muốn sử dụng trên YouTube.
 Bên dưới video, nhấn vào nút Chia sẻ (Share).
@@ -81,3 +79,12 @@ YouTube sẽ cung cấp cho bạn một đoạn mã HTML bắt đầu bằng <if
 Ví dụ: <iframe width="560" height="315" src="https://www.youtube.com/embed/H2_6cqa2cP4" ...></iframe>
 Quan trọng: Chúng ta chỉ cần URL bên trong thuộc tính src. Hãy sao chép nó.
 Trong ví dụ trên, URL cần lấy là: https://www.youtube.com/embed/H2_6cqa2cP4
+Trong CSDL Google Sheet, hãy dán URL bạn vừa copy vào cột youtubeEmbedUrl.
+
+4. Nhúng (Embed Code) từ Gg Drive
+Mở file video trên Google Drive.
+Nhấp vào biểu tượng ba chấm ở góc trên bên phải, chọn "Mở trong cửa sổ mới" (Open in new window).
+Trong cửa sổ mới, lại nhấp vào biểu tượng ba chấm và chọn "Nhúng mục..." (Embed item...).
+Một hộp thoại sẽ hiện ra chứa một đoạn mã <iframe>. Hãy sao chép chỉ phần URL bên trong src="...".
+Nó sẽ có dạng: https://drive.google.com/file/d/FILE_ID/preview
+Trong CSDL Google Sheet, hãy dán URL bạn vừa copy vào cột youtubeEmbedUrl.
