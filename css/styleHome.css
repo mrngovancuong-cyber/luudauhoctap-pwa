@@ -88,7 +88,7 @@ body {
 /* Logo lớn ở giữa (Luu Dau Hoc Tap) */
 .header-logo-text {
   /* Điều chỉnh kích thước logo tại đây */
-  height: 60px; 
+  height: 95px; 
   width: auto;
   object-fit: contain;
   vertical-align: middle;
@@ -97,13 +97,13 @@ body {
 @media (max-width: 768px) {
   .title { font-size: 20px; }
   .header-logo-text {
-    height: 50px; /* Thu nhỏ hơn một chút cho tablet */
+    height: 65px; /* Thu nhỏ hơn một chút cho tablet */
   }
 }
 @media (max-width: 480px) {
   .title { font-size: 18px; }
   .header-logo-text {
-    height: 40px; /* Thu nhỏ hơn nữa cho điện thoại */
+    height: 50px; /* Thu nhỏ hơn nữa cho điện thoại */
   }
 }
 
