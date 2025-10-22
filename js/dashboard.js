@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Các lỗi khác
         alert(`Lỗi khởi tạo: ${error.message}`);
     }
-}
         } finally {
             showLoading(false);
         }
@@ -126,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         alert(`Không thể tải dữ liệu tổng quan: ${error.message}`);
     }
-}
         } finally {
             showLoading(false);
             classOverviewSection.classList.remove('hidden');
@@ -207,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`Không thể tải dữ liệu: ${error.message}`);
         switchToOverviewView(); // Giữ lại để quay về màn hình chính nếu có lỗi khác
     }
-}
         } finally {
             showLoading(false);
         }
