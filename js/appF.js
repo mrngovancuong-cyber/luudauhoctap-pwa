@@ -790,10 +790,9 @@ function getSimpleDeviceInfo(){
 }
 
 // ===== Submit - PHIÊN BẢN CUỐI CÙNG =====
+// ===== Submit - PHIÊN BẢN AN TOÀN & ĐẦY ĐỦ =====
 async function submitExam(auto = false) {
-  // ===== BẮT ĐẦU KHỐI CODE MỚI ĐƯỢC THÊM VÀO =====
-  // Nếu hàm được gọi ở chế độ auto (tự động) VÀ state đã là submitted,
-  // nghĩa là chúng ta đang khôi phục lại trạng thái đã nộp.
+  // Logic kiểm tra trạng thái đã nộp (giữ nguyên, đã đúng)
   if (state.submitted && auto) {
       console.log("Đang hiển thị lại trạng thái đã nộp.");
       const resultCard = $('#resultCard');
@@ -805,13 +804,11 @@ async function submitExam(auto = false) {
         resultCard.classList.remove('hidden');
         resultCard.innerHTML = "<h3>Bài thi này đã được nộp.</h3><p>Để làm lại, vui lòng sử dụng nút 'Xoá dữ liệu tạm' và tải lại trang.</p>";
       }
-      // Ẩn các nút không cần thiết để tránh người dùng thao tác nhầm
       if(endControls) endControls.hidden = true;
       if(btnStart) btnStart.hidden = true;
-      if(guidelines) guidelines.hidden = true; // Ẩn luôn hướng dẫn
-      return; // Dừng hàm ngay tại đây
+      if(guidelines) guidelines.hidden = true;
+      return;
   }
-  // ===== KẾT THÚC KHỐI CODE MỚI =====
   
   if (state.submitted) return;
   if (!auto && !validateBeforeSubmit()) return;
@@ -819,9 +816,6 @@ async function submitExam(auto = false) {
   setButtonsDisabled(true);
   state.submitted = true;
   clearInterval(state.timerHandle);
-
-  // ===== THÊM DÒNG NÀY VÀO =====
-  // Lưu lại trạng thái `submitted: true` vào localStorage ngay lập tức
   persistLocal(); 
 
   const resultCard = $('#resultCard');
@@ -832,7 +826,6 @@ async function submitExam(auto = false) {
   resultCard.classList.remove('hidden');
   resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // Thu thập dữ liệu để gửi đi (giữ nguyên)
   const elapsed = (state.exam.durationMinutes * 60 - state.timeLeft);
   const device = getSimpleDeviceInfo();
   const submissionPayload = {
@@ -850,109 +843,103 @@ async function submitExam(auto = false) {
   try {
     const response = await fetch(API_URL, {
       method: 'POST',
-      // KHÔNG CÒN 'mode: no-cors' nữa
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(submissionPayload),
     });
 
-    if (!response.ok) {
-      throw new Error(`Lỗi mạng: ${response.statusText}`);
-    }
+    if (!response.ok) throw new Error(`Lỗi mạng: ${response.statusText}`);
     
-    const result = await response.json(); // Bây giờ có thể đọc được JSON
-    if (!result.success) {
-      throw new Error(result.message || "Server trả về lỗi không xác định.");
-    }
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || "Server trả về lỗi không xác định.");
     
     const serverData = result.data;
     console.log("Kết quả chi tiết từ server:", serverData);
     
-    // Hiển thị điểm số
     if (resultSummary) {
       resultSummary.innerHTML = `
         <p>Điểm: <strong>${serverData.score}/10</strong> (${serverData.correctCount}/${serverData.totalQuestions} câu đúng)</p>
       `;
     }
 
-    // Hiển thị nhận xét chi tiết
     if (feedbackEl) {
-      feedbackEl.innerHTML = serverData.feedback;
+      // SỬA LỖI BẢO MẬT #1: Làm sạch chuỗi HTML nhận xét từ server.
+      feedbackEl.innerHTML = DOMPurify.sanitize(serverData.feedback);
     }
     
-    // Hiển thị đáp án và lời giải
     if (serverData.fullQuestionsData) {
         const questionsData = serverData.fullQuestionsData;
         Object.keys(questionsData).forEach(qId => {
-    const qData = questionsData[qId];
-    const card = document.getElementById(`card-${qId}`);
-    if (!card) return;
+            const qData = questionsData[qId];
+            const card = document.getElementById(`card-${qId}`);
+            if (!card) return;
 
-    const exp = card.querySelector(`#exp-${qId}`);
-    const qTitleEl = card.querySelector('.q-title'); // Tìm đến tiêu đề câu hỏi
-    
-    if (!exp || !qTitleEl) return;
-
-    exp.hidden = false;
-    const studentAnswer = state.answers[qId];
-    
-    // Ngăn việc chèn biểu tượng lặp lại
-if (qTitleEl.querySelector('.result-icon')) {
-    // Đã xử lý, không làm gì thêm
-} else {
-    const questionType = qData.questionType || 'multiple_choice';
-    let isCorrect = false;
-
-// --- LOGIC KIỂM TRA ĐÁP ÁN CHO TẤT CẢ CÁC DẠNG ---
-if (studentAnswer) {
-    switch (questionType) {
-        case 'fill_blank': {
-            const studentAnswerNormalized = studentAnswer.toLowerCase().trim();
-            const correctOptions = qData.correct.split('|').map(opt => opt.toLowerCase().trim());
-            if (correctOptions.includes(studentAnswerNormalized)) {
-                isCorrect = true;
-            }
-            break;
-        }
-        case 'matching':
-        case 'ordering': {
-            // Chuẩn hóa bằng cách loại bỏ ký tự phân cách, viết hoa, sắp xếp để so sánh
-            const normalize = (str) => (str || "").replace(/[\s,-]/g, '').toUpperCase().split('').sort().join('');
+            const exp = card.querySelector(`#exp-${qId}`);
+            const qTitleEl = card.querySelector('.q-title');
             
-            const studentNormalized = normalize(studentAnswer);
-            const correctNormalized = normalize(qData.correct);
+            if (!exp || !qTitleEl) return;
 
-            if (studentNormalized === correctNormalized) {
-                isCorrect = true;
+            exp.hidden = false;
+            const studentAnswer = state.answers[qId];
+            
+            // Ngăn việc chèn biểu tượng lặp lại
+            if (qTitleEl.querySelector('.result-icon')) {
+                return; // Đã xử lý, thoát khỏi vòng lặp cho qId này
             }
-            break;
-        }
-        case 'multiple_choice':
-        default: {
-            if (studentAnswer === qData.correct) {
-                isCorrect = true;
-            }
-            break;
-        }
-    }
-}
 
-// --- LOGIC HIỂN THỊ DỰA TRÊN KẾT QUẢ `isCorrect` (GIỮ NGUYÊN) ---
-if (isCorrect) {
-    exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
-    card.classList.add('correct');
-    qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
-} else if (studentAnswer) {
-    const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
-    exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-    card.classList.add('incorrect');
-    qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
-} else {
-    const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
-    exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${displayCorrectAnswer}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
-    qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
-}
-}
-});
+            const questionType = qData.questionType || 'multiple_choice';
+            let isCorrect = false;
+
+            // ===== BỔ SUNG ĐẦY ĐỦ LOGIC KIỂM TRA ĐÁP ÁN =====
+            if (studentAnswer) {
+                switch (questionType) {
+                    case 'fill_blank': {
+                        const studentAnswerNormalized = studentAnswer.toLowerCase().trim();
+                        // Đáp án đúng có thể có nhiều lựa chọn, phân tách bằng dấu |
+                        const correctOptions = qData.correct.split('|').map(opt => opt.toLowerCase().trim());
+                        if (correctOptions.includes(studentAnswerNormalized)) {
+                            isCorrect = true;
+                        }
+                        break;
+                    }
+                    case 'matching':
+                    case 'ordering': {
+                        // Chuẩn hóa câu trả lời của học sinh và đáp án đúng để so sánh
+                        // Bằng cách loại bỏ các ký tự phân cách, viết hoa, và sắp xếp các ký tự
+                        const normalize = (str) => (str || "").replace(/[\s,-]/g, '').toUpperCase().split('').sort().join('');
+                        
+                        if (normalize(studentAnswer) === normalize(qData.correct)) {
+                            isCorrect = true;
+                        }
+                        break;
+                    }
+                    case 'multiple_choice':
+                    default: {
+                        if (studentAnswer === qData.correct) {
+                            isCorrect = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            // ===== KẾT THÚC PHẦN BỔ SUNG =====
+
+            if (isCorrect) {
+                exp.innerHTML = `<strong>Đúng!</strong> ${escapeHtml(qData.explain)}`;
+                card.classList.add('correct');
+                qTitleEl.innerHTML = `<span class="result-icon correct-icon">✔</span>` + qTitleEl.innerHTML;
+            } else if (studentAnswer) {
+                const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
+                // SỬA LỖI BẢO MẬT #2: Escape đáp án đúng trước khi hiển thị.
+                exp.innerHTML = `<strong>Sai.</strong> Đáp án đúng là <strong>${escapeHtml(displayCorrectAnswer)}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+                card.classList.add('incorrect');
+                qTitleEl.innerHTML = `<span class="result-icon incorrect-icon">✖</span>` + qTitleEl.innerHTML;
+            } else {
+                const displayCorrectAnswer = qData.correct.split('|').join(' hoặc ');
+                // SỬA LỖI BẢO MẬT #2: Escape đáp án đúng trước khi hiển thị.
+                exp.innerHTML = `<strong>Chưa trả lời.</strong> Đáp án đúng là <strong>${escapeHtml(displayCorrectAnswer)}</strong>. <br><em>Giải thích:</em> ${escapeHtml(qData.explain)}`;
+                qTitleEl.innerHTML = `<span class="result-icon unanswered-icon">−</span>` + qTitleEl.innerHTML;
+            }
+        });
     }
     
   } catch (error) {
@@ -964,7 +951,7 @@ if (isCorrect) {
         <p>Vui lòng kiểm tra lại kết nối mạng và thử lại.</p>
       `;
     }
-    setButtonsDisabled(false); // Cho phép thử lại nếu lỗi
+    setButtonsDisabled(false);
     state.submitted = false;
   }
 }
