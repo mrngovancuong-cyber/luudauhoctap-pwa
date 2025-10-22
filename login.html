@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Bảng điều khiển Giáo viên</title>
+    
+    <!-- SỬ DỤNG LẠI CSS CỦA DASHBOARD -->
+    <link rel="stylesheet" href="css/styleDashboard.css">
+    
+    <!-- Thêm một vài style riêng cho trang đăng nhập -->
+    <style>
+        .login-main {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 50px;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3); /* Cập nhật màu shadow cho hợp theme */
+        }
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .login-button:hover {
+            background-color: #6366f1;
+        }
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: var(--bad);
+            background-color: rgba(248, 113, 113, 0.1);
+            border: 1px solid var(--bad);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            text-align: center;
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+    <!-- TÁI SỬ DỤNG HEADER TỪ DASHBOARD.HTML -->
+    <header class="sticky-header">
+        <div class="header-top">
+            <div class="header-left">
+                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+            </div>
+            <div class="header-center">
+                <h1 class="title">BẢNG ĐIỀU KHIỂN DÀNH CHO GIÁO VIÊN</h1>
+            </div>        
+            <div class="header-right">
+                <img src="/icons/LDHTlogo" alt="Logo Lưu Dấu Học Tập" class="logo">
+            </div>
+        </div>
+    </header>
+
+    <main class="login-main">
+        <section class="card login-card">
+            <h2>Đăng nhập</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Nhập email của bạn" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <div id="error-message" class="error-message"></div>
+                <button type="submit" id="login-button" class="login-button">Đăng nhập</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Liên kết đến file JS (không thay đổi) -->
+    <script src="js/login.js"></script>
+</body>
+</html>
