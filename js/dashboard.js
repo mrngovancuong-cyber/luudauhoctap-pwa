@@ -51,11 +51,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentStudentHistoryData = null; // Lưu trữ dữ liệu lịch sử của học sinh đang xem
 
+// --- HÀM BẢO MẬT: KIỂM TRA ĐĂNG NHẬP KHI TẢI TRANG ---
+    function checkAuthentication() {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        // Nếu không có token, đá về trang đăng nhập
+        window.location.href = '/login.html';
+      }
+    }
+    // Gọi hàm này ngay lập tức để bảo vệ trang
+    checkAuthentication();
+
     // --- HÀM KHỞI TẠO ---
     async function initializeDashboard() {
         showLoading(true);
         try {
-            const response = await fetch(`${API_URL}?action=getExamList`);
+            const token = localStorage.getItem('authToken');
+	    const response = await fetch(`${API_URL}?action=getExamList`, {
+    		headers: { 'Authorization': `Bearer ${token}` }
+	    });
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
             
@@ -70,7 +84,17 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetchAndDisplayClassOverview(examSelect.value);
 
         } catch (error) {
-            alert(`Lỗi khởi tạo: ${error.message}`);
+    if (error.message.includes("Unauthorized")) {
+        // Token không hợp lệ hoặc hết hạn
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/login.html';
+    } else {
+        // Các lỗi khác
+        alert(`Lỗi khởi tạo: ${error.message}`);
+    }
+}
         } finally {
             showLoading(false);
         }
@@ -84,14 +108,25 @@ document.addEventListener('DOMContentLoaded', () => {
             let url = `${API_URL}?action=getClassAnalytics&examId=${examId}`;
             if (classId) url += `&classId=${classId}`;
             
-            const response = await fetch(url);
+	    const token = localStorage.getItem('authToken');
+	    const response = await fetch(url, {
+	        headers: { 'Authorization': `Bearer ${token}` }
+	    });
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
 
             renderClassOverview(result.data);
 
         } catch (error) {
-            alert(`Không thể tải dữ liệu tổng quan: ${error.message}`);
+    if (error.message.includes("Unauthorized")) {
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/login.html';
+    } else {
+        alert(`Không thể tải dữ liệu tổng quan: ${error.message}`);
+    }
+}
         } finally {
             showLoading(false);
             classOverviewSection.classList.remove('hidden');
@@ -153,15 +188,26 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading(true);
         resultSection.classList.add('hidden');
         try {
-            const response = await fetch(`${API_URL}?action=getStudentAnalytics&studentId=${studentId}`);
+            const token = localStorage.getItem('authToken');
+	    const response = await fetch(`${API_URL}?action=getStudentAnalytics&studentId=${studentId}`, {
+     		headers: { 'Authorization': `Bearer ${token}` }
+	    });
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
             switchToDetailView();
             renderData(result.data);
             resultSection.classList.remove('hidden');
         } catch (error) {
-            alert(`Không thể tải dữ liệu: ${error.message}`);
-            switchToOverviewView();
+    if (error.message.includes("Unauthorized")) {
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/login.html';
+    } else {
+        alert(`Không thể tải dữ liệu: ${error.message}`);
+        switchToOverviewView(); // Giữ lại để quay về màn hình chính nếu có lỗi khác
+    }
+}
         } finally {
             showLoading(false);
         }
