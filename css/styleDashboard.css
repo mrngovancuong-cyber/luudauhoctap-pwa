@@ -43,18 +43,63 @@ body {
 /* ------------------------------
    Header
 ------------------------------ */
-.dashboard-header {
-  padding: 1rem 1.5rem;
-  background-color: var(--bg-elev);
+.sticky-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px;
+  background: var(--bg-elev);
   border-bottom: 1px solid var(--border);
+  z-index: 1000;
+}
+
+.header-top {
+  display: grid;
+  /* Cấu trúc 3 cột: tự động co giãn | phần giữa chiếm hết | tự động co giãn */
+  grid-template-columns: auto 1fr auto; 
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.header-right { 
+  justify-content: flex-end; 
+}
+
+/* TẠO KIỂU CHO CẢ 2 LOGO CÙNG LÚC */
+.logo {
+  height: 70px; /* Đặt chiều cao mong muốn cho cả 2 logo */
+  width: auto; 
+  object-fit: contain;
+}
+
+@media (max-width: 768px) { .logo { height: 50px; } }
+@media (max-width: 480px) { .logo { height: 40px; } }
+
+
+/* TẠO KIỂU CHO VĂN BẢN TIÊU ĐỀ Ở GIỮA */
+.title {
+  font-weight: 700;
+  font-size: 1.5rem; /* ~24px */
+  margin: 0;
+  text-align: center;
   color: var(--text);
 }
 
-.dashboard-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  text-align: center;
-}
+@media (max-width: 768px) { .title { font-size: 1.2rem; } }
+@media (max-width: 480px) { .title { font-size: 1rem; } }
 
 /* ------------------------------
    Layout chính và Card

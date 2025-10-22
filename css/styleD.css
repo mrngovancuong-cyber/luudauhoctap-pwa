@@ -69,6 +69,44 @@ body {
   padding-bottom: 4px;
 }
 
+/* Container chứa cả logo và icon ngôi nhà */
+.home-link-container {
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  gap: 10px;           /* Khoảng cách giữa logo và icon */
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.home-link-container:hover {
+  opacity: 0.7; /* Hiệu ứng mờ nhẹ khi di chuột vào */
+}
+
+/* 1. Thu nhỏ logo bên phải */
+.home-link-logo {
+  height: 35px; /* Kích thước này khoảng 1/6 so với hiện tại */
+  width: auto;
+  object-fit: contain;
+}
+
+/* 2. Đổi màu icon ngôi nhà thành màu đỏ */
+/* Lưu ý: fill: currentColor nghĩa là nó sẽ ăn theo màu text, 
+   chúng ta ghi đè nó bằng màu đỏ cụ thể */
+.home-link-container svg {
+  fill: #E53935; /* Đây là một mã màu đỏ đẹp, bạn có thể thay bằng mã màu chính xác của logo nếu muốn (ví dụ: #FF0000) */
+}
+
+/* Điều chỉnh cho màn hình điện thoại */
+@media (max-width: 480px) {
+  .home-link-logo {
+    height: 25px; /* Nhỏ hơn nữa trên điện thoại */
+  }
+  .home-link-container svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .logo {
   height: 80px; width: auto; object-fit: contain;
 }
