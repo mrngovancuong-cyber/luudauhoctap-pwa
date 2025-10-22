@@ -7,17 +7,11 @@
 // Câu hỏi ĐIỀN KHUYẾT //
 1. Quy ước __ (Hai dấu gạch dưới)
 Mục đích: Để soạn câu hỏi (questionContent) trên Google Sheet. Ký hiệu này giúp cho cả học sinh và hệ thống nhận biết được vị trí cần điền.
-Hệ thống không tự động làm gì với ký hiệu __. Nó chỉ đơn giản là hiển thị chuỗi văn bản này ra cho học sinh xem. Vai trò chính của nó là để giao tiếp giữa giáo viên và học sinh.
+
 2. Quy ước | (Dấu sổ thẳng)
 Mục đích: Để cung cấp các phương án đáp án đúng cho hệ thống khi soạn cột correctAnswer trên Google Sheet.
-Hệ thống có "tự biết" không? Có! Đây chính là phần mà hệ thống "tự biết".
-Hàm gradeSubmission trên server đã được chúng ta lập trình để tìm ký tự |.
-Khi thấy ký tự này, nó sẽ tự động hiểu rằng chuỗi đó chứa nhiều đáp án được chấp nhận.
-Nó sẽ tách chuỗi tại các vị trí có dấu | để tạo ra một danh sách các đáp án đúng.
 
 Kết luận và Cách Hướng dẫn Giáo viên
-Khi bạn hướng dẫn một giáo viên khác sử dụng hệ thống, bạn cần chỉ cho họ cả hai quy ước này, nhưng với những lời giải thích khác nhau:
-Hướng dẫn cho Giáo viên:
 "Khi soạn một câu hỏi Dạng Điền khuyết, thầy/cô vui lòng làm theo 2 quy ước đơn giản sau:
 Trong Câu hỏi: Tại vị trí muốn học sinh điền vào, hãy dùng hai dấu gạch dưới __.
 Ví dụ: Tác giả của Truyện Kiều là __.

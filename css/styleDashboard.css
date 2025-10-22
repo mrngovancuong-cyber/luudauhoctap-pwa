@@ -386,3 +386,59 @@ body {
 #behavior-warning-content strong {
   color: var(--text);
 }
+
+.filter-bar { display: flex; gap: 1rem; }
+.filter-select { 
+    padding: 0.5rem; 
+    background-color: var(--bg); 
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.kpi-card {
+    background-color: var(--bg-card);
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+}
+.kpi-card h3 { margin: 0 0 0.5rem 0; color: var(--muted); font-size: 1rem; }
+.kpi-card p { margin: 0; font-size: 2rem; font-weight: 700; }
+
+.chart-grid, .student-list-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 768px) {
+    .chart-grid, .student-list-grid { grid-template-columns: 1fr; }
+}
+
+.list-container h4 { margin-top: 0; color: var(--accent); }
+.list-container ul { list-style: none; padding: 0; margin: 0; }
+.list-container li { 
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; /* Thêm để cho biết có thể click */
+    transition: background-color 0.2s;
+}
+.list-container li:hover { background-color: var(--bg-elev); }
+.list-container li:last-child { border-bottom: none; }
+.list-container li .score { font-weight: 700; }
+.list-container li .accuracy { color: var(--bad); }
+
+#back-to-overview-btn {
+    background-color: #6c757d;
+}
+#back-to-overview-btn:hover {
+    background-color: #5a6268;
+}
