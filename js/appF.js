@@ -676,22 +676,20 @@ function restoreLocal() {
     console.log("Phát hiện bài thi đã được nộp.");
     state.submitted = true;
     
-    // --- LOGIC MỚI ---
-    // Lấy thông tin về việc cho phép làm lại từ chính đối tượng `state.exam`
-    // Giả định `state.exam.allowRetake` đã được thêm vào từ API `getExamQuestions`
-    const allowRetake = state.exam?.allowRetake || true; // Mặc định cho làm lại
+    // Lấy chế độ làm bài từ state (đã được API getExamQuestions cung cấp)
+    const examMode = state.exam?.defaultMode || 'practice'; 
 
-    if (allowRetake) {
-        // Nếu cho phép làm lại, chỉ hiển thị kết quả cũ
-        console.log("Chế độ luyện tập, hiển thị lại kết quả lần nộp trước.");
-        submitExam(true); // Gọi submitExam ở chế độ auto để hiển thị lại kết quả
-    } else {
-        // Nếu không cho làm lại, KHÓA GIAO DIỆN
-        console.log("Chế độ kiểm tra, khóa giao diện.");
+    if (examMode === 'exam') {
+        // Nếu là bài kiểm tra, KHÓA GIAO DIỆN
+        console.log("Chế độ kiểm tra, khóa giao diện vì bài đã được nộp.");
         $('#questions').innerHTML = `<div class="card" style="text-align: center;"><h3>Bạn đã nộp bài này.</h3><p>Bài kiểm tra này chỉ cho phép nộp một lần duy nhất.</p></div>`;
         $('#end-controls').hidden = true;
         $('#btn-start').hidden = true;
         $('#guidelines').hidden = true;
+    } else {
+        // Nếu là bài luyện tập, chỉ hiển thị lại kết quả lần nộp trước
+        console.log("Chế độ luyện tập, hiển thị lại kết quả lần nộp trước.");
+        submitExam(true); 
     }
     return; // Dừng hàm ở đây
 }
