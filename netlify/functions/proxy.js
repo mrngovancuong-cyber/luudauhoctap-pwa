@@ -1,14 +1,12 @@
 // File: netlify/functions/proxy.js
-// PHIÊN BẢN ĐÃ ĐƯỢC SỬA LỖI VÀ ĐƠN GIẢN HÓA
+// PHIÊN BẢN CHỐNG ĐẠN (BULLETPROOF)
 
 import fetch from 'node-fetch';
 
-// Dán URL thực thi của Google Apps Script của bạn vào đây
-// Bạn cũng có thể dùng biến môi trường như cũ: const SCRIPT_URL = process.env.SCRIPT_URL;
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydr4uigyqHtjpstmYCVchp3ovGDMQQa12EiIpbjgPDBNybXDvS0tVnysBBHn0PVBlg/exec";
+const SCRIPT_URL = process.env.SCRIPT_URL;
 
 export const handler = async (event) => {
-  // --- Xử lý Google Drive Proxy (Giữ nguyên logic của bạn) ---
+  // --- Xử lý Google Drive Proxy (Giữ nguyên) ---
   if (event.path.startsWith('/api/gdrive-proxy/')) {
     const fileId = event.path.replace('/api/gdrive-proxy/', '');
     if (!fileId) return { statusCode: 400, body: 'Thiếu File ID.' };
@@ -28,56 +26,54 @@ export const handler = async (event) => {
     }
   }
 
-  // --- Xử lý Proxy cho Google Apps Script (PHẦN SỬA LỖI TRIỆT ĐỂ) ---
+  // --- Xử lý Proxy cho Google Apps Script ---
   
-  // Kiểm tra SCRIPT_URL
   if (!SCRIPT_URL) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL chưa được thiết lập trên Netlify." })
+      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL." })
     };
   }
 
-  // 1. Xây dựng URL đích với các tham số
+  // 1. Xây dựng URL đích
   const destinationUrl = new URL(SCRIPT_URL);
   for (const param in event.queryStringParameters) {
     destinationUrl.searchParams.append(param, event.queryStringParameters[param]);
   }
 
-  // 2. Tường minh xây dựng đối tượng headers để gửi đi
+  // 2. Xây dựng headers một cách an toàn
   const headersToSend = {};
   
-  // Lấy header 'content-type' từ request gốc (nếu có)
-  if (event.headers['content-type']) {
-    headersToSend['content-type'] = event.headers['content-type'];
-  }
+  // Kiểm tra an toàn: chỉ truy cập các thuộc tính của 'headers' nếu 'event.headers' tồn tại
+  const incomingHeaders = event.headers || {};
   
-  // Lấy header 'authorization' từ request gốc (nếu có)
-  // Đây là phần quan trọng nhất, chúng ta kiểm tra cả chữ hoa và chữ thường
-  const authToken = event.headers.authorization || event.headers.Authorization;
+  const authToken = incomingHeaders.authorization || incomingHeaders.Authorization;
   if (authToken) {
     headersToSend['authorization'] = authToken;
   }
   
-  // 3. Chuẩn bị các tùy chọn cho request fetch
+  if (incomingHeaders['content-type']) {
+    headersToSend['content-type'] = incomingHeaders['content-type'];
+  }
+  
+  // 3. Chuẩn bị options cho fetch
   const options = {
     method: event.httpMethod,
-    headers: headersToSend, // <--- Sử dụng đối tượng headers đã được xây dựng tường minh
+    headers: headersToSend,
     redirect: 'follow'
   };
 
-  // Chỉ thêm 'body' vào options nếu phương thức cho phép và có body
-  if (event.httpMethod.toUpperCase() !== 'GET' && event.httpMethod.toUpperCase() !== 'HEAD' && event.body) {
+  if (event.httpMethod.toUpperCase() !== 'GET' && event.body) {
     options.body = event.body;
   }
-
+  
   console.log(`[Proxy] Forwarding to: ${destinationUrl.toString()}`);
   console.log(`[Proxy] Options sent:`, JSON.stringify(options, null, 2));
 
   try {
-    // 4. Thực hiện request đến Google
+    // 4. Thực hiện request
     const response = await fetch(destinationUrl.toString(), options);
-    const data = await response.text(); // Lấy data dưới dạng text để tránh lỗi parse JSON nếu Google trả về lỗi HTML
+    const data = await response.text();
 
     // 5. Trả về phản hồi
     return {
