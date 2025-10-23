@@ -1,8 +1,7 @@
 // File: netlify/functions/proxy.js
 // PHIÊN BẢN HOÀN CHỈNH - SỬA LỖI CÚ PHÁP VÀ LOGIC
 
-// Dùng dynamic import cho node-fetch để tương thích
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = require('node-fetch');
 
 exports.handler = async function (event, context) {
   
@@ -45,13 +44,12 @@ exports.handler = async function (event, context) {
   //   PHẦN 2: LOGIC CHO GOOGLE APPS SCRIPT
   //   Nếu request không phải cho Google Drive, code sẽ chạy tiếp xuống đây.
   // ===================================================================
-
   const scriptUrl = process.env.SCRIPT_URL;
 
   if (!scriptUrl) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi: SCRIPT_URL chưa được cấu hình trên Netlify." })
+      body: JSON.stringify({ success: false, message: "Lỗi: SCRIPT_URL chưa được cấu hình." })
     };
   }
 
@@ -61,9 +59,11 @@ exports.handler = async function (event, context) {
   const options = {
     method: event.httpMethod,
     headers: {
-      'Authorization': event.headers.authorization || '',
+      'Authorization': event.headers.authorization || '', // Đảm bảo chuyển tiếp
       'Content-Type': event.headers['content-type'] || 'text/plain;charset=utf-8'
-    }
+    },
+    // Chuyển hướng theo Google Apps Script nếu cần
+    redirect: 'follow' 
   };
 
   if (event.body) {
@@ -84,7 +84,7 @@ exports.handler = async function (event, context) {
     console.error("Lỗi Proxy Apps Script:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Proxy gặp lỗi khi kết nối đến Google Script." })
+      body: JSON.stringify({ success: false, message: "Proxy gặp lỗi: " + error.message })
     };
   }
-}; // <--- ĐÂY LÀ DẤU NGOẶC CÓ THỂ BẠN ĐÃ THIẾU
+};
