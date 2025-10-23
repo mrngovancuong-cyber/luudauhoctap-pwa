@@ -21,7 +21,7 @@
   from = "/api/*"
   
   # Sẽ được chuyển hướng đến function tên là "proxy"
-  to = "/.netlify/functions/proxy/:splat"
+  to = "/.netlify/functions/api-handler/:splat"
   
   # Status 200 có nghĩa là "chuyển hướng ngầm" (rewrite), 
   # trình duyệt sẽ không biết có sự chuyển hướng này.
