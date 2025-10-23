@@ -77,7 +77,19 @@ async function main() {
     try {
         // Lấy danh sách đề bài
         console.log("Đang gửi request getExamList với token:", token);
-        const examListResult = await fetchApi('getExamList');
+        // const examListResult = await fetchApi('getExamList');
+// Dòng test mới
+console.log("--- BẮT ĐẦU PING TEST TỪ DASHBOARD ---");
+try {
+    const pingResult = await fetchApi('ping', { testParam: 'helloFromDashboard' });
+    console.log("KẾT QUẢ PING:", pingResult);
+    alert("Ping test thành công! Hãy kiểm tra Console (F12) để xem kết quả chi tiết.");
+} catch (error) {
+    console.error("LỖI KHI PING:", error);
+    alert("Ping test thất bại. Chi tiết lỗi có trong Console (F12).");
+}
+// Tạm thời dừng ở đây để xem kết quả ping
+return;
         const publishedExams = examListResult.data.filter(exam => exam.status === 'published');
 
         if (publishedExams.length === 0) {
