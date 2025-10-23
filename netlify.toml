@@ -10,11 +10,6 @@
   # Dấu "." có nghĩa là thư mục gốc
   publish = "." 
 
-# THÊM CÁC DÒNG NÀY VÀO
-[functions]
-  node_bundler = "esbuild"
-# KẾT THÚC PHẦN THÊM
-
 # Cấu hình chuyển hướng (redirect) để tạo proxy
 [[redirects]]
   # Bất kỳ request nào bắt đầu bằng /api/
