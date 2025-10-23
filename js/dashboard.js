@@ -51,94 +51,131 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentStudentHistoryData = null; // Lưu trữ dữ liệu lịch sử của học sinh đang xem
 
-// --- HÀM BẢO MẬT: KIỂM TRA ĐĂNG NHẬP KHI TẢI TRANG ---
-    function checkAuthentication() {
-  console.log("--- Bắt đầu checkAuthentication trên Dashboard ---");
-  const token = localStorage.getItem('authToken');
-  
-  // In ra token tìm thấy để debug
-  console.log("Token tìm thấy trong localStorage:", token);
+// =================================================================
+//                    LUỒNG KHỞI TẠO CHÍNH
+// =================================================================
 
-  if (!token) {
-    console.log("Không tìm thấy token. Đang chuyển hướng về /login.html");
-    window.location.href = '/login.html';
-  } else {
-    console.log("Đã tìm thấy token. Cho phép truy cập Dashboard.");
-  }
+/**
+ * Hàm chính để khởi động toàn bộ Dashboard.
+ * Đây là điểm bắt đầu duy nhất sau khi DOM đã tải.
+ */
+async function main() {
+    // BƯỚC 1: KIỂM TRA TOKEN. NẾU KHÔNG CÓ, DỪNG MỌI THỨ VÀ CHUYỂN HƯỚNG.
+    const token = localStorage.getItem('authToken');
+    console.log("Token tìm thấy trong localStorage:", token);
+    if (!token) {
+        console.log("Không tìm thấy token. Chuyển hướng về /login.html");
+        window.location.href = '/login.html';
+        return; // Dừng hàm main() ngay lập tức
+    }
+    
+    // BƯỚC 2: NẾU CÓ TOKEN, GẮN CÁC SỰ KIỆN CHO CÁC NÚT
+    attachEventListeners();
+
+    // BƯỚC 3: TẢI DỮ LIỆU BAN ĐẦU (DANH SÁCH ĐỀ BÀI VÀ DỮ LIỆU TỔNG QUAN)
+    showLoading(true);
+    try {
+        // Lấy danh sách đề bài
+        console.log("Đang gửi request getExamList với token:", token);
+        const examListResult = await fetchApi('getExamList');
+        const publishedExams = examListResult.data.filter(exam => exam.status === 'published');
+
+        if (publishedExams.length === 0) {
+            alert("Hiện không có bài tập nào được xuất bản.");
+            classOverviewSection.innerHTML = '<p style="text-align:center;">Không có dữ liệu để hiển thị.</p>';
+            return;
+        }
+        
+        // Hiển thị danh sách đề bài lên dropdown
+        examSelect.innerHTML = publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
+        
+        // Tải dữ liệu tổng quan cho đề bài đầu tiên trong danh sách
+        await fetchAndDisplayClassOverview(examSelect.value);
+
+    } catch (error) {
+        handleApiError(error, "Lỗi khởi tạo Dashboard");
+    } finally {
+        showLoading(false);
+    }
 }
-// Gọi hàm này ngay lập tức để bảo vệ trang
-checkAuthentication();
 
-    // --- HÀM KHỞI TẠO ---
-    async function initializeDashboard() {
-        showLoading(true);
-        try {
-            const token = localStorage.getItem('authToken');
-	    // IN RA TOKEN NGAY TRƯỚỚC KHI GỬI ĐI
-            console.log("Đang gửi request API đầu tiên với token:", token);	    
-	    const response = await fetch(`${API_URL}?action=getExamList`, {
-    		headers: { 'Authorization': `Bearer ${token}` }
-	    });
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message);
-            
-            const publishedExams = result.data.filter(exam => exam.status === 'published');
-            if (publishedExams.length === 0) {
-                alert("Không có bài tập nào được xuất bản.");
-                return;
-            }
-            
-            examSelect.innerHTML = publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
-            
-            await fetchAndDisplayClassOverview(examSelect.value);
+// =================================================================
+//                    CÁC HÀM API VÀ XỬ LÝ DỮ LIỆU
+// =================================================================
 
-        } catch (error) {
-    if (error.message.includes("Unauthorized")) {
-        // Token không hợp lệ hoặc hết hạn
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        window.location.href = '/login.html';
-    } else {
-        // Các lỗi khác
-        alert(`Lỗi khởi tạo: ${error.message}`);
+/**
+ * Hàm trợ giúp để gọi API, tự động đính kèm token.
+ * @param {string} action - Tên action cần gọi.
+ * @param {object} [params={}] - Các tham số URL khác.
+ * @returns {Promise<object>} - Dữ liệu trả về từ API.
+ */
+async function fetchApi(action, params = {}) {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        // Đây là một lớp bảo vệ thứ hai
+        throw new Error("401 Unauthorized: Missing token");
     }
-        } finally {
-            showLoading(false);
-        }
-    }
+    
+    const urlParams = new URLSearchParams({ action, ...params });
+    const url = `${API_URL}?${urlParams.toString()}`;
+    
+    console.log(`Đang gọi API: ${url}`); // Log URL để debug
 
-    // --- CÁC HÀM XỬ LÝ CHẾ ĐỘ XEM TỔNG QUAN ---
-    async function fetchAndDisplayClassOverview(examId, classId = null) {
-        showLoading(true);
-        classOverviewSection.classList.add('hidden');
-        try {
-            let url = `${API_URL}?action=getClassAnalytics&examId=${examId}`;
-            if (classId) url += `&classId=${classId}`;
-            
-	    const token = localStorage.getItem('authToken');
-	    const response = await fetch(url, {
-	        headers: { 'Authorization': `Bearer ${token}` }
-	    });
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message);
+    const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
 
-            renderClassOverview(result.data);
+    const result = await response.json();
+    if (!result.success) {
+        throw new Error(result.message);
+    }
+    return result;
+}
 
-        } catch (error) {
-    if (error.message.includes("Unauthorized")) {
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        window.location.href = '/login.html';
-    } else {
-        alert(`Không thể tải dữ liệu tổng quan: ${error.message}`);
+/**
+ * Tải và hiển thị dữ liệu tổng quan của lớp.
+ */
+async function fetchAndDisplayClassOverview(examId, classId = null) {
+    showLoading(true);
+    classOverviewSection.classList.add('hidden');
+    try {
+        const params = { examId };
+        if (classId) params.classId = classId;
+        
+        const result = await fetchApi('getClassAnalytics', params);
+        renderClassOverview(result.data);
+
+    } catch (error) {
+        handleApiError(error, "Không thể tải dữ liệu tổng quan");
+    } finally {
+        showLoading(false);
+        classOverviewSection.classList.remove('hidden');
     }
-        } finally {
-            showLoading(false);
-            classOverviewSection.classList.remove('hidden');
-        }
+}
+
+/**
+ * Tải và hiển thị dữ liệu chi tiết của học sinh.
+ */
+async function searchStudent() {
+    const studentId = studentIdInput.value.trim();
+    if (!studentId) {
+        alert('Vui lòng nhập Mã số học sinh.');
+        return;
     }
+    showLoading(true);
+    resultSection.classList.add('hidden');
+    try {
+        const result = await fetchApi('getStudentAnalytics', { studentId });
+        switchToDetailView();
+        renderData(result.data);
+        resultSection.classList.remove('hidden');
+    } catch (error) {
+        handleApiError(error, "Không thể tải dữ liệu học sinh");
+        switchToOverviewView(); // Quay về nếu có lỗi
+    } finally {
+        showLoading(false);
+    }
+}
 
     function renderClassOverview(data) {
         kpisContainer.innerHTML = `
@@ -186,39 +223,6 @@ checkAuthentication();
     }
 
     // --- CÁC HÀM XỬ LÝ CHẾ ĐỘ XEM CHI TIẾT (Lấy từ code gốc của bạn và tích hợp) ---
-    async function searchStudent() {
-        const studentId = studentIdInput.value.trim();
-        if (!studentId) {
-            alert('Vui lòng nhập Mã số học sinh.');
-            return;
-        }
-        showLoading(true);
-        resultSection.classList.add('hidden');
-        try {
-            const token = localStorage.getItem('authToken');
-	    const response = await fetch(`${API_URL}?action=getStudentAnalytics&studentId=${studentId}`, {
-     		headers: { 'Authorization': `Bearer ${token}` }
-	    });
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message);
-            switchToDetailView();
-            renderData(result.data);
-            resultSection.classList.remove('hidden');
-        } catch (error) {
-    if (error.message.includes("Unauthorized")) {
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        window.location.href = '/login.html';
-    } else {
-        alert(`Không thể tải dữ liệu: ${error.message}`);
-        switchToOverviewView(); // Giữ lại để quay về màn hình chính nếu có lỗi khác
-    }
-        } finally {
-            showLoading(false);
-        }
-    }
-
     function renderData(data) {
         studentNameDisplay.textContent = data.profile.name;
         studentClassDisplay.textContent = `Lớp: ${data.profile.class}`;
@@ -354,36 +358,60 @@ checkAuthentication();
         behaviorModal.classList.remove('hidden');
     }
 
-    // --- HÀM TIỆN ÍCH VÀ QUẢN LÝ GIAO DIỆN ---
-    function showLoading(isLoading) {
-        loadingSpinner.classList.toggle('hidden', !isLoading);
-    }
-    function switchToDetailView() {
-        classOverviewSection.classList.add('hidden');
-        searchSection.classList.add('hidden');
-        backToOverviewBtn.classList.remove('hidden');
-        resultSection.classList.remove('hidden');
-    }
-    function switchToOverviewView() {
-        resultSection.classList.add('hidden');
-        backToOverviewBtn.classList.add('hidden');
-        classOverviewSection.classList.remove('hidden');
-        searchSection.classList.remove('hidden');
-        studentIdInput.value = '';
-    }
-    function handleTabClick(event) {
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        const targetTab = event.target.dataset.tab;
-        tabPanels.forEach(panel => {
-            panel.classList.toggle('hidden', panel.id !== targetTab);
-        });
-    }
+    // =================================================================
+//                    HÀM TIỆN ÍCH VÀ QUẢN LÝ GIAO DIỆN
+// =================================================================
 
-    // --- GẮN SỰ KIỆN ---
-    examSelect.addEventListener('change', () => {
-        fetchAndDisplayClassOverview(examSelect.value);
+/**
+ * Hàm xử lý lỗi API tập trung.
+ * @param {Error} error - Đối tượng lỗi.
+ * @param {string} contextMessage - Thông báo ngữ cảnh.
+ */
+function handleApiError(error, contextMessage) {
+    console.error(`${contextMessage}:`, error);
+    if (error.message.includes("401 Unauthorized") || error.message.includes("hết hạn")) {
+        alert("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        window.location.href = '/login.html';
+    } else {
+        alert(`${contextMessage}: ${error.message}`);
+    }
+}
+
+function showLoading(isLoading) {
+    loadingSpinner.classList.toggle('hidden', !isLoading);
+}
+
+function switchToDetailView() {
+    classOverviewSection.classList.add('hidden');
+    searchSection.classList.add('hidden');
+    backToOverviewBtn.classList.remove('hidden');
+    resultSection.classList.remove('hidden');
+}
+
+function switchToOverviewView() {
+    resultSection.classList.add('hidden');
+    backToOverviewBtn.classList.add('hidden');
+    classOverviewSection.classList.remove('hidden');
+    searchSection.classList.remove('hidden');
+    studentIdInput.value = '';
+}
+
+function handleTabClick(event) {
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    const targetTab = event.target.dataset.tab;
+    tabPanels.forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== targetTab);
     });
+}
+
+/**
+ * Gắn tất cả các event listener vào các nút.
+ */
+function attachEventListeners() {
+    examSelect.addEventListener('change', () => fetchAndDisplayClassOverview(examSelect.value));
     searchBtn.addEventListener('click', searchStudent);
     studentIdInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchStudent();
@@ -394,7 +422,8 @@ checkAuthentication();
     behaviorModal.addEventListener('click', (event) => {
         if (event.target === behaviorModal) behaviorModal.classList.add('hidden');
     });
+}
 
-    // --- KHỞI CHẠY ---
-    initializeDashboard();
+// --- BẮT ĐẦU CHẠY ỨNG DỤNG ---
+main();
 });
