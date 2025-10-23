@@ -28,41 +28,58 @@ export const handler = async (event) => {
     }
   }
 
-  // --- Xử lý Proxy cho Google Apps Script (PHẦN ĐÃ SỬA) ---
+  // --- Xử lý Proxy cho Google Apps Script (PHẦN SỬA LỖI TRIỆT ĐỂ) ---
   
-  // 1. Xây dựng URL đích một cách an toàn
+  // Kiểm tra SCRIPT_URL
+  if (!SCRIPT_URL) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL chưa được thiết lập trên Netlify." })
+    };
+  }
+
+  // 1. Xây dựng URL đích với các tham số
   const destinationUrl = new URL(SCRIPT_URL);
-  // Thêm tất cả các query params từ request gốc vào URL đích
   for (const param in event.queryStringParameters) {
     destinationUrl.searchParams.append(param, event.queryStringParameters[param]);
   }
+
+  // 2. Tường minh xây dựng đối tượng headers để gửi đi
+  const headersToSend = {};
   
-  console.log(`[Proxy] Chuyển tiếp ${event.httpMethod} đến: ${destinationUrl.toString()}`);
+  // Lấy header 'content-type' từ request gốc (nếu có)
+  if (event.headers['content-type']) {
+    headersToSend['content-type'] = event.headers['content-type'];
+  }
+  
+  // Lấy header 'authorization' từ request gốc (nếu có)
+  // Đây là phần quan trọng nhất, chúng ta kiểm tra cả chữ hoa và chữ thường
+  const authToken = event.headers.authorization || event.headers.Authorization;
+  if (authToken) {
+    headersToSend['authorization'] = authToken;
+  }
+  
+  // 3. Chuẩn bị các tùy chọn cho request fetch
+  const options = {
+    method: event.httpMethod,
+    headers: headersToSend, // <--- Sử dụng đối tượng headers đã được xây dựng tường minh
+    redirect: 'follow'
+  };
+
+  // Chỉ thêm 'body' vào options nếu phương thức cho phép và có body
+  if (event.httpMethod.toUpperCase() !== 'GET' && event.httpMethod.toUpperCase() !== 'HEAD' && event.body) {
+    options.body = event.body;
+  }
+
+  console.log(`[Proxy] Forwarding to: ${destinationUrl.toString()}`);
+  console.log(`[Proxy] Options sent:`, JSON.stringify(options, null, 2));
 
   try {
-    // 2. Chuẩn bị các tùy chọn cho request fetch
-    const options = {
-      method: event.httpMethod,
-      headers: {
-        'authorization': event.headers.authorization || '',
-        'content-type': event.headers['content-type'] || 'application/json'
-      }
-    };
-
-    // 3. Chỉ thêm 'body' vào options nếu phương thức không phải là GET và có body
-    //    toUpperCase() để đảm bảo so sánh đúng 'GET' và 'HEAD'
-    if (event.httpMethod.toUpperCase() !== 'GET' && event.httpMethod.toUpperCase() !== 'HEAD' && event.body) {
-      options.body = event.body;
-    }
-
-    // 4. Thực hiện request đến Google Apps Script với options đã chuẩn bị
+    // 4. Thực hiện request đến Google
     const response = await fetch(destinationUrl.toString(), options);
-    
-    const data = await response.text();
+    const data = await response.text(); // Lấy data dưới dạng text để tránh lỗi parse JSON nếu Google trả về lỗi HTML
 
-    console.log(`[Proxy] Phản hồi từ Google: ${data}`);
-
-    // 5. Trả về phản hồi cho trình duyệt
+    // 5. Trả về phản hồi
     return {
       statusCode: response.status,
       headers: { "Content-Type": "application/json" },
@@ -70,7 +87,7 @@ export const handler = async (event) => {
     };
 
   } catch (error) {
-    console.error('[Proxy] Lỗi nghiêm trọng:', error);
+    console.error('[Proxy] Critical Error:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ success: false, message: "Proxy Server Error: " + error.message })
