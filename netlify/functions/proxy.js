@@ -1,9 +1,10 @@
 // File: netlify/functions/proxy.js
 // PHIÊN BẢN HOÀN CHỈNH - SỬA LỖI CÚ PHÁP VÀ LOGIC
 
-const fetch = require('node-fetch');
+import fetch from 'node-fetch'; // <<<< SỬA LỖI 1
 
-exports.handler = async function (event, context) {
+export const handler = async (event, context) => { // <<<< SỬA LỖI 2
+  
   
   // ===================================================================
   //   PHẦN 1: BỘ ĐIỀU HƯỚNG CHO GOOGLE DRIVE PROXY
