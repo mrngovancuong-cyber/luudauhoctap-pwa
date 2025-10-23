@@ -1,23 +1,31 @@
 // File: netlify/functions/proxy.js
-// PHIÊN BẢN CHỐNG ĐẠN (BULLETPROOF)
+// PHIÊN BẢN CUỐI CÙNG - GỬI TOKEN QUA URL
 
 import fetch from 'node-fetch';
 
+// Lấy URL của Google Script từ biến môi trường trên Netlify.
 const SCRIPT_URL = process.env.SCRIPT_URL;
 
 export const handler = async (event) => {
-  // --- Xử lý Google Drive Proxy (Giữ nguyên) ---
+  // --- Phần 1: Xử lý Proxy cho Google Drive (giữ nguyên logic cũ của bạn) ---
   if (event.path.startsWith('/api/gdrive-proxy/')) {
     const fileId = event.path.replace('/api/gdrive-proxy/', '');
-    if (!fileId) return { statusCode: 400, body: 'Thiếu File ID.' };
+    if (!fileId) {
+      return { statusCode: 400, body: 'Thiếu File ID.' };
+    }
     const gdriveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
     try {
       const driveResponse = await fetch(gdriveUrl);
-      if (!driveResponse.ok) throw new Error(`Google Drive error: ${driveResponse.statusText}`);
+      if (!driveResponse.ok) {
+        throw new Error(`Google Drive error: ${driveResponse.statusText}`);
+      }
       const buffer = await driveResponse.buffer();
       return {
         statusCode: 200,
-        headers: { 'Content-Type': driveResponse.headers.get('content-type') || 'application/octet-stream' },
+        headers: {
+          'Content-Type': driveResponse.headers.get('content-type') || 'application/octet-stream',
+          'Cache-Control': 'public, max-age=31536000'
+        },
         body: buffer.toString('base64'),
         isBase64Encoded: true,
       };
@@ -26,56 +34,57 @@ export const handler = async (event) => {
     }
   }
 
-  // --- Xử lý Proxy cho Google Apps Script ---
-  
+  // --- Phần 2: Xử lý Proxy cho Google Apps Script (PHẦN NÂNG CẤP) ---
+
+  // Kiểm tra xem SCRIPT_URL đã được cấu hình trên Netlify chưa.
   if (!SCRIPT_URL) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL." })
+      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: Biến môi trường SCRIPT_URL chưa được thiết lập trên Netlify." })
     };
   }
 
-  // 1. Xây dựng URL đích
+  // BƯỚC A: XÂY DỰNG URL ĐÍCH
   const destinationUrl = new URL(SCRIPT_URL);
+  // Gắn tất cả các tham số từ URL gốc (như ?action=... &examId=...) vào URL đích.
   for (const param in event.queryStringParameters) {
     destinationUrl.searchParams.append(param, event.queryStringParameters[param]);
   }
 
-  // 2. Xây dựng headers một cách an toàn
-  const headersToSend = {};
-  
-  // Kiểm tra an toàn: chỉ truy cập các thuộc tính của 'headers' nếu 'event.headers' tồn tại
+  // BƯỚC B: LẤY TOKEN TỪ HEADER VÀ GẮN NÓ VÀO URL ĐÍCH
   const incomingHeaders = event.headers || {};
+  const authToken = incomingHeaders.authorization || incomingHeaders.Authorization; // Lấy token một cách an toàn
   
-  const authToken = incomingHeaders.authorization || incomingHeaders.Authorization;
   if (authToken) {
-    headersToSend['authorization'] = authToken;
+    // Nếu có token, gắn nó vào URL dưới dạng một tham số mới tên là 'authToken'.
+    destinationUrl.searchParams.append('authToken', authToken);
   }
   
-  if (incomingHeaders['content-type']) {
-    headersToSend['content-type'] = incomingHeaders['content-type'];
-  }
-  
-  // 3. Chuẩn bị options cho fetch
+  // BƯỚC C: CHUẨN BỊ CÁC TÙY CHỌN CHO REQUEST FETCH
   const options = {
     method: event.httpMethod,
-    headers: headersToSend,
+    headers: {
+      // Chúng ta không cần gửi 'authorization' trong header nữa vì nó đã ở trong URL.
+      // Chỉ cần gửi 'content-type' cho các request POST.
+      'content-type': incomingHeaders['content-type'] || 'application/json'
+    },
     redirect: 'follow'
   };
 
-  if (event.httpMethod.toUpperCase() !== 'GET' && event.body) {
+  // Chỉ thêm 'body' vào options nếu đó là request POST/PUT... và có body.
+  if (event.httpMethod.toUpperCase() !== 'GET' && event.httpMethod.toUpperCase() !== 'HEAD' && event.body) {
     options.body = event.body;
   }
   
-  console.log(`[Proxy] Forwarding to: ${destinationUrl.toString()}`);
-  console.log(`[Proxy] Options sent:`, JSON.stringify(options, null, 2));
+  // Ghi log để debug (bạn có thể xem log này trong trang quản lý function của Netlify)
+  console.log(`[Proxy] Chuyển tiếp đến: ${destinationUrl.toString()}`);
 
   try {
-    // 4. Thực hiện request
+    // BƯỚC D: THỰC HIỆN REQUEST ĐẾN GOOGLE APPS SCRIPT
     const response = await fetch(destinationUrl.toString(), options);
-    const data = await response.text();
+    const data = await response.text(); // Lấy phản hồi dưới dạng text
 
-    // 5. Trả về phản hồi
+    // BƯỚC E: TRẢ VỀ PHẢN HỒI CHO TRÌNH DUYỆT
     return {
       statusCode: response.status,
       headers: { "Content-Type": "application/json" },
@@ -83,7 +92,7 @@ export const handler = async (event) => {
     };
 
   } catch (error) {
-    console.error('[Proxy] Critical Error:', error);
+    console.error('[Proxy] Lỗi nghiêm trọng:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ success: false, message: "Proxy Server Error: " + error.message })
