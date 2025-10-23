@@ -1,11 +1,14 @@
 // File: netlify/functions/proxy.js
-// PHIÊN BẢN CUỐI CÙNG, ỔN ĐỊNH VÀ AN TOÀN
+// PHIÊN BẢN ĐÃ ĐƯỢC SỬA LỖI VÀ ĐƠN GIẢN HÓA
 
 import fetch from 'node-fetch';
 
-export const handler = async (event, context) => {
-  
-  // --- Phần Google Drive Proxy ---
+// Dán URL thực thi của Google Apps Script của bạn vào đây
+// Bạn cũng có thể dùng biến môi trường như cũ: const SCRIPT_URL = process.env.SCRIPT_URL;
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydr4uigyqHtjpstmYCVchp3ovGDMQQa12EiIpbjgPDBNybXDvS0tVnysBBHn0PVBlg/exec";
+
+export const handler = async (event) => {
+  // --- Xử lý Google Drive Proxy (Giữ nguyên logic của bạn) ---
   if (event.path.startsWith('/api/gdrive-proxy/')) {
     const fileId = event.path.replace('/api/gdrive-proxy/', '');
     if (!fileId) return { statusCode: 400, body: 'Thiếu File ID.' };
@@ -16,10 +19,7 @@ export const handler = async (event, context) => {
       const buffer = await driveResponse.buffer();
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': driveResponse.headers.get('content-type') || 'application/octet-stream',
-          'Cache-Control': 'public, max-age=31536000'
-        },
+        headers: { 'Content-Type': driveResponse.headers.get('content-type') || 'application/octet-stream' },
         body: buffer.toString('base64'),
         isBase64Encoded: true,
       };
@@ -28,47 +28,46 @@ export const handler = async (event, context) => {
     }
   }
 
-  // --- PHẦN PROXY CHO GOOGLE APPS SCRIPT ---
-
-  const scriptUrl = process.env.SCRIPT_URL;
-  if (!scriptUrl) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL" })
-    };
-  }
-
-  const queryString = event.rawQuery ? `?${event.rawQuery}` : "";
-  const fullUrl = scriptUrl + queryString;
+  // --- Xử lý Proxy cho Google Apps Script (PHẦN ĐÃ SỬA) ---
   
-  // Tìm header 'authorization' một cách an toàn, không phân biệt hoa/thường.
-  const authHeader = event.headers.authorization || event.headers.Authorization || null;
-
-  const options = {
-    method: event.httpMethod,
-    headers: {
-      'Authorization': authHeader || '', // Sử dụng biến authHeader
-      'Content-Type': event.headers['content-type'] || 'text/plain;charset=utf-8'
-    },
-    redirect: 'follow'
-  };
-
-  if (event.body) {
-    options.body = event.body;
+  // 1. Xây dựng URL đích một cách an toàn
+  const destinationUrl = new URL(SCRIPT_URL);
+  // Thêm tất cả các query params từ request gốc vào URL đích
+  for (const param in event.queryStringParameters) {
+    destinationUrl.searchParams.append(param, event.queryStringParameters[param]);
   }
+  
+  console.log(`[Proxy] Chuyển tiếp ${event.httpMethod} đến: ${destinationUrl.toString()}`);
 
   try {
-    const googleResponse = await fetch(fullUrl, options);
-    const data = await googleResponse.text();
+    // 2. Thực hiện request đến Google Apps Script
+    const response = await fetch(destinationUrl.toString(), {
+      method: event.httpMethod,
+      headers: {
+        // Chuyển tiếp chính xác header 'authorization' (lưu ý: netlify chuyển thành chữ thường)
+        'authorization': event.headers.authorization || '',
+        'content-type': event.headers['content-type'] || 'application/json'
+      },
+      // Chỉ gửi body nếu có
+      body: event.body,
+    });
+    
+    const data = await response.text();
+
+    console.log(`[Proxy] Phản hồi từ Google: ${data}`);
+
+    // 3. Trả về phản hồi cho trình duyệt
     return {
-      statusCode: googleResponse.status,
+      statusCode: response.status,
       headers: { "Content-Type": "application/json" },
       body: data,
     };
+
   } catch (error) {
+    console.error('[Proxy] Lỗi nghiêm trọng:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Proxy gặp lỗi: " + error.message })
+      body: JSON.stringify({ success: false, message: "Proxy Server Error: " + error.message })
     };
   }
 };
