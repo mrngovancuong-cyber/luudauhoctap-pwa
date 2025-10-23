@@ -53,20 +53,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- HÀM BẢO MẬT: KIỂM TRA ĐĂNG NHẬP KHI TẢI TRANG ---
     function checkAuthentication() {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        // Nếu không có token, đá về trang đăng nhập
-        window.location.href = '/login.html';
-      }
-    }
-    // Gọi hàm này ngay lập tức để bảo vệ trang
-    checkAuthentication();
+  console.log("--- Bắt đầu checkAuthentication trên Dashboard ---");
+  const token = localStorage.getItem('authToken');
+  
+  // In ra token tìm thấy để debug
+  console.log("Token tìm thấy trong localStorage:", token);
+
+  if (!token) {
+    console.log("Không tìm thấy token. Đang chuyển hướng về /login.html");
+    window.location.href = '/login.html';
+  } else {
+    console.log("Đã tìm thấy token. Cho phép truy cập Dashboard.");
+  }
+}
+// Gọi hàm này ngay lập tức để bảo vệ trang
+checkAuthentication();
 
     // --- HÀM KHỞI TẠO ---
     async function initializeDashboard() {
         showLoading(true);
         try {
             const token = localStorage.getItem('authToken');
+	    // IN RA TOKEN NGAY TRƯỚỚC KHI GỬI ĐI
+            console.log("Đang gửi request API đầu tiên với token:", token);	    
 	    const response = await fetch(`${API_URL}?action=getExamList`, {
     		headers: { 'Authorization': `Bearer ${token}` }
 	    });
