@@ -47,48 +47,57 @@ exports.handler = async function (event, context) {
   //   Nếu request không phải cho Google Drive, code sẽ chạy tiếp xuống đây.
   // ===================================================================
 
-  const scriptUrl = process.env.SCRIPT_URL;
+  // Lấy URL của Apps Script từ biến môi trường của Netlify
+const scriptUrl = process.env.SCRIPT_URL;
 
-  if (!scriptUrl) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi: SCRIPT_URL chưa được cấu hình trên Netlify." })
-    };
-  }
+if (!scriptUrl) {
+  return {
+    statusCode: 500,
+    body: JSON.stringify({ success: false, message: "Lỗi: SCRIPT_URL chưa được cấu hình trên Netlify." })
+  };
+}
 
-  const queryString = event.rawQuery ? `?${event.rawQuery}` : "";
-  const fullUrl = scriptUrl + queryString;
-  
-  try {
-    const options = {
-      method: event.httpMethod,
-      headers: {
-        "Content-Type": event.headers["content-type"] || "text/plain",
-      },
-    };
+const queryString = event.rawQuery ? `?${event.rawQuery}` : "";
+const fullUrl = scriptUrl + queryString;
 
-    if (event.httpMethod === 'POST' && event.body) {
-      options.body = event.body;
-    }
+// Chuẩn bị các tùy chọn cho request `fetch`
+const options = {
+  method: event.httpMethod,
+  headers: {
+    // **DÒNG SỬA LỖI QUAN TRỌNG NHẤT**
+    // Lấy header 'authorization' từ request gốc và chuyển tiếp nó
+    'Authorization': event.headers.authorization || '',
 
-    const googleResponse = await fetch(fullUrl, options);
-    const data = await googleResponse.text();
-
-    return {
-      statusCode: googleResponse.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      },
-      body: data,
-    };
-
-  } catch (error) {
-    console.error("Lỗi Proxy Apps Script:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Proxy gặp lỗi khi kết nối đến Google Script." })
-    };
+    // Chuyển tiếp cả 'Content-Type' nếu có
+    'Content-Type': event.headers['content-type'] || 'text/plain;charset=utf-8'
   }
 };
+
+// Chỉ thêm 'body' vào request nếu nó tồn tại
+if (event.body) {
+  options.body = event.body;
+}
+
+try {
+  // Gọi đến Google Apps Script với đầy đủ thông tin
+  const googleResponse = await fetch(fullUrl, options);
+  const data = await googleResponse.text();
+
+  // Trả kết quả về cho trình duyệt
+  // Chúng ta không cần thêm các header CORS ở đây vì Netlify đã xử lý
+  return {
+    statusCode: googleResponse.status,
+    headers: {
+      // Chỉ cần đảm bảo trả về đúng kiểu nội dung
+      "Content-Type": "application/json" 
+    },
+    body: data, 
+  };
+
+} catch (error) {
+  console.error("Lỗi Proxy Apps Script:", error);
+  return {
+    statusCode: 500,
+    body: JSON.stringify({ success: false, message: "Proxy gặp lỗi khi kết nối đến Google Script." })
+  };
+}
