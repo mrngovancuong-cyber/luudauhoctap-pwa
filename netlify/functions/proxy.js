@@ -44,26 +44,26 @@ exports.handler = async function (event, context) {
   //   PHẦN 2: LOGIC CHO GOOGLE APPS SCRIPT
   //   Nếu request không phải cho Google Drive, code sẽ chạy tiếp xuống đây.
   // ===================================================================
-  const scriptUrl = process.env.SCRIPT_URL;
-
+const scriptUrl = process.env.SCRIPT_URL;
   if (!scriptUrl) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi: SCRIPT_URL chưa được cấu hình." })
+      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL chưa được thiết lập." })
     };
   }
 
+  // **DÒNG SỬA LỖI QUAN TRỌNG**
+  // Đảm bảo rawQuery luôn được nối vào URL
   const queryString = event.rawQuery ? `?${event.rawQuery}` : "";
   const fullUrl = scriptUrl + queryString;
   
   const options = {
     method: event.httpMethod,
     headers: {
-      'Authorization': event.headers.authorization || '', // Đảm bảo chuyển tiếp
+      'Authorization': event.headers.authorization || '',
       'Content-Type': event.headers['content-type'] || 'text/plain;charset=utf-8'
     },
-    // Chuyển hướng theo Google Apps Script nếu cần
-    redirect: 'follow' 
+    redirect: 'follow'
   };
 
   if (event.body) {
@@ -73,15 +73,12 @@ exports.handler = async function (event, context) {
   try {
     const googleResponse = await fetch(fullUrl, options);
     const data = await googleResponse.text();
-
     return {
       statusCode: googleResponse.status,
       headers: { "Content-Type": "application/json" },
       body: data,
     };
-
   } catch (error) {
-    console.error("Lỗi Proxy Apps Script:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ success: false, message: "Proxy gặp lỗi: " + error.message })
