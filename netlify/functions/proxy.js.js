@@ -1,67 +1,53 @@
 // File: netlify/functions/proxy.js
-// PHIÊN BẢN HOÀN CHỈNH - SỬA LỖI CÚ PHÁP VÀ LOGIC
+// PHIÊN BẢN CUỐI CÙNG, ỔN ĐỊNH VÀ AN TOÀN
 
-import fetch from 'node-fetch'; // <<<< SỬA LỖI 1
+import fetch from 'node-fetch';
 
-export const handler = async (event, context) => { // <<<< SỬA LỖI 2
+export const handler = async (event, context) => {
   
-  
-  // ===================================================================
-  //   PHẦN 1: BỘ ĐIỀU HƯỚNG CHO GOOGLE DRIVE PROXY
-  // ===================================================================
+  // --- Phần Google Drive Proxy ---
   if (event.path.startsWith('/api/gdrive-proxy/')) {
     const fileId = event.path.replace('/api/gdrive-proxy/', '');
-    if (!fileId) {
-      return { statusCode: 400, body: 'Thiếu File ID của Google Drive.' };
-    }
+    if (!fileId) return { statusCode: 400, body: 'Thiếu File ID.' };
     const gdriveUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-
     try {
       const driveResponse = await fetch(gdriveUrl);
-      if (!driveResponse.ok) {
-        throw new Error(`Google Drive trả về lỗi: ${driveResponse.status} ${driveResponse.statusText}`);
-      }
-      
+      if (!driveResponse.ok) throw new Error(`Google Drive error: ${driveResponse.statusText}`);
       const buffer = await driveResponse.buffer();
-      
       return {
         statusCode: 200,
         headers: {
           'Content-Type': driveResponse.headers.get('content-type') || 'application/octet-stream',
-          'Content-Length': buffer.length,
           'Cache-Control': 'public, max-age=31536000'
         },
         body: buffer.toString('base64'),
         isBase64Encoded: true,
       };
-
     } catch (error) {
-      console.error('Lỗi Google Drive Proxy:', error);
-      return { statusCode: 502, body: `Lỗi khi lấy file từ Google Drive: ${error.message}` };
+      return { statusCode: 502, body: `Lỗi GDrive Proxy: ${error.message}` };
     }
   }
 
-  // ===================================================================
-  //   PHẦN 2: LOGIC CHO GOOGLE APPS SCRIPT
-  //   Nếu request không phải cho Google Drive, code sẽ chạy tiếp xuống đây.
-  // ===================================================================
-const scriptUrl = process.env.SCRIPT_URL;
+  // --- PHẦN PROXY CHO GOOGLE APPS SCRIPT ---
+
+  const scriptUrl = process.env.SCRIPT_URL;
   if (!scriptUrl) {
-    return { statusCode: 500, body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL" }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL" })
+    };
   }
 
   const queryString = event.rawQuery ? `?${event.rawQuery}` : "";
   const fullUrl = scriptUrl + queryString;
   
-  // **SỬA ĐỔI QUAN TRỌNG Ở ĐÂY**
   // Tìm header 'authorization' một cách an toàn, không phân biệt hoa/thường.
   const authHeader = event.headers.authorization || event.headers.Authorization || null;
 
   const options = {
     method: event.httpMethod,
     headers: {
-      // Sử dụng biến authHeader vừa tìm được.
-      'Authorization': authHeader || '',
+      'Authorization': authHeader || '', // Sử dụng biến authHeader
       'Content-Type': event.headers['content-type'] || 'text/plain;charset=utf-8'
     },
     redirect: 'follow'
