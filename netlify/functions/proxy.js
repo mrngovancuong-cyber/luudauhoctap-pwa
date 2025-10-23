@@ -40,23 +40,29 @@ export const handler = async (event) => {
   console.log(`[Proxy] Chuyển tiếp ${event.httpMethod} đến: ${destinationUrl.toString()}`);
 
   try {
-    // 2. Thực hiện request đến Google Apps Script
-    const response = await fetch(destinationUrl.toString(), {
+    // 2. Chuẩn bị các tùy chọn cho request fetch
+    const options = {
       method: event.httpMethod,
       headers: {
-        // Chuyển tiếp chính xác header 'authorization' (lưu ý: netlify chuyển thành chữ thường)
         'authorization': event.headers.authorization || '',
         'content-type': event.headers['content-type'] || 'application/json'
-      },
-      // Chỉ gửi body nếu có
-      body: event.body,
-    });
+      }
+    };
+
+    // 3. Chỉ thêm 'body' vào options nếu phương thức không phải là GET và có body
+    //    toUpperCase() để đảm bảo so sánh đúng 'GET' và 'HEAD'
+    if (event.httpMethod.toUpperCase() !== 'GET' && event.httpMethod.toUpperCase() !== 'HEAD' && event.body) {
+      options.body = event.body;
+    }
+
+    // 4. Thực hiện request đến Google Apps Script với options đã chuẩn bị
+    const response = await fetch(destinationUrl.toString(), options);
     
     const data = await response.text();
 
     console.log(`[Proxy] Phản hồi từ Google: ${data}`);
 
-    // 3. Trả về phản hồi cho trình duyệt
+    // 5. Trả về phản hồi cho trình duyệt
     return {
       statusCode: response.status,
       headers: { "Content-Type": "application/json" },
