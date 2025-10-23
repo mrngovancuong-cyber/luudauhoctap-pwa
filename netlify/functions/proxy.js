@@ -47,21 +47,21 @@ export const handler = async (event, context) => { // <<<< SỬA LỖI 2
   // ===================================================================
 const scriptUrl = process.env.SCRIPT_URL;
   if (!scriptUrl) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL chưa được thiết lập." })
-    };
+    return { statusCode: 500, body: JSON.stringify({ success: false, message: "Lỗi cấu hình: SCRIPT_URL" }) };
   }
 
-  // **DÒNG SỬA LỖI QUAN TRỌNG**
-  // Đảm bảo rawQuery luôn được nối vào URL
   const queryString = event.rawQuery ? `?${event.rawQuery}` : "";
   const fullUrl = scriptUrl + queryString;
   
+  // **SỬA ĐỔI QUAN TRỌNG Ở ĐÂY**
+  // Tìm header 'authorization' một cách an toàn, không phân biệt hoa/thường.
+  const authHeader = event.headers.authorization || event.headers.Authorization || null;
+
   const options = {
     method: event.httpMethod,
     headers: {
-      'Authorization': event.headers.authorization || '',
+      // Sử dụng biến authHeader vừa tìm được.
+      'Authorization': authHeader || '',
       'Content-Type': event.headers['content-type'] || 'text/plain;charset=utf-8'
     },
     redirect: 'follow'
