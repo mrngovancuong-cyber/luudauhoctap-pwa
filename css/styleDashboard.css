@@ -442,3 +442,10 @@ body {
 #back-to-overview-btn:hover {
     background-color: #5a6268;
 }
+
+/* Thêm vào cuối file styleDashboard.css */
+.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+}

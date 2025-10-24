@@ -27,86 +27,61 @@
         </div>
     </header>
 
-    <main class="dashboard-main">
-        <!-- KHU VỰC BỘ LỌC TỔNG QUAN -->
-        <section class="card filter-section">
-            <h2>Tổng quan Hiệu suất Lớp học</h2>
-            <div class="filter-bar">
-                <select id="exam-select" class="filter-select"></select>
-                <select id="class-select" class="filter-select" disabled><option>Tất cả các lớp</option></select> <!-- Tạm thời vô hiệu hóa -->
-            </div>
-        </section>
-
-        <!-- KHU VỰC TỔNG QUAN LỚP HỌC (hiển thị mặc định) -->
-        <section id="class-overview-section">
-            <!-- Các thẻ chỉ số KPI -->
-            <div id="overview-kpis" class="kpi-grid"></div>
-
-            <!-- Các biểu đồ -->
-            <div class="chart-grid">
-                <div class="chart-container" id="grade-distribution-chart"></div>
-                <div class="list-container card">
-                    <h4><span style="vertical-align: middle;">💡</span> 5 Câu hỏi cần chú ý nhất</h4>
-                    <ul id="hardest-questions-list"></ul>
-                </div>
-            </div>
-
-            <!-- Danh sách học sinh -->
-            <div class="student-list-grid">
-                <div class="list-container card">
-                    <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
-                    <ul id="top-performers-list"></ul>
-                </div>
-                <div class="list-container card">
-                    <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
-                    <ul id="bottom-performers-list"></ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- KHU VỰC TÌM KIẾM HỌC SINH -->
-        <section class="card search-section">
-            <h2>Phân tích Chi tiết Học sinh</h2>
-            <div class="search-bar">
-                <input type="text" id="student-id-input" placeholder="Nhập Mã số học sinh...">
-                <button id="search-btn">Tìm kiếm</button>
-                <button id="back-to-overview-btn" class="hidden">Quay lại Tổng quan</button>
-            </div>
-        </section>
+    <!-- THAY THẾ TOÀN BỘ THẺ <main> TRONG Dashboard.html -->
+<main class="dashboard-main">
+    <!-- KHU VỰC ĐIỀU KHIỂN CHÍNH (ĐÃ GỘP BỘ LỌC VÀ TÌM KIẾM) -->
+    <section class="card filter-section">
+        <!-- Thay đổi tiêu đề -->
+        <h2>Tổng quan về Lớp học</h2>
         
-        <!-- KHU VỰC KẾT QUẢ CHI TIẾT (ẩn ban đầu) -->
-        <section id="result-section" class="hidden">
-            <!-- Thông tin cá nhân của học sinh sẽ hiện ở đây -->
-            <div class="student-profile">
-                <h3 id="student-name-display"></h3>
-                <span id="student-class-display"></span>
-            </div>
-
-            <!-- Thanh điều hướng Tab -->
-            <div class="tab-nav">
-                <button class="tab-btn active" data-tab="overview">Tổng quan</button>
-                <button class="tab-btn" data-tab="history">Lịch sử làm bài</button>
-                <button class="tab-btn" data-tab="skills">Phân tích Năng lực</button>
-                <button class="tab-btn" data-tab="behavior">Phân tích Hành vi</button>
-            </div>
-
-            <!-- Nội dung các Tab -->
-            <div class="tab-content">
-                <!-- Tab 1: Tổng quan -->
-                <div id="overview" class="tab-panel active">
-                    <div class="chart-container" id="score-trend-chart"></div>
-                    <div class="chart-container" id="performance-quadrant-chart"></div>
-                </div>
-                <!-- Các tab khác giữ nguyên -->
-            </div>
-        </section>
-        
-        <!-- Khu vực Loading -->
-        <div id="loading-spinner" class="loading-inline hidden">
-            <div class="spinner"></div>
-            <p>Đang tải dữ liệu...</p>
+        <!-- Hàng 1: Bộ lọc tổng quan -->
+        <div class="filter-bar">
+            <select id="exam-select" class="filter-select"></select>
+            <select id="class-select" class="filter-select" disabled><option>Tất cả các lớp</option></select>
         </div>
-    </main>
+
+        <hr class="divider"> <!-- Thêm đường kẻ ngang để phân tách -->
+
+        <!-- Hàng 2: Tìm kiếm chi tiết học sinh -->
+        <div class="search-bar">
+            <input type="text" id="student-id-input" placeholder="Hoặc, nhập Mã số HS để xem chi tiết...">
+            <button id="search-btn">Tìm kiếm</button>
+        </div>
+    </section>
+
+    <!-- KHU VỰC TỔNG QUAN LỚP HỌC (giữ nguyên) -->
+    <section id="class-overview-section">
+        <!-- Các thẻ chỉ số KPI -->
+        <div id="overview-kpis" class="kpi-grid"></div>
+
+        <!-- Các biểu đồ -->
+        <div class="chart-grid">
+            <div class="chart-container" id="grade-distribution-chart"></div>
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">💡</span> 5 Câu hỏi cần chú ý nhất</h4>
+                <ul id="hardest-questions-list"></ul>
+            </div>
+        </div>
+
+        <!-- Danh sách học sinh -->
+        <div class="student-list-grid">
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
+                <ul id="top-performers-list"></ul>
+            </div>
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
+                <ul id="bottom-performers-list"></ul>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Khu vực Loading (giữ nguyên) -->
+    <div id="loading-spinner" class="loading-inline hidden">
+        <div class="spinner"></div>
+        <p>Đang tải dữ liệu...</p>
+    </div>
+</main>
 
 <!-- Modal for Behavior Details -->
 <div id="behavior-modal" class="modal-overlay hidden">

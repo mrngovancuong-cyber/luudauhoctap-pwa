@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân tích Chi tiết Học sinh</title>
+    
+    <!-- Các font chữ và thư viện giống hệt Dashboard -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <!-- Quan trọng: Sử dụng chung file CSS với Dashboard để đảm bảo giao diện nhất quán -->
+    <link rel="stylesheet" href="css/styleDashboard.css">
+</head>
+<body>
+    <!-- =================================================================
+         HEADER - KẾ THỪA TỪ DASHBOARD VÀ CÓ CHỈNH SỬA
+    ================================================================== -->
+    <header class="sticky-header">
+        <div class="header-top">
+            <div class="header-left">
+                <!-- Logo bên trái (giữ nguyên) -->
+                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+            </div>
+            <div class="header-center">
+                <!-- Tiêu đề của trang này -->
+                <h1 class="title">PHÂN TÍCH CHI TIẾT HỌC SINH</h1>
+            </div>        
+            <div class="header-right">
+                <!-- Logo bên phải giờ là một liên kết để quay về Dashboard -->
+                <a href="/Dashboard.html" title="Quay lại Trang Tổng quan">
+                    <img src="/icons/LDHT logo.png" alt="Logo Lưu Dấu Học Tập" class="logo">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- =================================================================
+         MAIN CONTENT - CẤU TRÚC DASHBOARD GỐC ĐƯỢC KHÔI PHỤC TẠI ĐÂY
+    ================================================================== -->
+    <main class="dashboard-main">
+        <!-- Khu vực Loading (hiển thị khi đang tải dữ liệu) -->
+        <div id="loading-spinner" class="loading-inline">
+            <div class="spinner"></div>
+            <p>Đang tải dữ liệu học sinh...</p>
+        </div>
+
+        <!-- KHU VỰC KẾT QUẢ (sẽ hiển thị sau khi tải xong) -->
+        <section id="result-section" class="hidden">
+            <!-- Thông tin cá nhân của học sinh -->
+            <div class="student-profile">
+                <h3 id="student-name-display"></h3>
+                <span id="student-class-display"></span>
+            </div>
+
+            <!-- Thanh điều hướng Tab -->
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">Tổng quan</button>
+                <button class="tab-btn" data-tab="history">Lịch sử làm bài</button>
+                <button class="tab-btn" data-tab="skills">Phân tích Năng lực</button>
+                <button class="tab-btn" data-tab="behavior">Phân tích Hành vi</button>
+            </div>
+
+            <!-- Nội dung các Tab -->
+            <div class="tab-content">
+                <!-- Tab 1: Tổng quan -->
+                <div id="overview" class="tab-panel active">
+                    <div class="chart-container" id="score-trend-chart"></div>
+                    <div class="chart-container" id="performance-quadrant-chart"></div>
+                </div>
+                <!-- Tab 2: Lịch sử làm bài -->
+                <div id="history" class="tab-panel hidden">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tên bài</th>
+                                <th>Điểm</th>
+                                <th>Thời gian</th>
+                                <th>Rời trang</th>
+                                <th>Ngày nộp</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dữ liệu sẽ được chèn vào đây bởi JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Tab 3: Phân tích Năng lực -->
+                <div id="skills" class="tab-panel hidden">
+                    <div class="chart-container" id="topic-strength-chart"></div>
+                    <div class="chart-container" id="level-strength-chart"></div>
+                </div>
+                <!-- Tab 4: Phân tích Hành vi -->
+                <div id="behavior" class="tab-panel hidden">
+                    <div id="behavior-warning-card" class="card warning-card hidden">
+                        <h4><span style="font-size: 1.5rem; vertical-align: middle;">⚠️</span> Ghi nhận Hành vi Đáng chú ý</h4>
+                        <div id="behavior-warning-content"></div>
+                    </div>
+                    <div class="chart-container" id="leave-count-chart"></div>
+                    <div class="chart-container" id="device-usage-chart"></div>
+                    <div class="chart-container" id="study-time-chart"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Behavior Details (giữ nguyên) -->
+    <div id="behavior-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <button id="modal-close-btn" class="modal-close">&times;</button>
+        <h3 id="modal-title">Phân tích Hành vi Chi tiết</h3>
+        <div id="modal-body">
+          <!-- Nội dung chi tiết sẽ được chèn vào đây -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Chúng ta sẽ tạo file JS này ở bước tiếp theo -->
+    <script src="js/studentDetail.js"></script>
+</body>
+</html>
