@@ -1,8 +1,5 @@
 // File: /js/studentDetail.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    
-
     // --- BƯỚC 1: CẤU HÌNH APEXCHARTS TRƯỚC TIÊN ---
     Apex.setDefault({
   	chart: {
@@ -467,4 +464,3 @@ function generateStudyTimeSummary(timeData) {
     // --- KHỞI CHẠY ---
     initializeDetailView();
     attachEventListeners(); // Gắn các sự kiện cho các nút
-});
