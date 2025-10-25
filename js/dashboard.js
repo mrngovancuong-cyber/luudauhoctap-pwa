@@ -88,12 +88,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderClassOverview(data) {
-        kpisContainer.innerHTML = `
-            <div class="kpi-card"><h3>Tỷ lệ tham gia</h3><p>${data.kpis.submissionCount} / ${data.kpis.totalStudents}</p></div>
-            <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
-            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
-            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
-        `;
+        // 1. Xây dựng HTML cho thẻ KPI "Tham gia" một cách linh hoạt
+let participationHtml = `<div class="kpi-card"><h3>Số HS đã nộp</h3><p>${data.kpis.participantCount}</p>`;
+if (data.kpis.totalAssignedStudents !== null) {
+    // Nếu có mẫu số, hiển thị nó
+    participationHtml += `<span class="kpi-subtext">/ ${data.kpis.totalAssignedStudents} em được giao</span>`;
+}
+participationHtml += `</div>`;
+
+// 2. Ghép với các thẻ KPI khác
+kpisContainer.innerHTML = `
+    ${participationHtml}
+    <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
+    <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
+    <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
+`;
 
         renderGradeDistributionChart(data.gradeDistribution);
 
