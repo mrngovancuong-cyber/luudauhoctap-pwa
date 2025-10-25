@@ -510,21 +510,21 @@ button, input, select, textarea {
 .chart-summary {
     /* Layout và Kích thước */
     padding: 1rem 1.25rem;
-    margin-top: -1.5rem; /* Quan trọng: kéo phần tóm tắt lên trên, hơi chồng lên biểu đồ */
-    margin-bottom: 2rem; /* Tạo khoảng cách với biểu đồ tiếp theo */
+    margin-top: -1.5rem;
+    margin-bottom: 2rem;
     
     /* Giao diện */
-    background-color: var(--bg); /* Nền tối hơn một chút so với card để tạo chiều sâu */
+    background-color: var(--bg);
     border: 1px solid var(--border);
-    border-top: none; /* Bỏ viền trên để cảm giác liền mạch với biểu đồ */
-    border-radius: 0 0 12px 12px; /* Chỉ bo tròn hai góc dưới, khớp với thẻ card */
-    box-shadow: inset 0 4px 8px rgba(0,0,0,0.2); /* Tạo hiệu ứng lõm vào trong */
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);
     
-    /* Chữ */
-    font-size: 0.95rem; /* Kích thước chữ hơi nhỏ hơn bình thường */
-    color: var(--muted); /* Màu chữ xám mờ */
-    font-style: italic; /* Chữ nghiêng */
-    line-height: 1.6; /* Tăng khoảng cách giữa các dòng cho dễ đọc */
+    /* === CÁC THAY ĐỔI QUAN TRỌNG NẰM Ở ĐÂY === */
+    font-size: 1rem;      /* Tăng kích thước font lên (tương đương 16px) */
+    color: var(--text);   /* Đổi màu chữ thành màu text chính (trắng ngà) */
+    font-style: normal;   /* Bỏ chữ nghiêng để dễ đọc hơn */
+    line-height: 1.6;
 }
 
 /* Style cho các từ khóa được nhấn mạnh bên trong phần tóm tắt */
