@@ -1,7 +1,28 @@
 // File: /js/studentDetail.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
+    
+
+    // --- BƯỚC 1: CẤU HÌNH APEXCHARTS TRƯỚC TIÊN ---
+    Apex.setDefault({
+  	chart: {
+    	    fontFamily: "'Be Vietnam Pro', sans-serif", // Sử dụng font đã import
+    	    foreColor: '#e5e7eb' // Đặt màu chữ mặc định cho toàn bộ biểu đồ
+  	},
+  	title: {
+    	    style: {
+      		fontSize: '18px',
+      		fontWeight: '600',
+		fontFamily: "'Be Vietnam Pro', sans-serif",
+      		color: '#f3e9e0'
+    	    }
+  	},
+  	tooltip: {
+    	    theme: 'dark' // Đặt theme tooltip mặc định
+  	}
+    });
+    
+    // ---  BƯỚC 2: KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
     const API_URL = '/api/';
     const loadingSpinner = document.getElementById('loading-spinner');
     const searchBtn = document.getElementById('search-btn');
@@ -45,27 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let deviceUsageChart = null;
     let studyTimeChart = null;
     let currentStudentHistoryData = null;
-
-// =================================================================
-//          CẤU HÌNH FONT CHỮ CHUNG CHO TẤT CẢ BIỂU ĐỒ
-// =================================================================
-Apex.setDefault({
-  chart: {
-    fontFamily: "'Be Vietnam Pro', sans-serif", // Sử dụng font đã import
-    foreColor: '#e5e7eb' // Đặt màu chữ mặc định cho toàn bộ biểu đồ
-  },
-  title: {
-    style: {
-      fontSize: '18px',
-      fontWeight: '600',
-      fontFamily: "'Be Vietnam Pro', sans-serif",
-      color: '#f3e9e0'
-    }
-  },
-  tooltip: {
-    theme: 'dark' // Đặt theme tooltip mặc định
-  }
-});
 
     // =================================================================
     //                    LUỒNG KHỞI TẠO CHÍNH
