@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
     const API_URL = '/api/';
     const loadingSpinner = document.getElementById('loading-spinner');
+    const searchBtn = document.getElementById('search-btn');
+    const studentIdInput = document.getElementById('student-id-input');
     const resultSection = document.getElementById('result-section');
     
     // Profile
@@ -224,6 +226,10 @@ function generateStudyTimeSummary(timeData) {
 }
 
     function renderData(data) {
+	if(studentIdInput) {
+            const urlParams = new URLSearchParams(window.location.search);
+            studentIdInput.value = urlParams.get('id');
+    	}
         studentNameDisplay.textContent = data.profile.name;
         studentClassDisplay.textContent = `Lớp: ${data.profile.class}`;
         currentStudentHistoryData = data.history;
@@ -321,7 +327,7 @@ function generateStudyTimeSummary(timeData) {
     function renderLevelStrengthChart(levelData) {
         const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
         levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
-        const options = { chart: { type: 'radar', height: 350, foreColor: '#e5e7eb' }, series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], labels: levelData.map(item => item.level), yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } } };
+        const options = { chart: { type: 'radar', height: 500, foreColor: '#e5e7eb' }, series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], labels: levelData.map(item => item.level), yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } } };
         if (levelStrengthChart) { levelStrengthChart.updateOptions(options); } else { levelStrengthChart = new ApexCharts(levelStrengthChartContainer, options); levelStrengthChart.render(); }
     }
     
@@ -372,6 +378,17 @@ function generateStudyTimeSummary(timeData) {
     //                    HÀM TIỆN ÍCH VÀ SỰ KIỆN
     // =================================================================
 
+    function searchStudent() {
+    	const studentId = studentIdInput.value.trim();
+    	if (!studentId) {
+       	    alert('Vui lòng nhập Mã số học sinh.');
+            return;
+    }
+    
+    // Tải lại trang chi tiết với ID mới trong URL
+    	window.location.href = `/StudentDetail.html?id=${studentId}`;
+    }
+
     function showLoading(isLoading) {
         loadingSpinner.classList.toggle('hidden', !isLoading);
     }
@@ -419,6 +436,12 @@ function generateStudyTimeSummary(timeData) {
         behaviorModal.addEventListener('click', (event) => {
             if (event.target === behaviorModal) behaviorModal.classList.add('hidden');
         });
+	searchBtn.addEventListener('click', searchStudent);
+    	studentIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+            	searchStudent();
+            }
+	});
     }
 
     // --- KHỞI CHẠY ---

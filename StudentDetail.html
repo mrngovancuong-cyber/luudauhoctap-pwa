@@ -45,6 +45,13 @@
          MAIN CONTENT - CẤU TRÚC DASHBOARD GỐC ĐƯỢC KHÔI PHỤC TẠI ĐÂY
     ================================================================== -->
     <main class="dashboard-main">
+	<section class="card search-section">
+            <div class="search-bar">
+            	<input type="text" id="student-id-input" placeholder="Nhập Mã số học sinh khác để xem...">
+            	<button id="search-btn">Tìm kiếm</button>
+            </div>
+    	</section>
+
         <!-- Khu vực Loading (hiển thị khi đang tải dữ liệu) -->
         <div id="loading-spinner" class="loading-inline">
             <div class="spinner"></div>
@@ -95,12 +102,15 @@
                     </table>
                 </div>
                 <!-- Tab 3: Phân tích Năng lực -->
-                <div id="skills" class="tab-panel hidden">
-                    <div class="chart-container" id="topic-strength-chart"></div>
+		<div id="skills" class="tab-panel hidden">
+		    <!-- Biểu đồ 1: Chủ đề - Chiếm toàn bộ chiều rộng -->
+		    <div class="chart-container" id="topic-strength-chart"></div>
 		    <div class="chart-summary" id="topic-strength-summary"></div>
-                    <div class="chart-container" id="level-strength-chart"></div>
+    
+		    <!-- Biểu đồ 2: Radar - Chiếm toàn bộ chiều rộng và cao hơn -->
+		    <div class="chart-container full-width-chart" id="level-strength-chart"></div>
 		    <div class="chart-summary" id="level-strength-summary"></div>
-                </div>
+		</div>
                 <!-- Tab 4: Phân tích Hành vi -->
                 <div id="behavior" class="tab-panel hidden">
                     <div id="behavior-warning-card" class="card warning-card hidden">

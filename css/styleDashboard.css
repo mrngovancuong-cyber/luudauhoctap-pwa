@@ -530,3 +530,11 @@ body {
     font-weight: 600;         /* Đậm hơn một chút */
     font-style: normal;       /* Chữ không bị nghiêng */
 }
+
+/* Style cho các biểu đồ cần chiếm toàn bộ chiều rộng và cao hơn */
+.full-width-chart {
+    /* Ghi đè lại grid layout nếu có */
+    grid-column: 1 / -1; 
+    /* Tăng chiều cao tối thiểu cho biểu đồ */
+    min-height: 450px; 
+}
