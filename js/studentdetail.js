@@ -46,6 +46,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let studyTimeChart = null;
     let currentStudentHistoryData = null;
 
+// =================================================================
+//          CẤU HÌNH FONT CHỮ CHUNG CHO TẤT CẢ BIỂU ĐỒ
+// =================================================================
+Apex.setDefault({
+  chart: {
+    fontFamily: "'Be Vietnam Pro', sans-serif", // Sử dụng font đã import
+    foreColor: '#e5e7eb' // Đặt màu chữ mặc định cho toàn bộ biểu đồ
+  },
+  title: {
+    style: {
+      fontSize: '18px',
+      fontWeight: '600',
+      fontFamily: "'Be Vietnam Pro', sans-serif",
+      color: '#f3e9e0'
+    }
+  },
+  tooltip: {
+    theme: 'dark' // Đặt theme tooltip mặc định
+  }
+});
 
     // =================================================================
     //                    LUỒNG KHỞI TẠO CHÍNH
@@ -121,13 +141,13 @@ function generateScoreTrendSummary(scoreData) {
     const lastScore = scores[scores.length - 1];
     const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     
-    let summary = `Điểm trung bình các bài là <strong>${avgScore.toFixed(2)}</strong>. `;
+    let summary = `Điểm trung bình các bài là  <strong>${avgScore.toFixed(2)}</strong>. `;
     if (lastScore > firstScore + 1 && lastScore > avgScore) {
-        summary += `Ghi nhận xu hướng <strong>tiến bộ rõ rệt</strong>, với điểm số gần đây cao hơn đáng kể so với trước đây.`;
+        summary += `Ghi nhận xu hướng  <strong>tiến bộ rõ rệt</strong>, với điểm số gần đây cao hơn đáng kể so với trước đây.`;
     } else if (lastScore < firstScore - 1 && lastScore < avgScore) {
-        summary += `Cần chú ý xu hướng điểm số đang <strong>đi xuống</strong>. Em cần xem lại các phần kiến thức còn yếu.`;
+        summary += `Cần chú ý xu hướng điểm số đang  <strong>đi xuống</strong>. Em cần xem lại các phần kiến thức còn yếu.`;
     } else {
-        summary += `Phong độ của em khá <strong>ổn định</strong> qua các bài làm.`;
+        summary += `Phong độ của em khá  <strong>ổn định</strong> qua các bài làm.`;
     }
     return summary;
 }
@@ -147,7 +167,7 @@ function generatePerformanceQuadrantSummary(quadrantData) {
     else if (avgTime >= 70 && avgScore >= 7.5) style = "<strong>Cẩn thận và Chắc chắn</strong>. Em dành nhiều thời gian để đảm bảo câu trả lời chính xác.";
     else if (avgTime >= 70 && avgScore < 6) style = "<strong>Còn lúng túng</strong>. Em mất khá nhiều thời gian nhưng kết quả chưa cao, cho thấy có thể em đang gặp khó khăn với kiến thức nền tảng.";
     else style = "<strong>Cân bằng</strong>. Em có sự phân bổ thời gian và kết quả ở mức độ hợp lý.";
-    return `Nhìn chung, phong cách làm bài của em thuộc nhóm ${style}`;
+    return `Nhìn chung, phong cách làm bài của em thuộc nhóm  ${style}`;
 }
 
 /**
@@ -160,15 +180,15 @@ function generateTopicStrengthSummary(topicData) {
     const weakTopics = topicData.filter(t => t.accuracy < 0.5).map(t => t.topic);
 
     if (strongTopics.length === 0 && weakTopics.length === 0) {
-        return "Kiến thức của em ở các chủ đề khá <strong>đồng đều</strong>, không có phần nào quá yếu hoặc quá mạnh.";
+        return "Kiến thức của em ở các chủ đề khá  <strong>đồng đều</strong>, không có phần nào quá yếu hoặc quá mạnh.";
     }
 
     let summary = "";
     if (strongTopics.length > 0) {
-        summary += `Em tỏ ra <strong>rất vững</strong> ở các chủ đề: <strong>${strongTopics.join(', ')}</strong>. `;
+        summary += `Em tỏ ra  <strong>rất vững</strong> ở các chủ đề:  <strong>${strongTopics.join(', ')}</strong>. `;
     }
     if (weakTopics.length > 0) {
-        summary += `Tuy nhiên, em cần <strong>củng cố thêm</strong> kiến thức ở các chủ đề: <strong>${weakTopics.join(', ')}</strong>.`;
+        summary += `Tuy nhiên, em cần  <strong>củng cố thêm</strong> kiến thức ở các chủ đề:  <strong>${weakTopics.join(', ')}</strong>.`;
     }
     return summary.trim();
 }
@@ -183,13 +203,13 @@ function generateLeaveCountSummary(leaveData) {
     const avgLeaves = totalLeaves / leaveData.length;
 
     if (avgLeaves === 0) {
-        return "Xuất sắc! Em thể hiện sự <strong>tập trung tuyệt đối</strong> và không rời khỏi màn hình trong suốt quá trình làm bài.";
+        return "Xuất sắc! Em thể hiện sự  <strong>tập trung tuyệt đối</strong> và không rời khỏi màn hình trong suốt quá trình làm bài.";
     } else if (avgLeaves < 2) {
-        return `Mức độ tập trung của em <strong>rất tốt</strong>, với trung bình chỉ khoảng ${avgLeaves.toFixed(1)} lần rời trang mỗi bài.`;
+        return `Mức độ tập trung của em  <strong>rất tốt</strong>, với trung bình chỉ khoảng ${avgLeaves.toFixed(1)} lần rời trang mỗi bài.`;
     } else if (avgLeaves < 5) {
-        return `Em cần cải thiện sự tập trung hơn. Trung bình em rời trang khoảng ${avgLeaves.toFixed(1)} lần mỗi bài, điều này có thể ảnh hưởng đến kết quả.`;
+        return `Em cần cải thiện sự tập trung hơn. Trung bình em rời trang khoảng  ${avgLeaves.toFixed(1)} lần mỗi bài, điều này có thể ảnh hưởng đến kết quả.`;
     } else {
-        return `Báo động! Mức độ tập trung của em <strong>rất thấp</strong> (trung bình ${avgLeaves.toFixed(1)} lần rời trang). Em cần tìm một không gian yên tĩnh và tránh các yếu tố gây xao nhãng khi làm bài.`;
+        return `Báo động! Mức độ tập trung của em  <strong>rất thấp</strong> (trung bình ${avgLeaves.toFixed(1)} lần rời trang). Em cần tìm một không gian yên tĩnh và tránh các yếu tố gây xao nhãng khi làm bài.`;
     }
 }
 
@@ -203,7 +223,7 @@ function generateDeviceUsageSummary(deviceData) {
     const sortedDevices = [...deviceData].sort((a, b) => b.count - a.count);
     const primaryDevice = sortedDevices[0];
     
-    return `Thiết bị học tập chủ yếu của em là <strong>${primaryDevice.device}</strong> (chiếm ${((primaryDevice.count / sortedDevices.reduce((a, d) => a + d.count, 0)) * 100).toFixed(0)}%).`;
+    return `Thiết bị học tập chủ yếu của em là  <strong>${primaryDevice.device}</strong> (chiếm ${((primaryDevice.count / sortedDevices.reduce((a, d) => a + d.count, 0)) * 100).toFixed(0)}%).`;
 }
 
 /**
@@ -222,7 +242,7 @@ function generateStudyTimeSummary(timeData) {
         comment = "Đây là khung giờ vàng để học tập, rất đáng khen!";
     }
 
-    return `Em có xu hướng làm bài nhiều nhất vào khung giờ <strong>${favoriteTime.timeSlot}</strong>. ${comment}`;
+    return `Em có xu hướng làm bài nhiều nhất vào khung giờ  <strong>${favoriteTime.timeSlot}</strong>. ${comment}`;
 }
 
     function renderData(data) {
@@ -262,7 +282,7 @@ function generateStudyTimeSummary(timeData) {
 
     function renderScoreTrendChart(scoreData) {
         const options = {
-            chart: { type: 'line', height: 350, foreColor: '#e5e7eb' },
+            chart: { type: 'line', height: 350 },
             series: [
                 { name: 'Điểm của em', data: scoreData.map(item => item.score) },
                 { name: 'Điểm TB Lớp', data: scoreData.map(item => item.classAverage) }
@@ -270,8 +290,8 @@ function generateStudyTimeSummary(timeData) {
             xaxis: { categories: scoreData.map(item => item.examTitle) },
             yaxis: { min: 0, max: 10 },
             stroke: { curve: 'smooth', width: [4, 2], dashArray: [0, 5] },
-            title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
-            tooltip: { theme: 'dark', y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } }
+            title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left' },
+            tooltip: { y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } }
         };
         if (scoreTrendChart) { scoreTrendChart.updateOptions(options); } 
         else { scoreTrendChart = new ApexCharts(scoreTrendChartContainer, options); scoreTrendChart.render(); }
@@ -279,11 +299,11 @@ function generateStudyTimeSummary(timeData) {
 
     function renderPerformanceQuadrantChart(quadrantData) {
         const options = {
-            chart: { type: 'scatter', height: 350, foreColor: '#e5e7eb', zoom: { enabled: true } },
+            chart: { type: 'scatter', height: 350, zoom: { enabled: true } },
             series: [{ name: "Bài làm", data: quadrantData.map(item => [item.x, item.y]) }],
             xaxis: { tickAmount: 10, labels: { formatter: (val) => `${val.toFixed(0)}%` }, title: { text: '% Thời gian sử dụng' } },
             yaxis: { tickAmount: 5, min: 0, max: 10, title: { text: 'Điểm số' } },
-            title: { text: 'Phân tích Phong cách làm bài', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
+            title: { text: 'Phân tích Phong cách làm bài', align: 'left' },
             tooltip: {
                 theme: 'dark',
                 custom: function({ seriesIndex, dataPointIndex, w }) {
@@ -320,29 +340,29 @@ function generateStudyTimeSummary(timeData) {
     }
 
     function renderTopicStrengthChart(topicData) {
-        const options = { chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' }, series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }], xaxis: { categories: topicData.map(item => item.topic) }, yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, plotOptions: { bar: { horizontal: true } }, title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } } };
+        const options = { chart: { type: 'bar', height: 350 }, series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }], xaxis: { categories: topicData.map(item => item.topic) }, yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, plotOptions: { bar: { horizontal: true } }, title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left' }, tooltip: { y: { formatter: (val) => `${val}%` } } };
         if (topicStrengthChart) { topicStrengthChart.updateOptions(options); } else { topicStrengthChart = new ApexCharts(topicStrengthChartContainer, options); topicStrengthChart.render(); }
     }
     
     function renderLevelStrengthChart(levelData) {
         const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
         levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
-        const options = { chart: { type: 'radar', height: 500, foreColor: '#e5e7eb' }, series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], labels: levelData.map(item => item.level), yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } } };
+        const options = { chart: { type: 'radar', height: 500 }, series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], labels: levelData.map(item => item.level), yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left' }, tooltip: { y: { formatter: (val) => `${val}%` } } };
         if (levelStrengthChart) { levelStrengthChart.updateOptions(options); } else { levelStrengthChart = new ApexCharts(levelStrengthChartContainer, options); levelStrengthChart.render(); }
     }
     
     function renderLeaveCountChart(leaveData) {
-        const options = { chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' }, series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }], xaxis: { categories: leaveData.map(item => item.examTitle) }, yaxis: { labels: { formatter: (val) => Math.round(val) } }, title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, tooltip: { theme: 'dark' } };
+        const options = { chart: { type: 'bar', height: 350 }, series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }], xaxis: { categories: leaveData.map(item => item.examTitle) }, yaxis: { labels: { formatter: (val) => Math.round(val) } }, title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } } };
         if (leaveCountChart) { leaveCountChart.updateOptions(options); } else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
     }
 
     function renderDeviceUsageChart(deviceData) {
-        const options = { chart: { type: 'donut', height: 350, foreColor: '#e5e7eb' }, series: deviceData.map(item => item.count), labels: deviceData.map(item => item.device), title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, legend: { position: 'bottom' }, tooltip: { theme: 'dark', y: { formatter: (val) => `${val} lần` } } };
+        const options = { chart: { type: 'donut', height: 350 }, series: deviceData.map(item => item.count), labels: deviceData.map(item => item.device), title: { text: 'Thói quen sử dụng thiết bị', align: 'left' }, legend: { position: 'bottom' }, tooltip: { y: { formatter: (val) => `${val} lần` } } };
         if (deviceUsageChart) { deviceUsageChart.updateOptions(options); } else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
     }
     
     function renderStudyTimeChart(timeData) {
-        const options = { chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' }, series: [{ name: 'Số bài làm', data: timeData.map(item => item.count) }], xaxis: { categories: timeData.map(item => item.timeSlot) }, yaxis: { labels: { formatter: (val) => Math.round(val) } }, plotOptions: { bar: { distributed: true, borderRadius: 4, horizontal: false, } }, colors: ['#ef4444', '#f59e0b', '#22c55e', '#f59e0b', '#14b8a6', '#4f46e5', '#ef4444'], legend: { show: false }, title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } }, tooltip: { theme: 'dark' } };
+        const options = { chart: { type: 'bar', height: 350 }, series: [{ name: 'Số bài làm', data: timeData.map(item => item.count) }], xaxis: { categories: timeData.map(item => item.timeSlot) }, yaxis: { labels: { formatter: (val) => Math.round(val) } }, plotOptions: { bar: { distributed: true, borderRadius: 4, horizontal: false, } }, colors: ['#ef4444', '#f59e0b', '#22c55e', '#f59e0b', '#14b8a6', '#4f46e5', '#ef4444'], legend: { show: false }, title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left' } };
         if (studyTimeChart) { studyTimeChart.updateOptions(options); } else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
     }
 
