@@ -209,6 +209,20 @@ function renderChartsAndDetails(data) {
         gradeDistributionChart.render(); 
     }
 }
+
+/**
+ * Chuyển hướng đến trang chi tiết khi người dùng tìm kiếm bằng mã HS.
+ */
+function searchStudent() {
+    const studentId = studentIdInput.value.trim();
+    if (!studentId) {
+        alert('Vui lòng nhập Mã số học sinh.');
+        return;
+    }
+    // Chuyển hướng đến trang chi tiết với studentId trong URL
+    window.location.href = `/StudentDetail.html?id=${studentId}`;
+}
+
 /**
  * "Đổ" danh sách các lớp vào dropdown, lọc theo quyền và tối ưu hóa giao diện.
  * @param {string[]} allAssignedClasses - Mảng tất cả các lớp được giao cho đề bài.
