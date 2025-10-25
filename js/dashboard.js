@@ -168,27 +168,47 @@ function renderChartsAndDetails(data) {
 }
 
     function renderGradeDistributionChart(gradeData) {
-        const options = {
-            chart: { type: 'bar', height: 350, foreColor: '#e5e7eb' },
-            series: [{ name: 'Số học sinh', data: Object.values(gradeData) }],
-            xaxis: { categories: Object.keys(gradeData) },
-            yaxis: { title: { text: 'Số lượng học sinh' } },
-            title: { text: 'Phân bổ Điểm số', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } },
-            tooltip: { theme: 'dark' }
-        };
-        if (gradeDistributionChart) { gradeDistributionChart.updateOptions(options); } 
-        else { gradeDistributionChart = new ApexCharts(gradeDistributionChartContainer, options); gradeDistributionChart.render(); }
-    }
+    const options = {
+        chart: { 
+            type: 'bar', 
+            height: 350, 
+            foreColor: '#e5e7eb',
+            background: 'transparent'
+        },
+        // SỬA LỖI Ở ĐÂY: Dùng toán tử ba ngôi để kiểm tra gradeData
+        series: gradeData ? [{ name: 'Số học sinh', data: Object.values(gradeData) }] : [],
+        xaxis: { 
+            categories: gradeData ? Object.keys(gradeData) : ['0-2', '2-4', '4-6', '6-8', '8-10']
+        },
+        yaxis: { 
+            title: { text: 'Số lượng học sinh' } 
+        },
+        title: { 
+            text: 'Phân bổ Điểm số', 
+            align: 'left', 
+            style: { fontSize: '18px', color: '#f3e9e0' } 
+        },
+        // Thêm trạng thái "Không có dữ liệu" để hướng dẫn người dùng
+        noData: {
+            text: 'Vui lòng chọn bài tập và lớp để xem biểu đồ',
+            align: 'center',
+            verticalAlign: 'middle',
+            style: {
+                color: '#9CA3AF', // Màu xám mờ
+                fontSize: '14px',
+            }
+        },
+        tooltip: { theme: 'dark' }
+    };
     
-    function searchStudent() {
-        const studentId = studentIdInput.value.trim();
-        if (!studentId) {
-            alert('Vui lòng nhập Mã số học sinh.');
-            return;
-        }
-        window.location.href = `/StudentDetail.html?id=${studentId}`;
+    // Logic render/update giữ nguyên
+    if (gradeDistributionChart) { 
+        gradeDistributionChart.updateOptions(options); 
+    } else { 
+        gradeDistributionChart = new ApexCharts(gradeDistributionChartContainer, options); 
+        gradeDistributionChart.render(); 
     }
-
+}
 /**
  * "Đổ" danh sách các lớp vào dropdown, lọc theo quyền và tối ưu hóa giao diện.
  * @param {string[]} allAssignedClasses - Mảng tất cả các lớp được giao cho đề bài.
