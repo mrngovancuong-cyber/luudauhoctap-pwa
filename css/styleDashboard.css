@@ -541,3 +541,20 @@ button, input, select, textarea {
     /* Tăng chiều cao tối thiểu cho biểu đồ */
     min-height: 450px; 
 }
+
+.loading-placeholder, .error-placeholder {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+    font-style: italic;
+}
+.error-placeholder {
+    color: var(--bad);
+}
+.student-link {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.student-link:hover {
+    background-color: var(--bg);
+}

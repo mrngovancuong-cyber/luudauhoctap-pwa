@@ -71,62 +71,98 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-    async function fetchAndDisplayClassOverview(examId, classId = null) {
-        showLoading(true);
-        classOverviewSection.classList.add('hidden');
-        try {
-            const params = { examId };
-            if (classId) params.classId = classId;
-            const result = await fetchApi('getClassAnalytics', params);
-            renderClassOverview(result.data);
-            classOverviewSection.classList.remove('hidden');
-        } catch (error) {
-            handleApiError(error, "Không thể tải dữ liệu tổng quan");
-        } finally {
-            showLoading(false);
-        }
+    /**
+ * Tải và hiển thị dữ liệu tổng quan của lớp theo 2 giai đoạn để tối ưu tốc độ.
+ */
+async function fetchAndDisplayClassOverview(examId, classId = null) {
+    // --- GIAI ĐOẠN A: TẢI DỮ LIỆU NHANH VÀ HIỂN THỊ KHUNG SƯỜN ---
+
+    // 1. Hiển thị trạng thái "Đang tải..." cho các thành phần
+    showLoading(true); // Hiển thị spinner chính
+    classOverviewSection.classList.remove('hidden'); // Hiển thị khu vực tổng quan ngay
+    
+    // Hiển thị placeholder cho các phần sẽ tải sau
+    gradeDistributionChartContainer.innerHTML = '<p class="loading-placeholder">Đang tải biểu đồ...</p>';
+    hardestQuestionsList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
+    
+    try {
+        const params = { examId };
+        if (classId) params.classId = classId;
+
+        // 2. Gọi API nhanh (chỉ lấy KPI và danh sách học sinh)
+        const kpiResult = await fetchApi('getClassKPIs', params);
+        
+        // 3. Render ngay những gì đã có
+        renderKPIsAndLists(kpiResult.data);
+        showLoading(false); // Ẩn spinner chính, người dùng thấy trang đã có nội dung
+        
+    } catch (error) {
+        handleApiError(error, "Không thể tải dữ liệu tổng quan");
+        showLoading(false); // Ẩn spinner nếu có lỗi
+        return; // Dừng lại nếu giai đoạn A thất bại
     }
 
-    function renderClassOverview(data) {
-        // 1. Xây dựng HTML cho thẻ KPI "Tham gia" một cách linh hoạt
-let participationHtml = `<div class="kpi-card"><h3>Số HS đã nộp</h3><p>${data.kpis.participantCount}</p>`;
-if (data.kpis.totalAssignedStudents !== null) {
-    // Nếu có mẫu số, hiển thị nó
-    participationHtml += `<span class="kpi-subtext">/ ${data.kpis.totalAssignedStudents} em được giao</span>`;
+    // --- GIAI ĐOẠN B: TẢI NỀN DỮ LIỆU CHI TIẾT ---
+    try {
+        const params = { examId };
+        if (classId) params.classId = classId;
+
+        // 4. Gọi API chậm hơn ở chế độ nền
+        const detailsResult = await fetchApi('getClassDetails', params);
+
+        // 5. Render nốt các phần còn lại
+        renderChartsAndDetails(detailsResult.data);
+
+    } catch (error) {
+        // Chỉ log lỗi ra console, không làm phiền người dùng bằng alert
+        console.error("Lỗi khi tải dữ liệu chi tiết (nền):", error);
+        gradeDistributionChartContainer.innerHTML = '<p class="error-placeholder">Lỗi tải biểu đồ.</p>';
+        hardestQuestionsList.innerHTML = '<li class="error-placeholder">Lỗi tải dữ liệu.</li>';
+    }
 }
-participationHtml += `</div>`;
 
-// 2. Ghép với các thẻ KPI khác
-kpisContainer.innerHTML = `
-    ${participationHtml}
-    <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
-    <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
-    <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
-`;
+    /**
+ * Render các thành phần tải nhanh: KPI và danh sách học sinh.
+ */
+function renderKPIsAndLists(data) {
+    kpisContainer.innerHTML = `
+        <div class="kpi-card"><h3>Tỷ lệ tham gia</h3><p>${data.kpis.submissionCount} / ${data.kpis.totalStudents}</p></div>
+        <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
+        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
+        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
+    `;
 
-        renderGradeDistributionChart(data.gradeDistribution);
-
-        hardestQuestionsList.innerHTML = data.itemAnalysis.hardestQuestions.map(q => `
-            <li>
-                <span>Câu ${q.id.includes('_') ? q.id.split('_').pop() : q.id}</span>
-                <span class="accuracy">${q.accuracy.toFixed(0)}% đúng</span>
-            </li>
-        `).join('') || '<li>Không có dữ liệu.</li>';
-        
-        const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name} (${s.id})</span><span class="score">${s.score}</span></li>`;
-        topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>Không có dữ liệu.</li>';
-        bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>Không có dữ liệu.</li>';
-        
-        // Gắn sự kiện click cho các item học sinh vừa được tạo
-        document.querySelectorAll('.student-link').forEach(item => {
-            item.addEventListener('click', () => {
-                const studentId = item.dataset.studentid;
-                if (studentId) {
-                    window.location.href = `/StudentDetail.html?id=${studentId}`;
-                }
-            });
+    const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.score}</span></li>`;
+    topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>Không có dữ liệu.</li>';
+    bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>Không có dữ liệu.</li>';
+    
+    // Gắn lại sự kiện click cho các item học sinh vừa được tạo
+    document.querySelectorAll('.student-link').forEach(item => {
+        item.addEventListener('click', () => {
+            const studentId = item.dataset.studentid;
+            if(studentId) {
+                studentIdInput.value = studentId;
+                searchStudent();
+            }
         });
-    }
+    });
+}
+
+/**
+ * Render các thành phần tải chậm: Biểu đồ và danh sách câu hỏi.
+ */
+function renderChartsAndDetails(data) {
+    // Xóa placeholder trước khi vẽ
+    gradeDistributionChartContainer.innerHTML = ''; 
+    renderGradeDistributionChart(data.gradeDistribution);
+
+    hardestQuestionsList.innerHTML = data.itemAnalysis.hardestQuestions.map(q => `
+        <li>
+            <span>Câu ${q.id.includes('_') ? q.id.split('_').pop() : q.id}</span>
+            <span class="accuracy">${q.accuracy.toFixed(0)}% đúng</span>
+        </li>
+    `).join('') || '<li>Không có dữ liệu.</li>';
+}
 
     function renderGradeDistributionChart(gradeData) {
         const options = {
