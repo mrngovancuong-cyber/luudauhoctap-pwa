@@ -252,10 +252,7 @@ function generateStudyTimeSummary(timeData) {
     document.getElementById('leave-count-summary').innerHTML = generateLeaveCountSummary(data.behavior.leaveCountTrend);
     document.getElementById('device-usage-summary').innerHTML = generateDeviceUsageSummary(data.behavior.deviceUsage);
     document.getElementById('study-time-summary').innerHTML = generateStudyTimeSummary(data.behavior.studyTimeDistribution);
-}
     }
-
-
 
     function renderScoreTrendChart(scoreData) {
         const options = {
