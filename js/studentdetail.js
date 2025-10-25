@@ -270,7 +270,7 @@ function generateStudyTimeSummary(timeData) {
         yaxis: { min: 0, max: 10 },
         stroke: { curve: 'smooth', width: [4, 2], dashArray: [0, 5] },
         title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } },
-        tooltip: { y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } },
+        tooltip: { style: { fontSize: '12px', fontFamily: "'Be Vietnam Pro', sans-serif", color: '#333' }, y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } },
         grid: { borderColor: '#555' }
     };
     if (scoreTrendChart) { scoreTrendChart.updateOptions(options); } 
@@ -284,7 +284,7 @@ function generateStudyTimeSummary(timeData) {
         xaxis: { tickAmount: 10, labels: { formatter: (val) => `${val.toFixed(0)}%` }, title: { text: '% Thời gian sử dụng' } },
         yaxis: { tickAmount: 5, min: 0, max: 10, title: { text: 'Điểm số' } },
         title: { text: 'Phân tích Phong cách làm bài', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } },
-        tooltip: {
+        tooltip: { style: { color: '#333' },
             custom: function({ seriesIndex, dataPointIndex, w }) {
                 const data = quadrantData[dataPointIndex];
                 return `<div class="apexcharts-tooltip-title">${data.examTitle}</div>` +
@@ -327,7 +327,7 @@ function generateStudyTimeSummary(timeData) {
         yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, 
         plotOptions: { bar: { horizontal: true } }, 
         title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { y: { formatter: (val) => `${val}%` } },
+        tooltip: { style: { color: '#333' }, y: { formatter: (val) => `${val}%` } },
         grid: { borderColor: '#555' }
     };
     if (topicStrengthChart) { topicStrengthChart.updateOptions(options); } else { topicStrengthChart = new ApexCharts(topicStrengthChartContainer, options); topicStrengthChart.render(); }
@@ -342,7 +342,7 @@ function generateStudyTimeSummary(timeData) {
         labels: levelData.map(item => item.level), 
         yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, 
         title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { y: { formatter: (val) => `${val}%` } },
+        tooltip: { style: { color: '#333' }, y: { formatter: (val) => `${val}%` } },
         grid: { borderColor: '#555' },
         legend: { labels: { colors: '#f3e9e0' } }
     };
@@ -356,7 +356,7 @@ function generateStudyTimeSummary(timeData) {
         xaxis: { categories: leaveData.map(item => item.examTitle) }, 
         yaxis: { labels: { formatter: (val) => Math.round(val) } }, 
         title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: {},
+        tooltip: { style: { color: '#333' }, },
         grid: { borderColor: '#555' }
     };
     if (leaveCountChart) { leaveCountChart.updateOptions(options); } else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
@@ -369,7 +369,7 @@ function generateStudyTimeSummary(timeData) {
         labels: deviceData.map(item => item.device), 
         title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
         legend: { position: 'bottom', labels: { colors: '#f3e9e0' } }, 
-        tooltip: { y: { formatter: (val) => `${val} lần` } }
+        tooltip: { style: { color: '#333' }, y: { formatter: (val) => `${val} lần` } }
     };
     if (deviceUsageChart) { deviceUsageChart.updateOptions(options); } else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
 }
@@ -384,7 +384,7 @@ function generateStudyTimeSummary(timeData) {
         colors: ['#ef4444', '#f59e0b', '#22c55e', '#f59e0b', '#14b8a6', '#4f46e5', '#ef4444'], 
         legend: { show: false }, 
         title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: {},
+        tooltip: { style: { color: '#333' }, },
         grid: { borderColor: '#555' }
     };
     if (studyTimeChart) { studyTimeChart.updateOptions(options); } else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
