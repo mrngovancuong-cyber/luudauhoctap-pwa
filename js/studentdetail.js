@@ -1,7 +1,7 @@
 // File: /js/studentDetail.js
 
     // --- BƯỚC 1: CẤU HÌNH APEXCHARTS TRƯỚC TIÊN ---
-    Apex.setDefault({
+    ApexCharts.setDefault({
   	chart: {
     	    fontFamily: "'Be Vietnam Pro', sans-serif", // Sử dụng font đã import
     	    foreColor: '#e5e7eb' // Đặt màu chữ mặc định cho toàn bộ biểu đồ
