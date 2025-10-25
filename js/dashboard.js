@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingSpinner = document.getElementById('loading-spinner');
 
     let gradeDistributionChart = null;
+    let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
 
     // =================================================================
     //                    LUỒNG KHỞI TẠO CHÍNH
@@ -28,7 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/login.html';
             return;
         }
-        
+        try {
+	    currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) throw new Error("Missing user info");
+    	} catch (error) {
+            alert("Thông tin người dùng không hợp lệ. Vui lòng đăng nhập lại.");
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            window.location.href = '/login.html';
+            return;
+	}
         attachEventListeners();
 
         showLoading(true);
@@ -43,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             examSelect.innerHTML = publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
-            await fetchAndDisplayClassOverview(examSelect.value);
+            await fetchAndDisplayClassOverview();
 
         } catch (error) {
             handleApiError(error, "Lỗi khởi tạo Dashboard");
@@ -71,57 +81,56 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-    /**
- * Tải và hiển thị dữ liệu tổng quan của lớp theo 2 giai đoạn để tối ưu tốc độ.
- */
-async function fetchAndDisplayClassOverview(examId, classId = null) {
-    // --- GIAI ĐOẠN A: TẢI DỮ LIỆU NHANH VÀ HIỂN THỊ KHUNG SƯỜN ---
-
-    // 1. Hiển thị trạng thái "Đang tải..." cho các thành phần
-    showLoading(true); // Hiển thị spinner chính
-    classOverviewSection.classList.remove('hidden'); // Hiển thị khu vực tổng quan ngay
+async function fetchAndDisplayClassOverview() {
+    // Lấy giá trị hiện tại từ các dropdown
+    const examId = examSelect.value;
+    const classId = classSelect.value || null; // Nếu là "ALL", giá trị sẽ là null
     
-    // Hiển thị placeholder cho các phần sẽ tải sau
+    // --- GIAI ĐOẠN A: TẢI DỮ LIỆU NHANH VÀ HIỂN THỊ KHUNG SƯỜN ---
+    showLoading(true);
+    classOverviewSection.classList.remove('hidden');
     gradeDistributionChartContainer.innerHTML = '<p class="loading-placeholder">Đang tải biểu đồ...</p>';
     hardestQuestionsList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
-    
-    try {
-        const params = { examId };
-        if (classId) params.classId = classId;
+    kpisContainer.innerHTML = ''; // Xóa KPI cũ
+    topPerformersList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
+    bottomPerformersList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
 
-        // 2. Gọi API nhanh (chỉ lấy KPI và danh sách học sinh)
-        const kpiResult = await fetchApi('getClassKPIs', params);
+    try {
+        // Tải đồng thời cả KPI và danh sách lớp để tăng tốc
+        const paramsKPI = { examId };
+        if (classId) paramsKPI.classId = classId;
+
+        const [kpiResult, classesResult] = await Promise.all([
+            fetchApi('getClassKPIs', paramsKPI),
+            fetchApi('getClassesForExam', { examId })
+        ]);
         
-        // 3. Render ngay những gì đã có
+        populateClassSelect(classesResult.data, classId);
         renderKPIsAndLists(kpiResult.data);
-        showLoading(false); // Ẩn spinner chính, người dùng thấy trang đã có nội dung
+        showLoading(false);
         
     } catch (error) {
         handleApiError(error, "Không thể tải dữ liệu tổng quan");
-        showLoading(false); // Ẩn spinner nếu có lỗi
-        return; // Dừng lại nếu giai đoạn A thất bại
+        showLoading(false);
+        return;
     }
 
     // --- GIAI ĐOẠN B: TẢI NỀN DỮ LIỆU CHI TIẾT ---
     try {
-        const params = { examId };
-        if (classId) params.classId = classId;
-
-        // 4. Gọi API chậm hơn ở chế độ nền
-        const detailsResult = await fetchApi('getClassDetails', params);
-
-        // 5. Render nốt các phần còn lại
+        const paramsDetails = { examId };
+        if (classId) paramsDetails.classId = classId;
+        
+        const detailsResult = await fetchApi('getClassDetails', paramsDetails);
         renderChartsAndDetails(detailsResult.data);
 
     } catch (error) {
-        // Chỉ log lỗi ra console, không làm phiền người dùng bằng alert
         console.error("Lỗi khi tải dữ liệu chi tiết (nền):", error);
         gradeDistributionChartContainer.innerHTML = '<p class="error-placeholder">Lỗi tải biểu đồ.</p>';
         hardestQuestionsList.innerHTML = '<li class="error-placeholder">Lỗi tải dữ liệu.</li>';
     }
 }
 
-    /**
+/**
  * Render các thành phần tải nhanh: KPI và danh sách học sinh.
  */
 function renderKPIsAndLists(data) {
@@ -186,6 +195,46 @@ function renderChartsAndDetails(data) {
         window.location.href = `/StudentDetail.html?id=${studentId}`;
     }
 
+/**
+ * "Đổ" danh sách các lớp vào dropdown, lọc theo quyền và tối ưu hóa giao diện.
+ * @param {string[]} allAssignedClasses - Mảng tất cả các lớp được giao cho đề bài.
+ * @param {string} currentClassId - Lớp đang được chọn (nếu có).
+ */
+function populateClassSelect(allAssignedClasses, currentClassId) {
+    let classesToShow = allAssignedClasses;
+    
+    // Lọc danh sách lớp dựa trên quyền của giáo viên
+    if (currentUser && currentUser.role !== 'admin' && currentUser.managedClasses !== 'ALL') {
+        const managedClassesSet = new Set(currentUser.managedClasses.split(',').map(c => c.trim()));
+        classesToShow = allAssignedClasses.filter(c => managedClassesSet.has(c));
+    }
+
+    let optionsHtml = '';
+    
+    // Xử lý trường hợp chỉ có 1 lớp hoặc không có lớp nào
+    if (classesToShow.length > 1) {
+        optionsHtml += '<option value="">Tất cả các lớp</option>';
+        classSelect.disabled = false;
+    } else {
+        classSelect.disabled = true;
+    }
+
+    classesToShow.forEach(className => {
+        optionsHtml += `<option value="${className}">${className}</option>`;
+    });
+
+    classSelect.innerHTML = optionsHtml;
+    
+    // Tự động chọn giá trị
+    if (currentClassId && classesToShow.includes(currentClassId)) {
+        classSelect.value = currentClassId;
+    } else if (classesToShow.length === 1) {
+        classSelect.value = classesToShow[0];
+    } else {
+        classSelect.value = "";
+    }
+}
+
     // =================================================================
     //                    HÀM TIỆN ÍCH VÀ SỰ KIỆN
     // =================================================================
@@ -206,13 +255,19 @@ function renderChartsAndDetails(data) {
         loadingSpinner.classList.toggle('hidden', !isLoading);
     }
 
-    function attachEventListeners() {
-        examSelect.addEventListener('change', () => fetchAndDisplayClassOverview(examSelect.value));
-        searchBtn.addEventListener('click', searchStudent);
-        studentIdInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchStudent();
-        });
-    }
+function attachEventListeners() {
+    examSelect.addEventListener('change', () => {
+        // Khi đổi đề, reset dropdown lớp và tải lại
+        classSelect.value = ""; // Đặt về "Tất cả các lớp"
+        fetchAndDisplayClassOverview();
+    });
+    classSelect.addEventListener('change', fetchAndDisplayClassOverview);
+
+    searchBtn.addEventListener('click', searchStudent);
+    studentIdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchStudent();
+    });
+}
 
     // --- BẮT ĐẦU CHẠY ỨNG DỤNG ---
     main();
