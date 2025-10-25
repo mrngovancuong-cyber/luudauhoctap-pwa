@@ -357,7 +357,7 @@ function generateStudyTimeSummary(timeData) {
         xaxis: { categories: leaveData.map(item => item.examTitle) }, 
         yaxis: { labels: { formatter: (val) => Math.round(val) } }, 
         title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { theme: 'dark' }, },
+        tooltip: { theme: 'dark' },
         grid: { borderColor: '#555' }
     };
     if (leaveCountChart) { leaveCountChart.updateOptions(options); } else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
