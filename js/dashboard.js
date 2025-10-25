@@ -107,7 +107,8 @@ async function fetchAndDisplayClassOverview(examId, classId) {
         showLoading(false);
     } catch (error) {
         handleApiError(error, "Không thể tải dữ liệu tổng quan");
-        showLoading(false);
+        resetOverviewUI();
+	showLoading(false);
         return; // Dừng lại nếu lỗi
     }
 
@@ -260,6 +261,28 @@ function populateClassSelect(allAssignedClasses) {
     //                    HÀM TIỆN ÍCH VÀ SỰ KIỆN
     // =================================================================
 
+/**
+ * Đặt lại giao diện tổng quan về trạng thái ban đầu (trống).
+ */
+function resetOverviewUI() {
+    // Reset các thẻ KPI
+    kpisContainer.innerHTML = `
+        <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
+    `;
+
+    // Vẽ lại biểu đồ trống
+    renderGradeDistributionChart(null);
+
+    // Reset các danh sách
+    const placeholderText = '<li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>';
+    hardestQuestionsList.innerHTML = placeholderText;
+    topPerformersList.innerHTML = placeholderText;
+    bottomPerformersList.innerHTML = placeholderText;
+}
+
     function handleApiError(error, contextMessage) {
         console.error(`${contextMessage}:`, error);
         if (error.message.includes("401 Unauthorized") || error.message.includes("hết hạn")) {
@@ -297,7 +320,8 @@ function attachEventListeners() {
         checkFilters(); // Cập nhật trạng thái nút
 
         if (!selectedExamId) {
-            classSelect.innerHTML = '<option value="">-- Chọn bài tập trước --</option>';
+            if (classSelect) classSelect.innerHTML = '<option value="">-- Chọn bài tập trước --</option>';
+            resetOverviewUI(); // <--- GỌI HÀM RESET Ở ĐÂY
             return;
         }
 
@@ -311,7 +335,12 @@ function attachEventListeners() {
     });
 
     // Khi người dùng chọn một LỚP
-    classSelect.addEventListener('change', checkFilters);
+    classSelect.addEventListener('change', () => {
+    checkFilters();
+    if (classSelect.value === "") {
+        resetOverviewUI(); // <--- GỌI HÀM RESET Ở ĐÂY (KHI CHỌN LẠI DÒNG "-- Chọn lớp --")
+    }
+    });
     
     // Khi người dùng nhấn nút "XEM BÁO CÁO"
     viewReportBtn.addEventListener('click', () => {
