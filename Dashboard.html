@@ -28,55 +28,70 @@
     </header>
 
     <!-- THAY THẾ TOÀN BỘ THẺ <main> TRONG Dashboard.html -->
+<!-- THAY THẾ TOÀN BỘ THẺ <main> TRONG Dashboard.html -->
 <main class="dashboard-main">
-    <!-- KHU VỰC ĐIỀU KHIỂN CHÍNH (ĐÃ GỘP BỘ LỌC VÀ TÌM KIẾM) -->
+    <!-- KHU VỰC ĐIỀU KHIỂN CHÍNH -->
     <section class="card filter-section">
-        <!-- Thay đổi tiêu đề -->
         <h2>Tổng quan về Lớp học</h2>
         
-        <!-- Hàng 1: Bộ lọc tổng quan -->
+        <!-- Hàng 1: Bộ lọc tổng quan - ĐÂY LÀ PHẦN CẦN SỬA -->
         <div class="filter-bar">
-            <select id="exam-select" class="filter-select"></select>
-            <select id="class-select" class="filter-select" disabled><option>Tất cả các lớp</option></select>
+            <select id="exam-select" class="filter-select">
+                <option value="">-- Đang tải bài tập --</option>
+            </select>
+            <select id="class-select" class="filter-select">
+                <option value="">-- Chọn bài tập trước --</option>
+            </select>
+            <!-- THÊM NÚT NÀY VÀO -->
+            <button id="view-report-btn" class="action-btn" disabled>Xem báo cáo</button>
         </div>
 
-        <hr class="divider"> <!-- Thêm đường kẻ ngang để phân tách -->
+        <hr class="divider">
 
         <!-- Hàng 2: Tìm kiếm chi tiết học sinh -->
         <div class="search-bar">
             <input type="text" id="student-id-input" placeholder="Hoặc, nhập Mã số HS để xem chi tiết...">
-            <button id="search-btn">Tìm kiếm</button>
+            <!-- SỬA LẠI NÚT NÀY ĐỂ CÓ CLASS ĐÚNG -->
+            <button id="search-btn" class="action-btn">Tìm kiếm</button>
         </div>
     </section>
 
-    <!-- KHU VỰC TỔNG QUAN LỚP HỌC (giữ nguyên) -->
+    <!-- KHU VỰC TỔNG QUAN LỚP HỌC (chứa các placeholder) -->
     <section id="class-overview-section">
-        <!-- Các thẻ chỉ số KPI -->
-        <div id="overview-kpis" class="kpi-grid"></div>
-
-        <!-- Các biểu đồ -->
+        <div id="overview-kpis" class="kpi-grid">
+            <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
+        </div>
         <div class="chart-grid">
-            <div class="chart-container" id="grade-distribution-chart"></div>
+            <div class="chart-container" id="grade-distribution-chart">
+                 <!-- Biểu đồ trống sẽ được JS vẽ ở đây -->
+            </div>
             <div class="list-container card">
                 <h4><span style="vertical-align: middle;">💡</span> 5 Câu hỏi cần chú ý nhất</h4>
-                <ul id="hardest-questions-list"></ul>
+                <ul id="hardest-questions-list">
+                    <li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>
+                </ul>
             </div>
         </div>
-
-        <!-- Danh sách học sinh -->
         <div class="student-list-grid">
             <div class="list-container card">
                 <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
-                <ul id="top-performers-list"></ul>
+                <ul id="top-performers-list">
+                    <li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>
+                </ul>
             </div>
             <div class="list-container card">
                 <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
-                <ul id="bottom-performers-list"></ul>
+                <ul id="bottom-performers-list">
+                    <li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>
+                </ul>
             </div>
         </div>
     </section>
     
-    <!-- Khu vực Loading (giữ nguyên) -->
+    <!-- Khu vực Loading -->
     <div id="loading-spinner" class="loading-inline hidden">
         <div class="spinner"></div>
         <p>Đang tải dữ liệu...</p>
