@@ -39,7 +39,10 @@ body {
   background-color: var(--bg);
   color: var(--text);
 }
-
+button, input, select, textarea {
+    font-family: inherit; /* Lấy font từ thẻ cha (trong trường hợp này là body) */
+    font-size: 100%; /* Đảm bảo kích thước chữ không bị thay đổi mặc định */
+}
 /* ------------------------------
    /* =================================================================
    HEADER STYLE (PHIÊN BẢN SỬA LỖI VÀ HỢP NHẤT)

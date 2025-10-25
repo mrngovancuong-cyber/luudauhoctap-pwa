@@ -1,25 +1,7 @@
 // File: /js/studentDetail.js
 
-    // --- BƯỚC 1: CẤU HÌNH APEXCHARTS TRƯỚC TIÊN ---
-    ApexCharts.defaultOptions = {
-  	chart: {
-    	    fontFamily: "'Be Vietnam Pro', sans-serif", // Sử dụng font đã import
-    	    foreColor: '#e5e7eb' // Đặt màu chữ mặc định cho toàn bộ biểu đồ
-  	},
-  	title: {
-    	    style: {
-      		fontSize: '18px',
-      		fontWeight: '600',
-		fontFamily: "'Be Vietnam Pro', sans-serif",
-      		color: '#f3e9e0'
-    	    }
-  	},
-  	tooltip: {
-    	    theme: 'dark' // Đặt theme tooltip mặc định
-  	}
-    };
-    
-    // ---  BƯỚC 2: KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
+  
+    // ---  KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
     const API_URL = '/api/';
     const loadingSpinner = document.getElementById('loading-spinner');
     const searchBtn = document.getElementById('search-btn');
@@ -278,42 +260,43 @@ function generateStudyTimeSummary(timeData) {
     }
 
     function renderScoreTrendChart(scoreData) {
-        const options = {
-            chart: { type: 'line', height: 350 },
-            series: [
-                { name: 'Điểm của em', data: scoreData.map(item => item.score) },
-                { name: 'Điểm TB Lớp', data: scoreData.map(item => item.classAverage) }
-            ],
-            xaxis: { categories: scoreData.map(item => item.examTitle) },
-            yaxis: { min: 0, max: 10 },
-            stroke: { curve: 'smooth', width: [4, 2], dashArray: [0, 5] },
-            title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left' },
-            tooltip: { y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } }
-        };
-        if (scoreTrendChart) { scoreTrendChart.updateOptions(options); } 
-        else { scoreTrendChart = new ApexCharts(scoreTrendChartContainer, options); scoreTrendChart.render(); }
-    }
+    const options = {
+        chart: { type: 'line', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' },
+        series: [
+            { name: 'Điểm của em', data: scoreData.map(item => item.score) },
+            { name: 'Điểm TB Lớp', data: scoreData.map(item => item.classAverage) }
+        ],
+        xaxis: { categories: scoreData.map(item => item.examTitle) },
+        yaxis: { min: 0, max: 10 },
+        stroke: { curve: 'smooth', width: [4, 2], dashArray: [0, 5] },
+        title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } },
+        tooltip: { y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } },
+        grid: { borderColor: '#555' }
+    };
+    if (scoreTrendChart) { scoreTrendChart.updateOptions(options); } 
+    else { scoreTrendChart = new ApexCharts(scoreTrendChartContainer, options); scoreTrendChart.render(); }
+}
 
     function renderPerformanceQuadrantChart(quadrantData) {
-        const options = {
-            chart: { type: 'scatter', height: 350, zoom: { enabled: true } },
-            series: [{ name: "Bài làm", data: quadrantData.map(item => [item.x, item.y]) }],
-            xaxis: { tickAmount: 10, labels: { formatter: (val) => `${val.toFixed(0)}%` }, title: { text: '% Thời gian sử dụng' } },
-            yaxis: { tickAmount: 5, min: 0, max: 10, title: { text: 'Điểm số' } },
-            title: { text: 'Phân tích Phong cách làm bài', align: 'left' },
-            tooltip: {
-                theme: 'dark',
-                custom: function({ seriesIndex, dataPointIndex, w }) {
-                    const data = quadrantData[dataPointIndex];
-                    return `<div class="apexcharts-tooltip-title">${data.examTitle}</div>` +
-                           `<div><span>Điểm: <strong>${data.y.toFixed(2)}</strong></span><br>` +
-                           `<span>Thời gian: <strong>${data.x.toFixed(0)}%</strong></span></div>`;
-                }
+    const options = {
+        chart: { type: 'scatter', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb', zoom: { enabled: true } },
+        series: [{ name: "Bài làm", data: quadrantData.map(item => [item.x, item.y]) }],
+        xaxis: { tickAmount: 10, labels: { formatter: (val) => `${val.toFixed(0)}%` }, title: { text: '% Thời gian sử dụng' } },
+        yaxis: { tickAmount: 5, min: 0, max: 10, title: { text: 'Điểm số' } },
+        title: { text: 'Phân tích Phong cách làm bài', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } },
+        tooltip: {
+            custom: function({ seriesIndex, dataPointIndex, w }) {
+                const data = quadrantData[dataPointIndex];
+                return `<div class="apexcharts-tooltip-title">${data.examTitle}</div>` +
+                       `<div><span>Điểm: <strong>${data.y.toFixed(2)}</strong></span><br>` +
+                       `<span>Thời gian: <strong>${data.x.toFixed(0)}%</strong></span></div>`;
             }
-        };
-        if (performanceQuadrantChart) { performanceQuadrantChart.updateOptions(options); } 
-        else { performanceQuadrantChart = new ApexCharts(performanceQuadrantChartContainer, options); performanceQuadrantChart.render(); }
-    }
+        },
+        grid: { borderColor: '#555' }
+    };
+    if (performanceQuadrantChart) { performanceQuadrantChart.updateOptions(options); } 
+    else { performanceQuadrantChart = new ApexCharts(performanceQuadrantChartContainer, options); performanceQuadrantChart.render(); }
+}
 
     function renderHistoryTable(historyData) {
         if (!historyTableBody) return;
@@ -337,31 +320,75 @@ function generateStudyTimeSummary(timeData) {
     }
 
     function renderTopicStrengthChart(topicData) {
-        const options = { chart: { type: 'bar', height: 350 }, series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }], xaxis: { categories: topicData.map(item => item.topic) }, yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, plotOptions: { bar: { horizontal: true } }, title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left' }, tooltip: { y: { formatter: (val) => `${val}%` } } };
-        if (topicStrengthChart) { topicStrengthChart.updateOptions(options); } else { topicStrengthChart = new ApexCharts(topicStrengthChartContainer, options); topicStrengthChart.render(); }
-    }
+    const options = { 
+        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }], 
+        xaxis: { categories: topicData.map(item => item.topic) }, 
+        yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, 
+        plotOptions: { bar: { horizontal: true } }, 
+        title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
+        tooltip: { y: { formatter: (val) => `${val}%` } },
+        grid: { borderColor: '#555' }
+    };
+    if (topicStrengthChart) { topicStrengthChart.updateOptions(options); } else { topicStrengthChart = new ApexCharts(topicStrengthChartContainer, options); topicStrengthChart.render(); }
+}
     
     function renderLevelStrengthChart(levelData) {
-        const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
-        levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
-        const options = { chart: { type: 'radar', height: 500 }, series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], labels: levelData.map(item => item.level), yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left' }, tooltip: { y: { formatter: (val) => `${val}%` } } };
-        if (levelStrengthChart) { levelStrengthChart.updateOptions(options); } else { levelStrengthChart = new ApexCharts(levelStrengthChartContainer, options); levelStrengthChart.render(); }
-    }
+    const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
+    levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
+    const options = { 
+        chart: { type: 'radar', height: 500, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], 
+        labels: levelData.map(item => item.level), 
+        yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, 
+        title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
+        tooltip: { y: { formatter: (val) => `${val}%` } },
+        grid: { borderColor: '#555' },
+        legend: { labels: { colors: '#f3e9e0' } }
+    };
+    if (levelStrengthChart) { levelStrengthChart.updateOptions(options); } else { levelStrengthChart = new ApexCharts(levelStrengthChartContainer, options); levelStrengthChart.render(); }
+}
     
     function renderLeaveCountChart(leaveData) {
-        const options = { chart: { type: 'bar', height: 350 }, series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }], xaxis: { categories: leaveData.map(item => item.examTitle) }, yaxis: { labels: { formatter: (val) => Math.round(val) } }, title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', color: '#f3e9e0' } } };
-        if (leaveCountChart) { leaveCountChart.updateOptions(options); } else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
-    }
+    const options = { 
+        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }], 
+        xaxis: { categories: leaveData.map(item => item.examTitle) }, 
+        yaxis: { labels: { formatter: (val) => Math.round(val) } }, 
+        title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
+        tooltip: {},
+        grid: { borderColor: '#555' }
+    };
+    if (leaveCountChart) { leaveCountChart.updateOptions(options); } else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
+}
 
     function renderDeviceUsageChart(deviceData) {
-        const options = { chart: { type: 'donut', height: 350 }, series: deviceData.map(item => item.count), labels: deviceData.map(item => item.device), title: { text: 'Thói quen sử dụng thiết bị', align: 'left' }, legend: { position: 'bottom' }, tooltip: { y: { formatter: (val) => `${val} lần` } } };
-        if (deviceUsageChart) { deviceUsageChart.updateOptions(options); } else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
-    }
+    const options = { 
+        chart: { type: 'donut', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        series: deviceData.map(item => item.count), 
+        labels: deviceData.map(item => item.device), 
+        title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
+        legend: { position: 'bottom', labels: { colors: '#f3e9e0' } }, 
+        tooltip: { y: { formatter: (val) => `${val} lần` } }
+    };
+    if (deviceUsageChart) { deviceUsageChart.updateOptions(options); } else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
+}
     
     function renderStudyTimeChart(timeData) {
-        const options = { chart: { type: 'bar', height: 350 }, series: [{ name: 'Số bài làm', data: timeData.map(item => item.count) }], xaxis: { categories: timeData.map(item => item.timeSlot) }, yaxis: { labels: { formatter: (val) => Math.round(val) } }, plotOptions: { bar: { distributed: true, borderRadius: 4, horizontal: false, } }, colors: ['#ef4444', '#f59e0b', '#22c55e', '#f59e0b', '#14b8a6', '#4f46e5', '#ef4444'], legend: { show: false }, title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left' } };
-        if (studyTimeChart) { studyTimeChart.updateOptions(options); } else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
-    }
+    const options = { 
+        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        series: [{ name: 'Số bài làm', data: timeData.map(item => item.count) }], 
+        xaxis: { categories: timeData.map(item => item.timeSlot) }, 
+        yaxis: { labels: { formatter: (val) => Math.round(val) } }, 
+        plotOptions: { bar: { distributed: true, borderRadius: 4, horizontal: false, } }, 
+        colors: ['#ef4444', '#f59e0b', '#22c55e', '#f59e0b', '#14b8a6', '#4f46e5', '#ef4444'], 
+        legend: { show: false }, 
+        title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
+        tooltip: {},
+        grid: { borderColor: '#555' }
+    };
+    if (studyTimeChart) { studyTimeChart.updateOptions(options); } else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
+}
 
     function renderBehaviorWarnings(warningData) {
         if (!behaviorWarningCard) return;
