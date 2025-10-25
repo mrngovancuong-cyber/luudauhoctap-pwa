@@ -29,11 +29,15 @@
                 <h1 class="title">PHÂN TÍCH CHI TIẾT HỌC SINH</h1>
             </div>        
             <div class="header-right">
-                <!-- Logo bên phải giờ là một liên kết để quay về Dashboard -->
-                <a href="/Dashboard.html" title="Quay lại Trang Tổng quan">
-                    <img src="/icons/LDHT logo.png" alt="Logo Lưu Dấu Học Tập" class="logo">
-                </a>
-            </div>
+    <!-- Bọc cả logo và icon trong cùng một thẻ <a> -->
+    <a href="/Dashboard.html" title="Quay lại Trang Tổng quan" class="header-link-container">
+        <img src="/icons/LDHT logo.png" alt="Logo Lưu Dấu Học Tập" class="logo">
+        <!-- Thêm icon Home SVG ngay sau logo -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="home-icon" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/>
+        </svg>
+    </a>
+</div>
         </div>
     </header>
 
@@ -68,7 +72,9 @@
                 <!-- Tab 1: Tổng quan -->
                 <div id="overview" class="tab-panel active">
                     <div class="chart-container" id="score-trend-chart"></div>
+		    <div class="chart-summary" id="score-trend-summary"></div>
                     <div class="chart-container" id="performance-quadrant-chart"></div>
+		    <div class="chart-summary" id="performance-quadrant-summary"></div>
                 </div>
                 <!-- Tab 2: Lịch sử làm bài -->
                 <div id="history" class="tab-panel hidden">
@@ -91,7 +97,9 @@
                 <!-- Tab 3: Phân tích Năng lực -->
                 <div id="skills" class="tab-panel hidden">
                     <div class="chart-container" id="topic-strength-chart"></div>
+		    <div class="chart-summary" id="topic-strength-summary"></div>
                     <div class="chart-container" id="level-strength-chart"></div>
+		    <div class="chart-summary" id="level-strength-summary"></div>
                 </div>
                 <!-- Tab 4: Phân tích Hành vi -->
                 <div id="behavior" class="tab-panel hidden">
@@ -100,8 +108,11 @@
                         <div id="behavior-warning-content"></div>
                     </div>
                     <div class="chart-container" id="leave-count-chart"></div>
+		    <div class="chart-summary" id="leave-count-summary"></div>
                     <div class="chart-container" id="device-usage-chart"></div>
+		    <div class="chart-summary" id="device-usage-summary"></div>
                     <div class="chart-container" id="study-time-chart"></div>
+		    <div class="chart-summary" id="study-time-summary"></div>
                 </div>
             </div>
         </section>

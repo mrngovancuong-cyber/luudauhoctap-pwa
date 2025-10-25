@@ -106,6 +106,123 @@ document.addEventListener('DOMContentLoaded', () => {
     //                 CÁC HÀM RENDER DỮ LIỆU VÀ BIỂU ĐỒ
     // =================================================================
 
+// DÁN 6 HÀM NÀY VÀO TRƯỚC HÀM renderData(data)
+
+/**
+ * Phân tích dữ liệu xu hướng điểm số và tạo câu tóm tắt.
+ */
+function generateScoreTrendSummary(scoreData) {
+    if (!scoreData || scoreData.length < 2) return "Chưa đủ dữ liệu để nhận xét xu hướng.";
+    
+    const scores = scoreData.map(d => d.score);
+    const firstScore = scores[0];
+    const lastScore = scores[scores.length - 1];
+    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    
+    let summary = `Điểm trung bình các bài là <strong>${avgScore.toFixed(2)}</strong>. `;
+    if (lastScore > firstScore + 1 && lastScore > avgScore) {
+        summary += `Ghi nhận xu hướng <strong>tiến bộ rõ rệt</strong>, với điểm số gần đây cao hơn đáng kể so với trước đây.`;
+    } else if (lastScore < firstScore - 1 && lastScore < avgScore) {
+        summary += `Cần chú ý xu hướng điểm số đang <strong>đi xuống</strong>. Em cần xem lại các phần kiến thức còn yếu.`;
+    } else {
+        summary += `Phong độ của em khá <strong>ổn định</strong> qua các bài làm.`;
+    }
+    return summary;
+}
+
+/**
+ * Phân tích dữ liệu phong cách làm bài và tạo câu tóm tắt.
+ */
+function generatePerformanceQuadrantSummary(quadrantData) {
+    if (!quadrantData || quadrantData.length === 0) return "Chưa có dữ liệu về phong cách làm bài.";
+
+    const avgTime = quadrantData.reduce((a, item) => a + item.x, 0) / quadrantData.length;
+    const avgScore = quadrantData.reduce((a, item) => a + item.y, 0) / quadrantData.length;
+
+    let style = "";
+    if (avgTime < 50 && avgScore >= 7.5) style = "<strong>Nhanh và Hiệu quả</strong>. Em có khả năng xử lý bài tốt dưới áp lực thời gian.";
+    else if (avgTime < 50 && avgScore < 6) style = "<strong>Nhanh nhưng còn ẩu</strong>. Em có xu hướng hoàn thành bài sớm nhưng cần cẩn thận hơn để tránh lỗi sai không đáng có.";
+    else if (avgTime >= 70 && avgScore >= 7.5) style = "<strong>Cẩn thận và Chắc chắn</strong>. Em dành nhiều thời gian để đảm bảo câu trả lời chính xác.";
+    else if (avgTime >= 70 && avgScore < 6) style = "<strong>Còn lúng túng</strong>. Em mất khá nhiều thời gian nhưng kết quả chưa cao, cho thấy có thể em đang gặp khó khăn với kiến thức nền tảng.";
+    else style = "<strong>Cân bằng</strong>. Em có sự phân bổ thời gian và kết quả ở mức độ hợp lý.";
+    return `Nhìn chung, phong cách làm bài của em thuộc nhóm ${style}`;
+}
+
+/**
+ * Phân tích độ vững kiến thức theo chủ đề và tạo câu tóm tắt.
+ */
+function generateTopicStrengthSummary(topicData) {
+    if (!topicData || topicData.length === 0) return "Chưa có dữ liệu phân tích theo chủ đề.";
+
+    const strongTopics = topicData.filter(t => t.accuracy >= 0.8).map(t => t.topic);
+    const weakTopics = topicData.filter(t => t.accuracy < 0.5).map(t => t.topic);
+
+    if (strongTopics.length === 0 && weakTopics.length === 0) {
+        return "Kiến thức của em ở các chủ đề khá <strong>đồng đều</strong>, không có phần nào quá yếu hoặc quá mạnh.";
+    }
+
+    let summary = "";
+    if (strongTopics.length > 0) {
+        summary += `Em tỏ ra <strong>rất vững</strong> ở các chủ đề: <strong>${strongTopics.join(', ')}</strong>. `;
+    }
+    if (weakTopics.length > 0) {
+        summary += `Tuy nhiên, em cần <strong>củng cố thêm</strong> kiến thức ở các chủ đề: <strong>${weakTopics.join(', ')}</strong>.`;
+    }
+    return summary.trim();
+}
+
+/**
+ * Phân tích số lần rời trang và tạo câu tóm tắt.
+ */
+function generateLeaveCountSummary(leaveData) {
+    if (!leaveData || leaveData.length === 0) return "Chưa có dữ liệu về mức độ tập trung.";
+
+    const totalLeaves = leaveData.reduce((a, item) => a + item.count, 0);
+    const avgLeaves = totalLeaves / leaveData.length;
+
+    if (avgLeaves === 0) {
+        return "Xuất sắc! Em thể hiện sự <strong>tập trung tuyệt đối</strong> và không rời khỏi màn hình trong suốt quá trình làm bài.";
+    } else if (avgLeaves < 2) {
+        return `Mức độ tập trung của em <strong>rất tốt</strong>, với trung bình chỉ khoảng ${avgLeaves.toFixed(1)} lần rời trang mỗi bài.`;
+    } else if (avgLeaves < 5) {
+        return `Em cần cải thiện sự tập trung hơn. Trung bình em rời trang khoảng ${avgLeaves.toFixed(1)} lần mỗi bài, điều này có thể ảnh hưởng đến kết quả.`;
+    } else {
+        return `Báo động! Mức độ tập trung của em <strong>rất thấp</strong> (trung bình ${avgLeaves.toFixed(1)} lần rời trang). Em cần tìm một không gian yên tĩnh và tránh các yếu tố gây xao nhãng khi làm bài.`;
+    }
+}
+
+/**
+ * Phân tích thói quen sử dụng thiết bị và tạo câu tóm tắt.
+ */
+function generateDeviceUsageSummary(deviceData) {
+    if (!deviceData || deviceData.length === 0) return "Chưa có dữ liệu về thói quen sử dụng thiết bị.";
+    
+    // Sắp xếp để tìm thiết bị dùng nhiều nhất
+    const sortedDevices = [...deviceData].sort((a, b) => b.count - a.count);
+    const primaryDevice = sortedDevices[0];
+    
+    return `Thiết bị học tập chủ yếu của em là <strong>${primaryDevice.device}</strong> (chiếm ${((primaryDevice.count / sortedDevices.reduce((a, d) => a + d.count, 0)) * 100).toFixed(0)}%).`;
+}
+
+/**
+ * Phân tích thời gian học và tạo câu tóm tắt.
+ */
+function generateStudyTimeSummary(timeData) {
+    if (!timeData || timeData.length === 0) return "Chưa có dữ liệu về thời gian làm bài.";
+
+    const sortedTimes = [...timeData].sort((a, b) => b.count - a.count);
+    const favoriteTime = sortedTimes[0];
+
+    let comment = "";
+    if (favoriteTime.timeSlot.includes("Khuya") || favoriteTime.timeSlot.includes("Đêm")) {
+        comment = "Tuy nhiên, việc thường xuyên thức khuya học bài có thể ảnh hưởng đến sức khỏe. Em nên cố gắng sắp xếp thời gian học sớm hơn.";
+    } else if (favoriteTime.timeSlot.includes("Sáng")) {
+        comment = "Đây là khung giờ vàng để học tập, rất đáng khen!";
+    }
+
+    return `Em có xu hướng làm bài nhiều nhất vào khung giờ <strong>${favoriteTime.timeSlot}</strong>. ${comment}`;
+}
+
     function renderData(data) {
         studentNameDisplay.textContent = data.profile.name;
         studentClassDisplay.textContent = `Lớp: ${data.profile.class}`;
@@ -121,7 +238,24 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLeaveCountChart(data.behavior.leaveCountTrend);
         renderDeviceUsageChart(data.behavior.deviceUsage);
         renderStudyTimeChart(data.behavior.studyTimeDistribution);
+
+    // THÊM TOÀN BỘ KHỐI CODE NÀY VÀO CUỐI HÀM
+    
+    // --- Điền nội dung cho các ô tóm tắt ---
+    document.getElementById('score-trend-summary').innerHTML = generateScoreTrendSummary(data.overview.scoreTrend);
+    document.getElementById('performance-quadrant-summary').innerHTML = generatePerformanceQuadrantSummary(data.overview.performanceQuadrant);
+    document.getElementById('topic-strength-summary').innerHTML = generateTopicStrengthSummary(data.skills.byTopic);
+    
+    // Hàm này chưa có dữ liệu, sẽ làm sau nếu cần
+    // document.getElementById('level-strength-summary').innerHTML = generateLevelStrengthSummary(data.skills.byLevel); 
+    
+    document.getElementById('leave-count-summary').innerHTML = generateLeaveCountSummary(data.behavior.leaveCountTrend);
+    document.getElementById('device-usage-summary').innerHTML = generateDeviceUsageSummary(data.behavior.deviceUsage);
+    document.getElementById('study-time-summary').innerHTML = generateStudyTimeSummary(data.behavior.studyTimeDistribution);
+}
     }
+
+
 
     function renderScoreTrendChart(scoreData) {
         const options = {
