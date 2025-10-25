@@ -17,7 +17,7 @@
   	tooltip: {
     	    theme: 'dark' // Đặt theme tooltip mặc định
   	}
-    });
+    };
     
     // ---  BƯỚC 2: KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
     const API_URL = '/api/';
