@@ -1,10 +1,13 @@
+-----------------------------------
 // Cách cập nhật file ở FrontEnd //
+-----------------------------------
 1. Mở cmd
 2. Chuyển đến thư mục luudauhoctap
 3. Chạy 3 lệnh: git add ., git commit -m "Refactor: Improve logic for handleAnswered", và git push
 
-
+-------------------------
 // Câu hỏi ĐIỀN KHUYẾT //
+-------------------------
 1. Quy ước __ (Hai dấu gạch dưới)
 Mục đích: Để soạn câu hỏi (questionContent) trên Google Sheet. Ký hiệu này giúp cho cả học sinh và hệ thống nhận biết được vị trí cần điền.
 
@@ -23,8 +26,9 @@ Ví dụ: nguyễn du|đại thi hào nguyễn du
 (Hệ thống sẽ tự động chấp nhận cả hai đáp án này từ học sinh).
 Hệ thống sẽ tự động xử lý việc chấm điểm dựa trên các đáp án mà thầy/cô cung cấp."
 
-
+---------------------------------------------------------
 // Cách lấy link âm thanh, hình ảnh để chèn vào đề thi //
+---------------------------------------------------------
 1. Sử dụng file từ Google Drive (Khuyến khích)
 Đây là lựa chọn tốt nhất vì nó ổn định, miễn phí và bạn có toàn quyền kiểm soát file.
 Loại link có thể dùng: Link Tải trực tiếp (Direct Download Link)
@@ -82,3 +86,20 @@ Trong cửa sổ mới, lại nhấp vào biểu tượng ba chấm và chọn "
 Một hộp thoại sẽ hiện ra chứa một đoạn mã <iframe>. Hãy sao chép chỉ phần URL bên trong src="...".
 Nó sẽ có dạng: https://drive.google.com/file/d/FILE_ID/preview
 Trong CSDL Google Sheet, hãy dán URL bạn vừa copy vào cột youtubeEmbedUrl.
+
+----------------------------------------------
+// Quy trình thêm/cập nhật mật khẩu và User //
+----------------------------------------------
+1. Thêm giáo viên mới: 
+Mở sheet USERS, thêm hàng mới, điền userId, email, role, managedClasses. Để trống passwordHash.
+Cập nhật trang: Tải lại trang Google Sheets để menu "🚀 Tiện ích Hệ thống" được cập nhật.
+2. Chạy tiện ích:
+Click vào 🚀 Tiện ích Hệ thống -> Cập nhật Mật khẩu Giáo viên.
+Một hộp thoại sẽ hiện ra, yêu cầu bạn nhập email của giáo viên (ví dụ: giaovien.moi@email.com). Nhấn OK.
+Một hộp thoại thứ hai hiện ra, yêu cầu bạn nhập mật khẩu mới cho họ (ví dụ: welcome123). Nhấn OK.
+Tự động cập nhật: Script sẽ tự động:
+Tìm đúng hàng có email giaovien.moi@email.com.
+Tạo ra một chuỗi hash từ welcome123.
+Ghi chuỗi hash đó vào đúng ô passwordHash của hàng đó.
+Hoàn tất: Một thông báo "Thành công" sẽ hiện ra. Bạn có thể kiểm tra lại sheet USERS để thấy ô passwordHash đã được điền.
+3. Thông báo email và pass (không phải chuỗi hash) cho giáo viên

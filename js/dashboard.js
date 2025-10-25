@@ -20,47 +20,51 @@ document.addEventListener('DOMContentLoaded', () => {
     let gradeDistributionChart = null;
     let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
 
-    // =================================================================
-    //                    LUỒNG KHỞI TẠO CHÍNH
-    // =================================================================
-    async function main() {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            window.location.href = '/login.html';
-            return;
-        }
-        try {
-	    currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (!currentUser) throw new Error("Missing user info");
-    	} catch (error) {
-            alert("Thông tin người dùng không hợp lệ. Vui lòng đăng nhập lại.");
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-            window.location.href = '/login.html';
-            return;
-	}
-        attachEventListeners();
+// =================================================================
+//                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN (PHIÊN BẢN MỚI)
+// =================================================================
 
-        showLoading(true);
-        try {
-            const examListResult = await fetchApi('getExamList');
-            const publishedExams = examListResult.data.filter(exam => exam.status === 'published');
-
-            if (publishedExams.length === 0) {
-                alert("Hiện không có bài tập nào được xuất bản.");
-                classOverviewSection.innerHTML = '<p style="text-align:center;">Không có dữ liệu để hiển thị.</p>';
-                return;
-            }
-            
-            examSelect.innerHTML = publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
-            await fetchAndDisplayClassOverview();
-
-        } catch (error) {
-            handleApiError(error, "Lỗi khởi tạo Dashboard");
-        } finally {
-            showLoading(false);
-        }
+/**
+ * Hàm chính: Tải dữ liệu ban đầu cho các bộ lọc.
+ */
+async function main() {
+    // --- PHẦN KIỂM TRA ĐĂNG NHẬP (GIỮ NGUYÊN TỪ CODE CỦA BẠN) ---
+    const token = localStorage.getItem('authToken');
+    if (!token) { window.location.href = '/login.html'; return; }
+    try {
+        currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) throw new Error("Missing user info");
+    } catch (error) {
+        alert("Thông tin người dùng không hợp lệ. Vui lòng đăng nhập lại.");
+        localStorage.clear(); // Xóa hết cho an toàn
+        window.location.href = '/login.html';
+        return;
     }
+    // --- KẾT THÚC PHẦN KIỂM TRA ---
+
+    attachEventListeners();
+    renderGradeDistributionChart(null); // Vẽ biểu đồ trống
+
+    // Tải danh sách đề bài ban đầu
+    try {
+        const examListResult = await fetchApi('getExamList');
+        const publishedExams = examListResult.data.filter(exam => exam.status === 'published');
+
+        if (publishedExams.length > 0) {
+            examSelect.innerHTML = 
+                `<option value="">-- Chọn bài tập --</option>` + 
+                publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
+        } else {
+            examSelect.innerHTML = `<option value="">-- Không có bài tập --</option>`;
+            examSelect.disabled = true;
+            classSelect.disabled = true;
+            viewReportBtn.disabled = true;
+        }
+    } catch (error) {
+        handleApiError(error, "Lỗi khi tải danh sách bài tập");
+    }
+}
+
 
     // =================================================================
     //                    CÁC HÀM API VÀ RENDER
@@ -81,52 +85,42 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
-async function fetchAndDisplayClassOverview() {
-    // Lấy giá trị hiện tại từ các dropdown
-    const examId = examSelect.value;
-    const classId = classSelect.value || null; // Nếu là "ALL", giá trị sẽ là null
+/**
+ * Hàm tải và hiển thị dữ liệu tổng quan sau khi nhấn nút.
+ */
+async function fetchAndDisplayClassOverview(examId, classId) {
+    // Tái sử dụng lại logic Tải nhanh/Tải chậm của bạn
     
-    // --- GIAI ĐOẠN A: TẢI DỮ LIỆU NHANH VÀ HIỂN THỊ KHUNG SƯỜN ---
+    // GIAI ĐOẠN A: TẢI NHANH
     showLoading(true);
     classOverviewSection.classList.remove('hidden');
+    // Reset giao diện
     gradeDistributionChartContainer.innerHTML = '<p class="loading-placeholder">Đang tải biểu đồ...</p>';
     hardestQuestionsList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
-    kpisContainer.innerHTML = ''; // Xóa KPI cũ
-    topPerformersList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
-    bottomPerformersList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
-
+    
     try {
-        // Tải đồng thời cả KPI và danh sách lớp để tăng tốc
         const paramsKPI = { examId };
         if (classId) paramsKPI.classId = classId;
 
-        const [kpiResult, classesResult] = await Promise.all([
-            fetchApi('getClassKPIs', paramsKPI),
-            fetchApi('getClassesForExam', { examId })
-        ]);
-        
-        populateClassSelect(classesResult.data, classId);
+        const kpiResult = await fetchApi('getClassKPIs', paramsKPI);
         renderKPIsAndLists(kpiResult.data);
         showLoading(false);
-        
     } catch (error) {
         handleApiError(error, "Không thể tải dữ liệu tổng quan");
         showLoading(false);
-        return;
+        return; // Dừng lại nếu lỗi
     }
 
-    // --- GIAI ĐOẠN B: TẢI NỀN DỮ LIỆU CHI TIẾT ---
+    // GIAI ĐOẠN B: TẢI NỀN
     try {
         const paramsDetails = { examId };
         if (classId) paramsDetails.classId = classId;
         
         const detailsResult = await fetchApi('getClassDetails', paramsDetails);
         renderChartsAndDetails(detailsResult.data);
-
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu chi tiết (nền):", error);
         gradeDistributionChartContainer.innerHTML = '<p class="error-placeholder">Lỗi tải biểu đồ.</p>';
-        hardestQuestionsList.innerHTML = '<li class="error-placeholder">Lỗi tải dữ liệu.</li>';
     }
 }
 
@@ -200,23 +194,24 @@ function renderChartsAndDetails(data) {
  * @param {string[]} allAssignedClasses - Mảng tất cả các lớp được giao cho đề bài.
  * @param {string} currentClassId - Lớp đang được chọn (nếu có).
  */
-function populateClassSelect(allAssignedClasses, currentClassId) {
+function populateClassSelect(allAssignedClasses) {
     let classesToShow = allAssignedClasses;
     
-    // Lọc danh sách lớp dựa trên quyền của giáo viên
     if (currentUser && currentUser.role !== 'admin' && currentUser.managedClasses !== 'ALL') {
         const managedClassesSet = new Set(currentUser.managedClasses.split(',').map(c => c.trim()));
         classesToShow = allAssignedClasses.filter(c => managedClassesSet.has(c));
     }
 
-    let optionsHtml = '';
-    
-    // Xử lý trường hợp chỉ có 1 lớp hoặc không có lớp nào
-    if (classesToShow.length > 1) {
-        optionsHtml += '<option value="">Tất cả các lớp</option>';
-        classSelect.disabled = false;
-    } else {
+    if (classesToShow.length === 0) {
+        classSelect.innerHTML = '<option value="">-- Không có lớp --</option>';
         classSelect.disabled = true;
+        return;
+    }
+
+    // Luôn có lựa chọn "Tất cả"
+    let optionsHtml = '<option value="">-- Chọn lớp --</option>';
+    if (currentUser.role === 'admin' || currentUser.managedClasses === 'ALL' || classesToShow.length > 1) {
+        optionsHtml += '<option value="ALL">Tất cả các lớp</option>';
     }
 
     classesToShow.forEach(className => {
@@ -224,15 +219,7 @@ function populateClassSelect(allAssignedClasses, currentClassId) {
     });
 
     classSelect.innerHTML = optionsHtml;
-    
-    // Tự động chọn giá trị
-    if (currentClassId && classesToShow.includes(currentClassId)) {
-        classSelect.value = currentClassId;
-    } else if (classesToShow.length === 1) {
-        classSelect.value = classesToShow[0];
-    } else {
-        classSelect.value = "";
-    }
+    classSelect.disabled = false;
 }
 
     // =================================================================
@@ -255,14 +242,52 @@ function populateClassSelect(allAssignedClasses, currentClassId) {
         loadingSpinner.classList.toggle('hidden', !isLoading);
     }
 
+/**
+ * Gắn tất cả các sự kiện và xử lý logic kích hoạt nút.
+ */
 function attachEventListeners() {
-    examSelect.addEventListener('change', () => {
-        // Khi đổi đề, reset dropdown lớp và tải lại
-        classSelect.value = ""; // Đặt về "Tất cả các lớp"
-        fetchAndDisplayClassOverview();
-    });
-    classSelect.addEventListener('change', fetchAndDisplayClassOverview);
+    const viewReportBtn = document.getElementById('view-report-btn');
 
+    // Hàm kiểm tra và kích hoạt nút "Xem báo cáo"
+    const checkFilters = () => {
+        const examSelected = examSelect.value !== "";
+        const classSelected = classSelect.value !== "";
+        viewReportBtn.disabled = !(examSelected && classSelected);
+    };
+
+    // Khi người dùng chọn một BÀI TẬP
+    examSelect.addEventListener('change', async () => {
+        const selectedExamId = examSelect.value;
+        classSelect.innerHTML = '<option value="">-- Đang tải lớp --</option>'; // Reset dropdown lớp
+        classSelect.disabled = true;
+        checkFilters(); // Cập nhật trạng thái nút
+
+        if (!selectedExamId) {
+            classSelect.innerHTML = '<option value="">-- Chọn bài tập trước --</option>';
+            return;
+        }
+
+        // Gọi API để lấy danh sách lớp tương ứng với bài tập
+        try {
+            const classesResult = await fetchApi('getClassesForExam', { examId: selectedExamId });
+            populateClassSelect(classesResult.data); // Gọi hàm populate của bạn
+        } catch (error) {
+            handleApiError(error, "Không thể tải danh sách lớp");
+        }
+    });
+
+    // Khi người dùng chọn một LỚP
+    classSelect.addEventListener('change', checkFilters);
+    
+    // Khi người dùng nhấn nút "XEM BÁO CÁO"
+    viewReportBtn.addEventListener('click', () => {
+        const selectedExamId = examSelect.value;
+        const selectedClassId = classSelect.value === "ALL" ? null : classSelect.value;
+        
+        fetchAndDisplayClassOverview(selectedExamId, selectedClassId);
+    });
+
+    // Các event listener cũ
     searchBtn.addEventListener('click', searchStudent);
     studentIdInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchStudent();
