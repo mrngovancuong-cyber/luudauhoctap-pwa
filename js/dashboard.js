@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const searchBtn = document.getElementById('search-btn');
     const studentIdInput = document.getElementById('student-id-input');
-    const loadingSpinner = document.getElementById('loading-spinner');
+    const overviewLoadingOverlay = document.getElementById('overview-loading-overlay');
 
     let gradeDistributionChart = null;
     let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
@@ -89,39 +89,35 @@ async function main() {
  * Hàm tải và hiển thị dữ liệu tổng quan sau khi nhấn nút.
  */
 async function fetchAndDisplayClassOverview(examId, classId) {
-    // Tái sử dụng lại logic Tải nhanh/Tải chậm của bạn
+    // HIỆN LỚP PHỦ
+    if (overviewLoadingOverlay) overviewLoadingOverlay.classList.add('active');
     
-    // GIAI ĐOẠN A: TẢI NHANH
-    showLoading(true);
-    classOverviewSection.classList.remove('hidden');
-    // Reset giao diện
-    gradeDistributionChartContainer.innerHTML = '<p class="loading-placeholder">Đang tải biểu đồ...</p>';
-    hardestQuestionsList.innerHTML = '<li class="loading-placeholder">Đang tải...</li>';
-    
+    // Giai đoạn A: Tải nhanh (không cần reset giao diện vì đã bị che)
     try {
         const paramsKPI = { examId };
         if (classId) paramsKPI.classId = classId;
-
         const kpiResult = await fetchApi('getClassKPIs', paramsKPI);
         renderKPIsAndLists(kpiResult.data);
-        showLoading(false);
     } catch (error) {
         handleApiError(error, "Không thể tải dữ liệu tổng quan");
+        // ẨN LỚP PHỦ NẾU CÓ LỖI
+        if (overviewLoadingOverlay) overviewLoadingOverlay.classList.remove('active');
         resetOverviewUI();
-	showLoading(false);
-        return; // Dừng lại nếu lỗi
+        return;
     }
 
-    // GIAI ĐOẠN B: TẢI NỀN
+    // Giai đoạn B: Tải nền
     try {
         const paramsDetails = { examId };
         if (classId) paramsDetails.classId = classId;
-        
         const detailsResult = await fetchApi('getClassDetails', paramsDetails);
         renderChartsAndDetails(detailsResult.data);
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu chi tiết (nền):", error);
         gradeDistributionChartContainer.innerHTML = '<p class="error-placeholder">Lỗi tải biểu đồ.</p>';
+    } finally {
+        // LUÔN ẨN LỚP PHỦ SAU KHI TẢI XONG GIAI ĐOẠN B
+        if (overviewLoadingOverlay) overviewLoadingOverlay.classList.remove('active');
     }
 }
 
@@ -293,10 +289,6 @@ function resetOverviewUI() {
         } else {
             alert(`${contextMessage}: ${error.message}`);
         }
-    }
-
-    function showLoading(isLoading) {
-        loadingSpinner.classList.toggle('hidden', !isLoading);
     }
 
 /**
