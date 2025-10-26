@@ -932,15 +932,28 @@ async function submitExam(auto = false) {
 
 switch (questionType) {
     case 'matching':
-        friendlyCorrectAnswer = qData.correct.split(',')
-            .map(pair => {
-                const [aIndex, bIndex] = pair.split('-');
+    friendlyCorrectAnswer = qData.correct.split(',')
+        .map(pair => {
+            const [aIndexStr, bIndexStr] = pair.split('-');
+            const aIndex = parseInt(aIndexStr, 10);
+            const bIndex = parseInt(bIndexStr, 10);
+
+            // KIỂM TRA AN TOÀN
+            // Kiểm tra xem aIndex và bIndex có phải là số hợp lệ không,
+            // và qData.options có tồn tại và có phần tử ở vị trí bIndex không.
+            if (!isNaN(aIndex) && !isNaN(bIndex) && qData.options && qData.options[bIndex] !== undefined) {
                 const letterA = ['A', 'B', 'C', 'D'][aIndex];
                 const contentB = qData.options[bIndex];
-                return `${letterA} - ${contentB}`;
-            })
-            .join('; ');
-        break;
+                
+                if (letterA && contentB) {
+                    return `${letterA} - ${contentB}`;
+                }
+            }
+            // Nếu có lỗi, trả về cặp chỉ số gốc để dễ debug
+            return pair; 
+        })
+        .join('; ');
+    break;
         
     case 'ordering':
         friendlyCorrectAnswer = qData.correct.split('||').join(' → ');
