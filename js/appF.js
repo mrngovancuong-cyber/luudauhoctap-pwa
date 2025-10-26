@@ -331,8 +331,8 @@ if (q.youtubeEmbedUrl) {
     break;
 	}
 
-      case 'multiple_choice': {
-default:
+      case 'multiple_choice': 
+default: {
   // LOGIC MỚI: Xáo trộn các lựa chọn trước khi render
   // 1. Lấy mảng các câu trả lời gốc
   const originalAnswers = q.answers; 
