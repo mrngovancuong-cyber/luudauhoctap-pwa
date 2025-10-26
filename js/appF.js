@@ -261,11 +261,12 @@ if (q.youtubeEmbedUrl) {
     const questionType = q.questionType || 'multiple_choice';
 
     switch (questionType) {
-      case 'fill_blank':
+      case 'fill_blank': {
         answerBlockHtml = `<div class="answer-container-fill-blank"><input type="text" name="${q.id}" id="ans-${q.id}" class="fill-blank-input" placeholder="Nhập câu trả lời..."></div>`;
         break;
+	}
 
-      case 'matching':
+      case 'matching': {
         const colA = q.answers;
         const colB = q.options || []; // Đảm bảo an toàn nếu không có options
         const shuffledColB = [...colB].sort(() => Math.random() - 0.5);
@@ -299,8 +300,9 @@ if (q.youtubeEmbedUrl) {
             </div>
         `;
         break;
+	}
 
-      case 'ordering':
+      case 'ordering': {
     // Xáo trộn các lựa chọn để hiển thị ở cột bên phải
     const shuffledAnswers = [...q.answers].sort(() => Math.random() - 0.5);
     const answerOptions = ['A', 'B', 'C', 'D']; // Giả định ID của các mục
@@ -327,8 +329,9 @@ if (q.youtubeEmbedUrl) {
         </div>
     `;
     break;
+	}
 
-      case 'multiple_choice':
+      case 'multiple_choice': {
 default:
   // LOGIC MỚI: Xáo trộn các lựa chọn trước khi render
   // 1. Lấy mảng các câu trả lời gốc
@@ -352,6 +355,7 @@ default:
   }).join('');
   break;
     }
+}
 
     // --- Ghép tất cả các mảnh HTML lại ---
     const questionCardHtml = `
