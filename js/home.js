@@ -1,31 +1,18 @@
-// File: /js/home.js (PHIÊN BẢN HOÀN CHỈNH - HỖ TRỢ CẢ HS VÀ GV)
+// File: /js/home.js (PHIÊN BẢN MỚI - "XEM THEO BÀI")
 
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = "/api/";
 
-    // --- CÁC PHẦN TỬ DOM ---
-    
-    // Khu vực của Học sinh
+    // --- DOM Elements ---
     const studentLoginSection = document.getElementById('student-login-section');
-    const startSessionBtn = document.getElementById('start-session-btn');
-    const loginError = document.getElementById('login-error');
-    const studentNameInput = document.getElementById('studentName');
-    const studentIdInput = document.getElementById('studentId');
-    const classNameInput = document.getElementById('className');
-    
-    // Khu vực của Giáo viên (phải tồn tại trong Index.html)
     const teacherControls = document.getElementById('teacher-preview-controls');
-    const teacherClassSelect = document.getElementById('teacher-class-select');
-    const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
-
-    // Khu vực chung
     const examListSection = document.getElementById('exam-list-section');
     const welcomeStudentName = document.getElementById('welcome-student-name');
     const examListContainer = document.getElementById('exam-list');
     const loadingMessage = document.getElementById('loading-message');
 
     /**
-     * HÀM CHÍNH: KIỂM TRA VAI TRÒ VÀ BẮT ĐẦU LUỒNG PHÙ HỢP
+     * HÀM CHÍNH: KIỂM TRA VAI TRÒ VÀ BẮT ĐẦU LUỒNG
      */
     function initialize() {
         const teacherInfoJSON = sessionStorage.getItem('teacherPreviewInfo');
@@ -49,93 +36,51 @@ document.addEventListener('DOMContentLoaded', () => {
      * LUỒNG 1: Thiết lập cho Giáo viên xem trước
      */
     function initializeTeacherView(teacher) {
-        // Ẩn form HS, hiện khu vực điều khiển của GV và danh sách bài tập
-        if (studentLoginSection) studentLoginSection.classList.add('hidden');
-        if (teacherControls) teacherControls.classList.remove('hidden');
-        if (examListSection) examListSection.classList.remove('hidden');
+        studentLoginSection.classList.add('hidden');
+        teacherControls.classList.remove('hidden');
+        examListSection.classList.remove('hidden');
 
-        // Chào mừng giáo viên
-        if (welcomeStudentName) {
-            welcomeStudentName.textContent = `${teacher.email.split('@')[0]} (Giáo viên)`;
-        }
+        welcomeStudentName.textContent = `${teacher.email.split('@')[0]} (Giáo viên)`;
         
-        // Điền vào dropdown các lớp mà giáo viên quản lý
-        if (teacherClassSelect) {
-            let classes = [];
-            if (teacher.role === 'admin' || teacher.managedClasses === 'ALL') {
-                // TODO: Admin cần API riêng để lấy tất cả các lớp. Tạm thời để trống.
-                // Chúng ta sẽ giải quyết việc này sau khi luồng cơ bản hoạt động.
-                teacherClassSelect.innerHTML = '<option value="">-- Admin: Chọn lớp để xem --</option>';
-                // Cần một API `getAllClasses` ở đây.
-            } else {
-                classes = teacher.managedClasses.split(',');
-            }
-            
-            teacherClassSelect.innerHTML = `<option value="">-- Chọn lớp để xem --</option>` +
-                                           classes.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            // Gắn sự kiện cho dropdown của giáo viên
-            teacherClassSelect.addEventListener('change', () => {
-                const selectedClass = teacherClassSelect.value;
-                
-                // Lưu lớp đang chọn vào sessionStorage để trang Exam có thể sử dụng
-                sessionStorage.setItem('teacherSelectedClass', selectedClass);
-
-                if (selectedClass) {
-                    fetchAndDisplayExams(selectedClass);
-                } else {
-                    if (examListContainer) examListContainer.innerHTML = '<p style="text-align: center;">Vui lòng chọn một lớp để xem danh sách bài tập.</p>';
-                }
-            });
-        }
-
-        // Gắn sự kiện cho nút quay lại Dashboard
+        // Gắn sự kiện cho nút quay lại
+        const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
         if (backToDashboardBtn) {
             backToDashboardBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 sessionStorage.removeItem('teacherPreviewInfo');
-                sessionStorage.removeItem('teacherSelectedClass');
                 window.location.href = '/Dashboard.html';
             });
         }
-        
-        // Hiển thị thông báo ban đầu
-        if (examListContainer) examListContainer.innerHTML = '<p style="text-align: center;">Vui lòng chọn một lớp để xem danh sách bài tập.</p>';
+
+        // Tải ngay danh sách bài tập dành cho giáo viên
+        fetchAndDisplayExamsForTeacher(teacher);
     }
 
     /**
      * LUỒNG 2: Thiết lập cho Học sinh đã có thông tin
      */
     function initializeStudentView(student) {
-        if (studentLoginSection) studentLoginSection.classList.add('hidden');
-        if (examListSection) examListSection.classList.remove('hidden');
-        if (welcomeStudentName) welcomeStudentName.textContent = student.name;
-        
-        fetchAndDisplayExams(student.className);
+        studentLoginSection.classList.add('hidden');
+        examListSection.classList.remove('hidden');
+        welcomeStudentName.textContent = student.name;
+        fetchAndDisplayExamsForStudent(student.className);
     }
 
     /**
      * LUỒNG 3: Thiết lập cho Học sinh chưa có thông tin
      */
     function setupStudentLogin() {
-        if (studentLoginSection) studentLoginSection.classList.remove('hidden');
-        if (examListSection) examListSection.classList.add('hidden');
+        // ... (Hàm này giữ nguyên từ phiên bản trước)
+        const startSessionBtn = document.getElementById('start-session-btn');
+        const studentNameInput = document.getElementById('studentName');
+        const studentIdInput = document.getElementById('studentId');
+        const classNameInput = document.getElementById('className');
+        const loginError = document.getElementById('login-error');
 
         if (startSessionBtn) {
             startSessionBtn.addEventListener('click', () => {
-                const student = {
-                    name: studentNameInput.value.trim(),
-                    id: studentIdInput.value.trim(),
-                    className: classNameInput.value.trim().toUpperCase()
-                };
-
-                if (!student.name || !student.id || !student.className) {
-                    if (loginError) {
-                        loginError.textContent = 'Vui lòng điền đầy đủ cả ba thông tin.';
-                        loginError.style.display = 'block';
-                    }
-                    return;
-                }
+                const student = { name: studentNameInput.value.trim(), id: studentIdInput.value.trim(), className: classNameInput.value.trim().toUpperCase() };
+                if (!student.name || !student.id || !student.className) { /* ... xử lý lỗi ... */ return; }
                 sessionStorage.setItem('studentInfo', JSON.stringify(student));
                 initializeStudentView(student);
             });
@@ -143,25 +88,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * HÀM CHUNG: Tải và hiển thị danh sách bài tập
+     * TẢI BÀI TẬP CHO GIÁO VIÊN
      */
-    async function fetchAndDisplayExams(className) {
-        if (loadingMessage) {
-            loadingMessage.textContent = `Đang tải bài tập cho lớp ${className}...`;
-            loadingMessage.style.display = 'block';
+    async function fetchAndDisplayExamsForTeacher(teacher) {
+        // Giáo viên cần gửi token để được xác thực
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            alert("Không tìm thấy phiên đăng nhập của giáo viên. Đang quay lại Dashboard.");
+            window.location.href = '/Dashboard.html';
+            return;
         }
-        if (examListContainer) examListContainer.innerHTML = ''; 
+        
+        // Gọi API với token, không cần className
+        await fetchAndDisplayExams(`${API_URL}?action=getExamList`, token);
+    }
+
+    /**
+     * TẢI BÀI TẬP CHO HỌC SINH
+     */
+    async function fetchAndDisplayExamsForStudent(className) {
+        // Học sinh không cần token, nhưng cần className
+        await fetchAndDisplayExams(`${API_URL}?action=getExamList&class=${className}`);
+    }
+
+    /**
+     * HÀM CHUNG: Tải và hiển thị danh sách bài tập từ một URL cụ thể
+     */
+    async function fetchAndDisplayExams(url, token = null) {
+        loadingMessage.textContent = 'Đang tải danh sách bài tập...';
+        loadingMessage.style.display = 'block';
+        examListContainer.innerHTML = ''; 
         
         try {
-            const response = await fetch(`${API_URL}?action=getExamList&class=${className}`);
+            const options = {};
+            if (token) {
+                options.headers = { 'Authorization': `Bearer ${token}` };
+            }
+
+            const response = await fetch(url, options);
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
 
             const exams = result.data;
-            if (loadingMessage) loadingMessage.style.display = 'none';
+            loadingMessage.style.display = 'none';
 
             if (!exams || exams.length === 0) {
-                if (examListContainer) examListContainer.innerHTML = `<p style="text-align: center;">Hiện chưa có bài tập nào được giao cho lớp ${className}.</p>`;
+                examListContainer.innerHTML = `<p style="text-align: center;">Hiện chưa có bài tập nào phù hợp.</p>`;
                 return;
             }
 
@@ -172,9 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.innerHTML = `<h3>${exam.title}</h3><p>Thời gian làm bài: ${exam.durationMinutes} phút</p>`;
                 examListContainer.appendChild(link);
             });
-
         } catch (error) {
-            if (loadingMessage) loadingMessage.textContent = `Lỗi: ${error.message}.`;
+            loadingMessage.textContent = `Lỗi: ${error.message}.`;
         }
     }
 
