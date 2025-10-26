@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeStudentName = document.getElementById('welcome-student-name');
     const examListContainer = document.getElementById('exam-list');
     const loadingMessage = document.getElementById('loading-message');
+    const welcomeMessage = document.getElementById('welcome-message');
 
     /**
      * HÀM CHÍNH: KIỂM TRA VAI TRÒ VÀ BẮT ĐẦU LUỒNG
@@ -40,7 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
         teacherControls.classList.remove('hidden');
         examListSection.classList.remove('hidden');
 
-        welcomeStudentName.textContent = `${teacher.email.split('@')[0]} (Giáo viên)`;
+        if (welcomeMessage) {
+        welcomeMessage.innerHTML = `Xin chào <strong>${teacher.email.split('@')[0]}</strong>. Chúc thầy/cô một ngày làm việc hiệu quả!`;
+    }
         
         // Gắn sự kiện cho nút quay lại
         const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');

@@ -32,8 +32,8 @@ function hideLoader() {
 
 function createTeacherPreviewBar() {
     const bar = document.createElement('div');
-    bar.style.cssText = 'background-color: #facc15; color: #1e1a17; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 9999;';
-    bar.innerHTML = 'Bạn đang ở Chế độ Xem của Giáo viên. <a href="/Dashboard.html" id="back-to-dashboard" style="color: #2563eb; text-decoration: underline;">Quay lại Dashboard</a>';
+    bar.style.cssText = 'background-color: #facc15; color: #1e1a17; padding: 10px; text-align: center; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;';
+    bar.innerHTML = 'Bạn đang ở Chế độ Xem trước của Giáo viên. <a href="/" id="back-to-index" style="color: #2563eb; text-decoration: underline;">Quay lại Danh sách bài tập</a>';
     
     // Chèn thanh bar vào ngay sau header
     const header = document.querySelector('.sticky-header');
@@ -43,13 +43,20 @@ function createTeacherPreviewBar() {
         document.body.prepend(bar);
     }
 
-    // Gắn sự kiện để khi quay lại, xóa hết các phiên lưu trữ
-    document.getElementById('back-to-dashboard').addEventListener('click', (e) => {
-        e.preventDefault();
-        sessionStorage.removeItem('teacherPreviewInfo'); // Xóa phiên giáo viên
-        sessionStorage.removeItem('studentInfo');      // Xóa cả phiên học sinh
-        window.location.href = '/Dashboard.html';
-    });
+    // Đẩy header chính của trang xuống để không bị thanh bar che mất
+    const header = document.querySelector('.sticky-header');
+    if (header) {
+    // Lấy chiều cao của thanh bar vừa tạo và đẩy header xuống một khoảng tương ứng
+    const barHeight = bar.offsetHeight;
+    header.style.top = `${barHeight}px`;
+}
+
+    // Gắn sự kiện cho nút "Quay lại Danh sách bài tập"
+document.getElementById('back-to-index').addEventListener('click', (e) => {
+    e.preventDefault(); // Ngăn chặn hành vi chuyển trang mặc định
+    // Không cần xóa sessionStorage, vì giáo viên vẫn đang ở chế độ xem trước
+    window.location.href = '/'; // Chuyển về trang index.html
+});
 }
 
 // ===== Hàm trợ giúp cho Toast Notification =====
