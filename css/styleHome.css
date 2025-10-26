@@ -224,3 +224,16 @@ main {
 }
 
 .hidden { display: none !important; }
+
+.sign-out-link {
+    display: block; /* Hiển thị trên một dòng riêng */
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.sign-out-link:hover {
+    color: var(--bad); /* Đổi màu đỏ khi di chuột vào */
+}

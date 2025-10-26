@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const examListContainer = document.getElementById('exam-list');
     const loadingMessage = document.getElementById('loading-message');
     const welcomeMessage = document.getElementById('welcome-message');
+    const signOutBtn = document.getElementById('sign-out-btn');
 
     /**
      * HÀM CHÍNH: KIỂM TRA VAI TRÒ VÀ BẮT ĐẦU LUỒNG
@@ -67,7 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
         examListSection.classList.remove('hidden');
         welcomeStudentName.textContent = student.name;
         fetchAndDisplayExamsForStudent(student.className);
+    // THÊM ĐOẠN CODE SAU VÀO CUỐI HÀM NÀY
+    if (signOutBtn) {
+        signOutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleSignOut();
+        });
     }
+}
 
     /**
      * LUỒNG 3: Thiết lập cho Học sinh chưa có thông tin
@@ -89,6 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+function handleSignOut() {
+    // Xóa thông tin học sinh khỏi sessionStorage
+    sessionStorage.removeItem('studentInfo');
+    
+    // Tải lại trang. Vì không còn 'studentInfo', trang sẽ tự động hiển thị lại form đăng nhập.
+    window.location.reload();
+}
 
     /**
      * TẢI BÀI TẬP CHO GIÁO VIÊN
