@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingMessage = document.getElementById('loading-message');
     const welcomeMessage = document.getElementById('welcome-message');
     const signOutBtn = document.getElementById('sign-out-btn');
+    const welcomeSection = document.getElementById('welcome-section');
 
     /**
      * HÀM CHÍNH: KIỂM TRA VAI TRÒ VÀ BẮT ĐẦU LUỒNG
@@ -63,25 +64,37 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * LUỒNG 2: Thiết lập cho Học sinh đã có thông tin
      */
-    function initializeStudentView(student) {
-        studentLoginSection.classList.add('hidden');
-        examListSection.classList.remove('hidden');
-        welcomeStudentName.textContent = student.name;
-        fetchAndDisplayExamsForStudent(student.className);
-    // THÊM ĐOẠN CODE SAU VÀO CUỐI HÀM NÀY
+function initializeStudentView(student) {
+    if (studentLoginSection) studentLoginSection.classList.add('hidden');
+    
+    // Hiện cả khu vực chào mừng và khu vực danh sách bài tập
+    if (welcomeSection) welcomeSection.classList.remove('hidden'); 
+    if (examListSection) examListSection.classList.remove('hidden');
+
+    if (welcomeStudentName) welcomeStudentName.textContent = student.name;
+    
+    // Gắn sự kiện cho nút đăng xuất
+    const signOutBtn = document.getElementById('sign-out-btn');
     if (signOutBtn) {
         signOutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            handleSignOut();
+            sessionStorage.removeItem('studentInfo');
+            window.location.reload();
         });
     }
+    
+    fetchAndDisplayExamsForStudent(student.className);
 }
 
     /**
      * LUỒNG 3: Thiết lập cho Học sinh chưa có thông tin
      */
-    function setupStudentLogin() {
-        // ... (Hàm này giữ nguyên từ phiên bản trước)
+function setupStudentLogin() {
+    if (studentLoginSection) studentLoginSection.classList.remove('hidden');
+    
+    // Ẩn khu vực chào mừng và danh sách bài tập
+    if (welcomeSection) welcomeSection.classList.add('hidden');
+    if (examListSection) examListSection.classList.add('hidden');
         const startSessionBtn = document.getElementById('start-session-btn');
         const studentNameInput = document.getElementById('studentName');
         const studentIdInput = document.getElementById('studentId');
