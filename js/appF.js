@@ -268,37 +268,35 @@ if (q.youtubeEmbedUrl) {
 
       case 'matching': {
         const colA = q.answers;
-        const colB = q.options || []; // Đảm bảo an toàn nếu không có options
-        const shuffledColB = [...colB].sort(() => Math.random() - 0.5);
+const colB = q.options || [];
+const shuffledColB = [...colB].sort(() => Math.random() - 0.5);
 
-        answerBlockHtml = `
-            <div class="matching-container">
-                <div class="matching-column">
-                    <strong>Cột A</strong>
-                    ${colA.map((item, index) => `<div class="matching-item-a">${['A', 'B', 'C', 'D'][index]}. ${escapeHtml(item)}</div>`).join('')}
+answerBlockHtml = `
+    <div class="matching-container">
+        <div class="matching-column">
+            <strong>Cột A</strong>
+            ${colA.map((item, index) => `<div class="matching-item-a">${['A', 'B', 'C', 'D'][index]}. ${escapeHtml(item)}</div>`).join('')}
+        </div>
+        <div class="matching-column">
+            <strong>Cột B</strong>
+            ${shuffledColB.map(item => `<div class="matching-item-b">${escapeHtml(item)}</div>`).join('')}
+        </div>
+    </div>
+    <div class="matching-inputs">
+        ${colA.map((_, index) => {
+            const optionLetter = ['A', 'B', 'C', 'D'][index];
+            return `
+                <div class="matching-input-row">
+                    <span>Ghép ${optionLetter} với:</span>
+                    <select class="matching-select" data-col-a-index="${index}">
+                        <option value="">Chọn...</option>
+                        ${shuffledColB.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('')}
+                    </select>
                 </div>
-                <div class="matching-column">
-                    <strong>Cột B</strong>
-                    {/* Bỏ đi phần (item, index) và ${index + 1} */}
-                    ${shuffledColB.map(item => `<div class="matching-item-b">${escapeHtml(item)}</div>`).join('')}
-                </div>
-            </div>
-            <div class="matching-inputs">
-                ${colA.map((_, index) => {
-                    const optionLetter = ['A', 'B', 'C', 'D'][index];
-                    return `
-                        <div class="matching-input-row">
-                            <span>Ghép ${optionLetter} với:</span>
-                            <select class="matching-select" data-col-a-index="${index}">
-                                <option value="">Chọn...</option>
-                                {/* Sửa cả đoạn này để value là nội dung, không phải số thứ tự */}
-                                ${shuffledColB.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('')}
-                            </select>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
+            `;
+        }).join('')}
+    </div>
+`;
         break;
 	}
 
