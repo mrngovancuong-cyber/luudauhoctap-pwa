@@ -31,19 +31,14 @@ function hideLoader() {
 }
 
 function createTeacherPreviewBar() {
+    // --- PHẦN 1: TẠO VÀ CHÈN THANH BAR ---
     const bar = document.createElement('div');
+    bar.id = 'teacher-preview-bar'; // Thêm ID để dễ dàng tham chiếu
     bar.style.cssText = 'background-color: #facc15; color: #1e1a17; padding: 10px; text-align: center; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;';
     bar.innerHTML = 'Bạn đang ở Chế độ Xem trước của Giáo viên. <a href="/" id="back-to-index" style="color: #2563eb; text-decoration: underline;">Quay lại Danh sách bài tập</a>';
     
-    // Khai báo biến 'header' MỘT LẦN DUY NHẤT
-    const header = document.querySelector('.sticky-header');
-
-    // Chèn thanh bar vào ngay sau header
-    if (header) {
-        header.parentNode.insertBefore(bar, header.nextSibling);
-    } else {
-        document.body.prepend(bar);
-    }
+    // Luôn chèn thanh bar vào đầu của <body>
+    document.body.prepend(bar);
 
     // Gắn sự kiện cho nút "Quay lại"
     document.getElementById('back-to-index').addEventListener('click', (e) => {
@@ -51,14 +46,17 @@ function createTeacherPreviewBar() {
         window.location.href = '/';
     });
     
-    // Đẩy header chính của trang xuống (TÁI SỬ DỤNG biến 'header')
-    if (header) {
-        // Chờ một chút để trình duyệt render xong thanh bar và có chiều cao thực
-        setTimeout(() => {
-            const barHeight = bar.offsetHeight;
-            header.style.top = `${barHeight}px`;
-        }, 50); // Chờ 50ms là đủ
-    }
+    // --- PHẦN 2: TẠO KHOẢNG ĐỆM CHO BODY ---
+    // Chờ một chút để trình duyệt render xong thanh bar và có chiều cao thực
+    setTimeout(() => {
+        const barHeight = bar.offsetHeight;
+        
+        // Thêm padding-top cho thẻ <body> để đẩy toàn bộ nội dung xuống
+        document.body.style.paddingTop = `${barHeight}px`;
+
+        // Nếu header chính là sticky, nó cũng sẽ tự động được đẩy xuống theo
+        // mà không cần can thiệp trực tiếp vào style 'top' của nó nữa.
+    }, 50); // Chờ 50ms là đủ
 }
 
 // ===== Hàm trợ giúp cho Toast Notification =====
