@@ -585,3 +585,35 @@ button, input, select, textarea {
 .student-link:hover {
     background-color: var(--bg);
 }
+
+/* Thêm vào cuối file styleDashboard.css */
+
+.utility-section h2 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.utility-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.utility-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: var(--bg); /* Nền tối, ít nổi bật hơn nút chính */
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: auto; /* Để nút co giãn theo nội dung */
+    transition: all 0.2s ease;
+}
+
+.utility-btn:hover {
+    background-color: var(--bg-card);
+    color: var(--accent);
+    border-color: var(--accent);
+}

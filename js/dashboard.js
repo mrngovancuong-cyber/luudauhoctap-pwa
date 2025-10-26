@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const studentIdInput = document.getElementById('student-id-input');
     const overviewLoadingOverlay = document.getElementById('overview-loading-overlay');
+    const studentViewBtn = document.getElementById('student-view-btn');
 
     let gradeDistributionChart = null;
     let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
@@ -347,6 +348,18 @@ function attachEventListeners() {
     studentIdInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchStudent();
     });
+const studentViewBtn = document.getElementById('student-view-btn');
+    if (studentViewBtn) {
+        studentViewBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const currentUserJSON = localStorage.getItem('currentUser');
+            if (currentUserJSON) {
+                sessionStorage.setItem('teacherPreviewInfo', currentUserJSON);
+            }
+            sessionStorage.removeItem('studentInfo'); 
+            window.location.href = '/'; 
+        });
+    }
 }
 
     // --- BẮT ĐẦU CHẠY ỨNG DỤNG ---

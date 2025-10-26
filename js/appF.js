@@ -30,6 +30,28 @@ function hideLoader() {
   }
 }
 
+function createTeacherPreviewBar() {
+    const bar = document.createElement('div');
+    bar.style.cssText = 'background-color: #facc15; color: #1e1a17; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 9999;';
+    bar.innerHTML = 'Bạn đang ở Chế độ Xem của Giáo viên. <a href="/Dashboard.html" id="back-to-dashboard" style="color: #2563eb; text-decoration: underline;">Quay lại Dashboard</a>';
+    
+    // Chèn thanh bar vào ngay sau header
+    const header = document.querySelector('.sticky-header');
+    if (header) {
+        header.parentNode.insertBefore(bar, header.nextSibling);
+    } else {
+        document.body.prepend(bar);
+    }
+
+    // Gắn sự kiện để khi quay lại, xóa hết các phiên lưu trữ
+    document.getElementById('back-to-dashboard').addEventListener('click', (e) => {
+        e.preventDefault();
+        sessionStorage.removeItem('teacherPreviewInfo'); // Xóa phiên giáo viên
+        sessionStorage.removeItem('studentInfo');      // Xóa cả phiên học sinh
+        window.location.href = '/Dashboard.html';
+    });
+}
+
 // ===== Hàm trợ giúp cho Toast Notification =====
 let toastTimeout; // Biến để quản lý việc tự động ẩn
 
@@ -751,34 +773,37 @@ function clearLocal() {
   } catch(e) {}
 }
 
-function readStudent(){
-  if ($('#studentName')) state.student.name = $('#studentName').value.trim();
-  if ($('#studentId')) state.student.id = $('#studentId').value.trim();
-  if ($('#className')) state.student.className = $('#className').value.trim();
-  if ($('#email')) state.student.email = $('#email').value.trim();
-}
+function readStudent() {
+    // Ưu tiên kiểm tra xem có phải là giáo viên đang xem trước không
+    const teacherInfoJSON = sessionStorage.getItem('teacherPreviewInfo');
+    let studentInfoJSON = sessionStorage.getItem('studentInfo');
+    
+    if (teacherInfoJSON) {
+        // ---- LUỒNG CỦA GIÁO VIÊN ----
+        const teacherData = JSON.parse(teacherInfoJSON);
+        
+        // Lấy lớp đang được chọn để xem trước (nếu có)
+        const previewClass = sessionStorage.getItem('teacherSelectedClass');
 
-function validateBeforeSubmit(){
-  readStudent();
-  const missing=[];
-  if (!state.student.name) missing.push('Họ và tên');
-  if (!state.student.id) missing.push('Mã học sinh');
-  if (!state.student.className) missing.push('Lớp');
-  if (missing.length){
-    alert('Vui lòng điền: '+missing.join(', '));
-    return false;
-  }
-  
-  // SỬA DÒNG NÀY: Dùng state.exam.questions thay vì MOCK_EXAM.questions
-  const total = state.exam.questions.length;
-  const answered = Object.keys(state.answers).length;
-  
-  if (answered < total){
-    return confirm(`Em còn ${total - answered} câu chưa trả lời. Em vẫn muốn nộp luôn?`);
-  }
-  return true;
-}
+        // Tạo thông tin "học sinh giả" để nộp bài
+        state.student.name = `${teacherData.email.split('@')[0]} (GV Xem trước)`;
+        state.student.id = `GV_${teacherData.userId || 'PREVIEW'}`;
+        // Gán lớp đang xem trước, hoặc 'ALL' nếu không có
+        state.student.className = previewClass || 'ALL';
 
+    } else if (studentInfoJSON) {
+        // ---- LUỒNG CỦA HỌC SINH ----
+        const studentData = JSON.parse(studentInfoJSON);
+        state.student.name = studentData.name || '';
+        state.student.id = studentData.id || '';
+        state.student.className = studentData.className || '';
+
+    } else {
+        // ---- LUỒNG DỰ PHÒNG: KHÔNG CÓ THÔNG TIN ----
+        alert("Không tìm thấy thông tin của bạn. Vui lòng khai báo lại từ trang chủ.");
+        window.location.href = '/';
+    }
+}
 
 function getSimpleDeviceInfo(){
   const ua = navigator.userAgent || '';
@@ -795,7 +820,6 @@ function getSimpleDeviceInfo(){
   return `${browser} trên ${os}`;
 }
 
-// ===== Submit - PHIÊN BẢN CUỐI CÙNG =====
 // ===== Submit - PHIÊN BẢN AN TOÀN & ĐẦY ĐỦ =====
 async function submitExam(auto = false) {
   // Logic kiểm tra trạng thái đã nộp (giữ nguyên, đã đúng)
@@ -817,7 +841,16 @@ async function submitExam(auto = false) {
   }
   
   if (state.submitted) return;
-  if (!auto && !validateBeforeSubmit()) return;
+  readStudent(); // Luôn đọc lại thông tin mới nhất trước khi nộp
+if (!auto) {
+    const total = state.exam.questions.length;
+    const answered = Object.keys(state.answers).length;
+    if (answered < total) {
+        if (!confirm(`Em còn ${total - answered} câu chưa trả lời. Em vẫn muốn nộp luôn?`)) {
+            return; // Hủy nếu người dùng không đồng ý
+        }
+    }
+}
 
   setButtonsDisabled(true);
   state.submitted = true;
@@ -1067,15 +1100,7 @@ function activateOrderingQuestions() {
 // <<<< THAY THẾ TOÀN BỘ HÀM wireEvents() >>>>
 function wireEvents(){
   $('#btn-start')?.addEventListener('click', ()=>{
-    // Luôn đọc thông tin học sinh khi nhấn nút
-    readStudent(); 
-
-    // Kiểm tra 3 trường bắt buộc
-    if (!state.student.name || !state.student.id || !state.student.className) {
-        alert('Vui lòng điền đầy đủ Họ và tên, Mã số học sinh và Lớp để bắt đầu.');
-        return; // Dừng lại nếu chưa điền đủ
-    }
-
+   
     // Nếu đã điền đủ, ẩn nút "Bắt đầu làm" và "Hướng dẫn"
     $('#btn-start').hidden = true;
     $('#btn-guidelines').hidden = true;
@@ -1180,25 +1205,33 @@ function activateLazyLoading() {
 
 // ===== Boot =====
 document.addEventListener('DOMContentLoaded', () => {
-  // initMode(); // <-- Dòng này được xóa là ĐÚNG, vì logic đã chuyển vào loadExam
-
-  const examId = getParam("examId"); // Lấy examId từ URL
-
-  if (examId) {
-    loadExam(examId); // Chỉ tải đề khi có examId
-  } else {
-    // Xử lý trường hợp không có examId trên URL
-    const questionsContainer = document.getElementById('questions');
-    if (questionsContainer) {
-      questionsContainer.innerHTML = `
-        <div class="card" style="text-align: center;">
-          <h3>Lỗi: Không tìm thấy mã đề bài.</h3>
-          <p>Vui lòng kiểm tra lại đường link hoặc quay trở lại trang chủ.</p>
-          <a href="/" class="action-btn btn-start" style="text-decoration: none;">Về Trang chủ</a>
-        </div>
-      `;
+    // KIỂM TRA VAI TRÒ NGAY TỪ ĐẦU ĐỂ HIỂN THỊ THANH BAR
+    const teacherInfoJSON = sessionStorage.getItem('teacherPreviewInfo');
+    if (teacherInfoJSON) {
+        createTeacherPreviewBar();
     }
-  }
 
-  wireEvents(); // <-- Dòng này BẮT BUỘC phải có để các nút hoạt động   
+    // ĐỌC THÔNG TIN NGƯỜI DÙNG (CÓ THỂ LÀ HỌC SINH THẬT HOẶC GIÁO VIÊN)
+    // Dòng này đã có sẵn ở file của bạn, chỉ cần đảm bảo nó ở đúng vị trí
+    readStudent();
+
+    // TẢI ĐỀ BÀI (giữ nguyên logic cũ)
+    const examId = getParam("examId");
+    if (examId) {
+        loadExam(examId);
+    } else {
+        const questionsContainer = document.getElementById('questions');
+        if (questionsContainer) {
+            questionsContainer.innerHTML = `
+                <div class="card" style="text-align: center;">
+                    <h3>Lỗi: Không tìm thấy mã đề bài.</h3>
+                    <p>Vui lòng kiểm tra lại đường link hoặc quay trở lại trang chủ.</p>
+                    <a href="/" class="action-btn btn-start" style="text-decoration: none;">Về Trang chủ</a>
+                </div>
+            `;
+        }
+    }
+
+    // GẮN CÁC SỰ KIỆN NÚT BẤM (giữ nguyên logic cũ)
+    wireEvents();
 });
