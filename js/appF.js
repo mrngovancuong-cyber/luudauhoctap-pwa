@@ -35,28 +35,30 @@ function createTeacherPreviewBar() {
     bar.style.cssText = 'background-color: #facc15; color: #1e1a17; padding: 10px; text-align: center; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;';
     bar.innerHTML = 'Bạn đang ở Chế độ Xem trước của Giáo viên. <a href="/" id="back-to-index" style="color: #2563eb; text-decoration: underline;">Quay lại Danh sách bài tập</a>';
     
-    // Chèn thanh bar vào ngay sau header
+    // Khai báo biến 'header' MỘT LẦN DUY NHẤT
     const header = document.querySelector('.sticky-header');
+
+    // Chèn thanh bar vào ngay sau header
     if (header) {
         header.parentNode.insertBefore(bar, header.nextSibling);
     } else {
         document.body.prepend(bar);
     }
 
-    // Đẩy header chính của trang xuống để không bị thanh bar che mất
-    const header = document.querySelector('.sticky-header');
+    // Gắn sự kiện cho nút "Quay lại"
+    document.getElementById('back-to-index').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/';
+    });
+    
+    // Đẩy header chính của trang xuống (TÁI SỬ DỤNG biến 'header')
     if (header) {
-    // Lấy chiều cao của thanh bar vừa tạo và đẩy header xuống một khoảng tương ứng
-    const barHeight = bar.offsetHeight;
-    header.style.top = `${barHeight}px`;
-}
-
-    // Gắn sự kiện cho nút "Quay lại Danh sách bài tập"
-document.getElementById('back-to-index').addEventListener('click', (e) => {
-    e.preventDefault(); // Ngăn chặn hành vi chuyển trang mặc định
-    // Không cần xóa sessionStorage, vì giáo viên vẫn đang ở chế độ xem trước
-    window.location.href = '/'; // Chuyển về trang index.html
-});
+        // Chờ một chút để trình duyệt render xong thanh bar và có chiều cao thực
+        setTimeout(() => {
+            const barHeight = bar.offsetHeight;
+            header.style.top = `${barHeight}px`;
+        }, 50); // Chờ 50ms là đủ
+    }
 }
 
 // ===== Hàm trợ giúp cho Toast Notification =====
