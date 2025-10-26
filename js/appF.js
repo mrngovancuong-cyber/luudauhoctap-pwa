@@ -278,7 +278,8 @@ if (q.youtubeEmbedUrl) {
                 </div>
                 <div class="matching-column">
                     <strong>Cột B</strong>
-                    ${shuffledColB.map((item, index) => `<div class="matching-item-b">${index + 1}. ${escapeHtml(item)}</div>`).join('')}
+                    {/* Bỏ đi phần (item, index) và ${index + 1} */}
+                    ${shuffledColB.map(item => `<div class="matching-item-b">${escapeHtml(item)}</div>`).join('')}
                 </div>
             </div>
             <div class="matching-inputs">
@@ -287,9 +288,10 @@ if (q.youtubeEmbedUrl) {
                     return `
                         <div class="matching-input-row">
                             <span>Ghép ${optionLetter} với:</span>
-                            <select class="matching-select" data-col-a-option="${optionLetter}">
+                            <select class="matching-select" data-col-a-index="${index}">
                                 <option value="">Chọn...</option>
-                                ${colB.map((_, b_index) => `<option value="${b_index + 1}">${b_index + 1}</option>`).join('')}
+                                {/* Sửa cả đoạn này để value là nội dung, không phải số thứ tự */}
+                                ${shuffledColB.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('')}
                             </select>
                         </div>
                     `;
@@ -327,13 +329,28 @@ if (q.youtubeEmbedUrl) {
     break;
 
       case 'multiple_choice':
-      default:
-        const mcOptions = ['A', 'B', 'C', 'D'];
-        answerBlockHtml = q.answers.map((ans, ansIdx) => {
-          const option = mcOptions[ansIdx];
-          return `<label class="answer" for="ans-${q.id}-${option}"><input type="radio" name="${q.id}" id="ans-${q.id}-${option}" value="${option}"><span>${escapeHtml(ans)}</span></label>`;
-        }).join('');
-        break;
+default:
+  // LOGIC MỚI: Xáo trộn các lựa chọn trước khi render
+  // 1. Lấy mảng các câu trả lời gốc
+  const originalAnswers = q.answers; 
+  
+  // 2. Xáo trộn mảng đó
+  const shuffledAnswers = [...originalAnswers].sort(() => Math.random() - 0.5);
+
+  // 3. Tạo HTML từ mảng đã xáo trộn
+  answerBlockHtml = shuffledAnswers.map((ans, ansIdx) => {
+    // QUAN TRỌNG:
+    // - value của input giờ là NỘI DUNG câu trả lời, không phải 'A', 'B'...
+    // - id và for vẫn cần là duy nhất, nên ta dùng index sau khi xáo trộn
+    return `<label class="answer" for="ans-${q.id}-${ansIdx}">
+              <input type="radio" 
+                     name="${q.id}" 
+                     id="ans-${q.id}-${ansIdx}" 
+                     value="${escapeHtml(ans)}">
+              <span>${escapeHtml(ans)}</span>
+            </label>`;
+  }).join('');
+  break;
     }
 
     // --- Ghép tất cả các mảnh HTML lại ---
@@ -461,29 +478,44 @@ function handleMatchingChange(e) {
   const selectElement = e.target;
   const qCard = selectElement.closest('.q-card');
   const qid = qCard.id.replace('card-', '');
+  
+  // Lấy câu hỏi gốc từ state để truy xuất chỉ số
+  const questionData = state.questions.find(q => q.id === qid);
+  if (!questionData) return;
 
-  // Thu thập tất cả các cặp đã chọn
   const allSelects = qCard.querySelectorAll('.matching-select');
   const pairs = [];
+
   allSelects.forEach(sel => {
-    const colA = sel.dataset.colAOption;
-    const colB = sel.value;
-    if (colA && colB) {
-      pairs.push(`${colA}-${colB}`);
+    // Lấy chỉ số của Cột A (0, 1, 2...)
+    const colAIndex = parseInt(sel.dataset.colAIndex, 10);
+    
+    // Lấy NỘI DUNG của mục Cột B mà người dùng đã chọn
+    const selectedColBContent = sel.options[sel.selectedIndex]?.text;
+    
+    if (!isNaN(colAIndex) && selectedColBContent) {
+      // Tìm chỉ số GỐC của nội dung Cột B đã chọn trong mảng options ban đầu
+      const colBIndex = questionData.options.indexOf(selectedColBContent);
+      
+      if (colBIndex > -1) {
+        // Tạo cặp chỉ số 'chỉ_số_A-chỉ_số_B'
+        pairs.push(`${colAIndex}-${colBIndex}`);
+      }
     }
   });
 
   // Nếu đã ghép đủ tất cả các cặp, lưu lại câu trả lời
   if (pairs.length === allSelects.length) {
-    state.answers[qid] = pairs.join(',');
+    // Sắp xếp các cặp để đảm bảo chuỗi luôn nhất quán trước khi lưu
+    state.answers[qid] = pairs.sort().join(',');
     handleAnswered(qid);
     paintNavigator();
     updateAnsweredCount();
   } else {
-    // Nếu chưa ghép đủ, xóa câu trả lời cũ (nếu có)
+    // Nếu chưa ghép đủ, xóa câu trả lời cũ
     if (state.answers[qid]) {
       delete state.answers[qid];
-      handleAnswered(qid); // Vẫn gọi để cập nhật thời gian
+      handleAnswered(qid);
       paintNavigator();
       updateAnsweredCount();
     }
@@ -1009,8 +1041,8 @@ function activateOrderingQuestions() {
           return Array.from(slots).indexOf(slotA) - Array.from(slots).indexOf(slotB);
         });
         
-        const newOrder = sortedItems.map(item => item.dataset.id);
-        state.answers[qid] = newOrder.join(',');
+        const newOrderContent = sortedItems.map(item => item.textContent.trim());
+        state.answers[qid] = newOrderContent.join('||');
       } else {
         delete state.answers[qid];
       }
