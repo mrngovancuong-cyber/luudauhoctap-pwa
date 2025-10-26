@@ -950,23 +950,22 @@ async function submitExam(auto = false) {
                         }
                         break;
                     }
-                    case 'matching':
-                    case 'ordering': {
-                        // Chuẩn hóa câu trả lời của học sinh và đáp án đúng để so sánh
-                        // Bằng cách loại bỏ các ký tự phân cách, viết hoa, và sắp xếp các ký tự
-                        const normalize = (str) => (str || "").replace(/[\s,-]/g, '').toUpperCase().split('').sort().join('');
-                        
-                        if (normalize(studentAnswer) === normalize(qData.correct)) {
-                            isCorrect = true;
-                        }
-                        break;
-                    }
-                    case 'multiple_choice':
-                    default: {
-                        if (studentAnswer === qData.correct) {
-                            isCorrect = true;
-                        }
-                        break;
+                   case 'matching': {
+            // Logic mới: Sắp xếp các cặp chỉ số rồi so sánh
+            const normalize = (str) => (str || "").replace(/\s/g, '').split(',').sort().join(',');
+            if (normalize(studentAnswer) === normalize(qData.correct)) {
+                isCorrect = true;
+            }
+            break;
+        }
+        case 'ordering':
+        case 'multiple_choice':
+        default: {
+            // Logic mới: So sánh trực tiếp chuỗi nội dung
+            if (studentAnswer.trim() === qData.correct.trim()) {
+                isCorrect = true;
+            }
+            break;
                     }
                 }
             }
