@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const duration = document.getElementById('exam-duration').value.trim();
             const assignedClasses = document.getElementById('exam-classes').value.trim();
             const sourceSheetUrl = document.getElementById('exam-sheet-url').value.trim();
+	    const sourceSheetName = document.getElementById('exam-sheet-name').value.trim();
 
             if (!title || !duration || !assignedClasses || !sourceSheetUrl) {
                 alert("Vui lòng điền đầy đủ tất cả các trường bắt buộc.");
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({
                         action: 'importExamFromSheet',
                         title, duration, assignedClasses, sourceSheetUrl
+			sourceSheetName
                     })
                 });
 

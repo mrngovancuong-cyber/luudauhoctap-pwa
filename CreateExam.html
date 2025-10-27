@@ -1,20 +1,115 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <title>Tạo Bài tập mới - Dashboard Giáo viên</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TẠO BÀI TẬP MỚI - DASHBOARD GIÁO VIÊN</title>
+    
+    <!-- Tái sử dụng CSS từ Dashboard để giao diện nhất quán -->
     <link rel="stylesheet" href="css/styleDashboard.css">
-    <!-- (Thêm các link head khác nếu cần, ví dụ như font) -->
+    
+    <!-- Thêm font Be Vietnam Pro (nếu cần) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS nội bộ cho trang này -->
+    <style>
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
+        }
+        .form-group small {
+            display: block;
+            margin-top: 0.5rem;
+            color: var(--muted);
+            font-style: italic;
+        }
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
+    <!-- TÁI SỬ DỤNG HEADER TỪ DASHBOARD.HTML -->
     <header class="sticky-header">
-        <!-- (Copy-paste toàn bộ header từ Dashboard.html vào đây) -->
+        <div class="header-top">
+            <div class="header-left">
+                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+            </div>
+            <div class="header-center">
+                <h1 class="title">TẠO BÀI TẬP MỚI</h1>
+            </div>        
+            <div class="header-right">
+                <img src="/icons/LDHT logo.png" alt="Logo Lưu Dấu Học Tập" class="logo">
+            </div>
+        </div>
     </header>
 
     <main class="dashboard-main">
-        <!-- (Copy-paste toàn bộ section create-exam-section từ lần hướng dẫn trước vào đây) -->
-        <section class="card create-exam-section">
-            <h2>Tạo bài tập mới (Import từ Google Sheet)</h2>
-            <!-- ... form ... -->
+        <section class="card">
+            <h2>Import bài tập từ Google Sheet</h2>
+            <p>Soạn bài tập của bạn trên một file Google Sheet theo mẫu, sau đó dán đường link vào đây để hệ thống tự động import.</p>
+            <a href="https://docs.google.com/spreadsheets/d/1g5xY3.../edit?usp=sharing" target="_blank" class="action-btn" style="text-decoration: none; margin-bottom: 1.5rem; display: inline-block;">
+                Mở File Mẫu
+            </a>
+            
+            <form id="import-exam-form">
+                <div class="form-group">
+                    <label for="exam-title">1. Tiêu đề bài tập</label>
+                    <input type="text" id="exam-title" placeholder="Ví dụ: Ôn tập chương 1 - Đại số 7" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="exam-duration">2. Thời gian làm bài (phút)</label>
+                    <input type="number" id="exam-duration" placeholder="Ví dụ: 45" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="exam-classes">3. Các lớp được giao</label>
+                    <input type="text" id="exam-classes" placeholder="Ví dụ: 7A1,7A2,7A3 hoặc ALL" required>
+                    <small>Nhập mã các lớp cách nhau bởi dấu phẩy, hoặc nhập "ALL" để giao cho tất cả các lớp.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="exam-sheet-url">4. URL của Google Sheet chứa bài tập</label>
+                    <input type="url" id="exam-sheet-url" placeholder="Dán đường link chia sẻ của file Google Sheet vào đây" required>
+                    <small>Lưu ý: File Google Sheet phải được chia sẻ ở chế độ "Bất kỳ ai có đường liên kết đều có thể xem".</small>
+                </div>
+
+		<div class="form-group">
+		    <label for="exam-sheet-name">5. (Tùy chọn) Tên chính xác của Sheet</label>
+		    <input type="text" id="exam-sheet-name" placeholder="Ví dụ: Đề số 1">
+		    <small>Để trống trường này nếu bài tập của bạn nằm ở sheet đầu tiên trong file.</small>
+		</div>
+
+                <button type="submit" id="import-btn" class="action-btn">Import Bài tập</button>
+            </form>
         </section>
     </main>
 
