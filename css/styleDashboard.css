@@ -605,7 +605,7 @@ button, input, select, textarea {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    background-color: var(--bg); /* Nền tối, ít nổi bật hơn nút chính */
+    background-color: var(--bg-elev); /* Nền tối, ít nổi bật hơn nút chính */
     border: 1px solid var(--border);
     color: var(--muted);
     width: auto; /* Để nút co giãn theo nội dung */
