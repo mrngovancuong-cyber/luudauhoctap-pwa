@@ -83,36 +83,46 @@
 		</a>
             
             <form id="import-exam-form">
-                <div class="form-group">
-                    <label for="exam-title">1. Tiêu đề bài tập</label>
-                    <input type="text" id="exam-title" placeholder="Ví dụ: Ôn tập chương 1 - Đại số 7" required>
-                </div>
+    <div class="form-group">
+        <label for="exam-title">1. Tiêu đề bài tập</label>
+        <input type="text" id="exam-title" placeholder="Ví dụ: Ôn tập chương 1 - Đại số 7" required>
+    </div>
 
-                <div class="form-group">
-                    <label for="exam-duration">2. Thời gian làm bài (phút)</label>
-                    <input type="number" id="exam-duration" placeholder="Ví dụ: 45" required>
-                </div>
+    <div class="form-group">
+        <label for="exam-duration">2. Thời gian làm bài (phút)</label>
+        <input type="number" id="exam-duration" placeholder="Ví dụ: 45" required>
+    </div>
 
-                <div class="form-group">
-                    <label for="exam-classes">3. Các lớp được giao</label>
-                    <input type="text" id="exam-classes" placeholder="Ví dụ: 7A1,7A2,7A3 hoặc ALL" required>
-                    <small>Nhập mã các lớp cách nhau bởi dấu phẩy, hoặc nhập "ALL" để giao cho tất cả các lớp.</small>
-                </div>
+    <div class="form-group">
+        <label for="exam-classes">3. Các lớp được giao</label>
+        <input type="text" id="exam-classes" placeholder="Ví dụ: 7A1,7A2,7A3 hoặc ALL" required>
+        <small>Nhập mã các lớp cách nhau bởi dấu phẩy, hoặc nhập "ALL" để giao cho tất cả các lớp.</small>
+    </div>
 
-                <div class="form-group">
-                    <label for="exam-sheet-url">4. URL của Google Sheet chứa bài tập</label>
-                    <input type="url" id="exam-sheet-url" placeholder="Dán đường link chia sẻ của file Google Sheet vào đây" required>
-                    <small>Lưu ý: File Google Sheet phải được chia sẻ ở chế độ "Bất kỳ ai có đường liên kết đều có thể xem".</small>
-                </div>
+    <div class="form-group">
+        <label for="exam-description">4. (Tùy chọn) Mô tả ngắn</label>
+        <input type="text" id="exam-description" placeholder="Ví dụ: Bài tập củng cố kiến thức về phân số">
+    </div>
 
-		<div class="form-group">
-		    <label for="exam-sheet-name">5. (Tùy chọn) Tên chính xác của Sheet</label>
-		    <input type="text" id="exam-sheet-name" placeholder="Ví dụ: Đề số 1">
-		    <small>Để trống trường này nếu bài tập của bạn nằm ở sheet đầu tiên trong file.</small>
-		</div>
+    <div class="form-group">
+        <label for="exam-score-scale">5. (Tùy chọn) Thang điểm</o>
+        <input type="number" id="exam-score-scale" placeholder="Mặc định là 10">
+    </div>
 
-                <button type="submit" id="import-btn" class="action-btn">Import Bài tập</button>
-            </form>
+    <div class="form-group">
+        <label for="exam-sheet-url">6. URL của Google Sheet chứa bài tập</label>
+        <input type="url" id="exam-sheet-url" placeholder="Dán đường link chia sẻ của file Google Sheet vào đây" required>
+        <small>Lưu ý: File Google Sheet phải được chia sẻ ở chế độ "Bất kỳ ai có đường liên kết đều có thể xem".</small>
+    </div>
+
+    <div class="form-group">
+        <label for="exam-sheet-name">7. (Tùy chọn) Tên chính xác của Sheet</label>
+        <input type="text" id="exam-sheet-name" placeholder="Ví dụ: Đề số 1">
+        <small>Để trống trường này nếu bài tập của bạn nằm ở sheet đầu tiên trong file.</small>
+    </div>
+
+    <button type="submit" id="import-btn" class="action-btn">Import và Xuất bản</button>
+</form>
         </section>
     </main>
 
