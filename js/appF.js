@@ -938,33 +938,44 @@ if (!auto) {
             // ===== BỔ SUNG ĐẦY ĐỦ LOGIC KIỂM TRA ĐÁP ÁN =====
             if (studentAnswer) {
                 switch (questionType) {
-                    case 'fill_blank': {
-                        const studentAnswerNormalized = studentAnswer.toLowerCase().trim();
-                        // Đáp án đúng có thể có nhiều lựa chọn, phân tách bằng dấu |
-                        const correctOptions = qData.correct.split('|').map(opt => opt.toLowerCase().trim());
-                        if (correctOptions.includes(studentAnswerNormalized)) {
-                            isCorrect = true;
-                        }
-                        break;
-                    }
-                   case 'matching': {
-            // Logic mới: Sắp xếp các cặp chỉ số rồi so sánh
-            const normalize = (str) => (str || "").replace(/\s/g, '').split(',').sort().join(',');
-            if (normalize(studentAnswer) === normalize(qData.correct)) {
-                isCorrect = true;
-            }
-            break;
+    case 'fill_blank': {
+        const studentAnswerNormalized = studentAnswer.toLowerCase().trim();
+        const correctOptions = qData.correct.split('|').map(opt => opt.toLowerCase().trim());
+        if (correctOptions.includes(studentAnswerNormalized)) {
+            isCorrect = true;
         }
-        case 'ordering':
-        case 'multiple_choice':
-        default: {
-            // Logic mới: So sánh trực tiếp chuỗi nội dung
-            if (studentAnswer.trim() === qData.correct.trim()) {
-                isCorrect = true;
-            }
-            break;
-                    }
-                }
+        break;
+    }
+    case 'matching': {
+        // Chuẩn hóa bằng cách xóa khoảng trắng, sắp xếp các cặp, rồi so sánh
+        const normalize = (str) => (str || "").replace(/\s/g, '').split(',').sort().join(',');
+        if (normalize(studentAnswer) === normalize(qData.correct)) {
+            isCorrect = true;
+        }
+        break;
+    }
+    case 'ordering': {
+        // =========================================================
+        // === SỬA LỖI CHÍNH NẰM Ở ĐÂY ===
+        // Chuẩn hóa bằng cách xóa tất cả các ký tự không phải chữ và số
+        // rồi so sánh. "AlMgNaK" sẽ luôn bằng "AlMgNaK".
+        const normalize = (str) => (str || "").replace(/[^a-zA-Z0-9]/g, '');
+        
+        if (normalize(studentAnswer) === normalize(qData.correct)) {
+            isCorrect = true;
+        }
+        // =========================================================
+        break;
+    }
+    case 'multiple_choice':
+    default: {
+        // So sánh đơn giản cho trắc nghiệm vẫn ổn
+        if (studentAnswer === qData.correct) {
+            isCorrect = true;
+        }
+        break;
+    }
+}
             }
             // ===== KẾT THÚC PHẦN BỔ SUNG =====
 
@@ -1022,6 +1033,17 @@ if (isCorrect) {
 }
         });
     }
+
+// =========================================================
+// === DÁN ĐOẠN CODE GỌI LẠI MATHJAX VÀO NGAY ĐÂY ===
+// =========================================================
+        if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+            console.log("Gọi lại MathJax để render đáp án và giải thích...");
+            window.MathJax.typesetPromise()
+                .then(() => console.log("MathJax đã render xong nội dung mới."))
+                .catch((err) => console.error('Lỗi khi render lại MathJax:', err));
+        }
+// =========================================================
     
   } catch (error) {
     console.error('Lỗi khi nộp bài:', error);
