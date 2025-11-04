@@ -181,7 +181,8 @@ function renderChartsAndDetails(data) {
             type: 'bar', 
             height: 350, 
             foreColor: getChartForeColor(),
-            background: 'transparent'
+            background: 'transparent',
+	    fontFamily: "'Be Vietnam Pro', sans-serif"
         },
         // SỬA LỖI Ở ĐÂY: Dùng toán tử ba ngôi để kiểm tra gradeData
         series: gradeData ? [{ name: 'Số học sinh', data: Object.values(gradeData) }] : [],
