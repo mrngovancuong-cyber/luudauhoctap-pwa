@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lưu Dấu Học Tập - Cổng Luyện tập</title>
-    
+    <link rel="stylesheet" href="css/theme.css">
     <!-- SỬA LẠI: Liên kết đến file CSS chung của dự án -->
     <link rel="stylesheet" href="css/styleHome.css">
     <!-- Thêm một vài style riêng cho trang chủ -->
@@ -59,8 +59,11 @@
     <header class="sticky-header">
         <div class="header-top">
             <div class="header-left">
-                <!-- Bạn có thể thêm logo ở đây nếu muốn -->
-                <img src="icons/logo.png" alt="Logo" class="logo">
+                <button id="theme-toggle-btn" class="theme-toggle-cluster" title="Chuyển đổi giao diện Sáng/Tối">
+    		<span id="theme-icon" class="theme-icon"></span>
+    		<img src="icons/logo HC_1.png" alt="Logo Ham Choi Education" class="logo logo-dark-theme">
+    		<img src="icons/logo HC_2.png" alt="Logo Ham Choi Education" class="logo logo-light-theme"> <!-- Logo cho nền sáng -->
+		</button>
             </div>
             <div class="header-center">
                 <h1 class="title">
@@ -117,5 +120,6 @@
 </main>
 
     <script src="js/home.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

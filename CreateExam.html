@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TẠO BÀI TẬP MỚI - DASHBOARD GIÁO VIÊN</title>
-    
+    <link rel="stylesheet" href="css/theme.css">
     <!-- Tái sử dụng CSS từ Dashboard để giao diện nhất quán -->
     <link rel="stylesheet" href="css/styleDashboard.css">
     
@@ -55,12 +55,16 @@
         }
     </style>
 </head>
-<body>
+<body class="dashboard-page">
     <!-- TÁI SỬ DỤNG HEADER TỪ DASHBOARD.HTML -->
     <header class="sticky-header">
         <div class="header-top">
             <div class="header-left">
-                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+                <button id="theme-toggle-btn" class="theme-toggle-cluster" title="Chuyển đổi giao diện Sáng/Tối">
+    		<span id="theme-icon" class="theme-icon"></span>
+    		<img src="icons/logo HC_1.png" alt="Logo Ham Choi Education" class="logo logo-dark-theme">
+    		<img src="icons/logo HC_2.png" alt="Logo Ham Choi Education" class="logo logo-light-theme"> <!-- Logo cho nền sáng -->
+		</button>
             </div>
             <div class="header-center">
                 <h1 class="title">TẠO BÀI TẬP MỚI</h1>
@@ -127,5 +131,6 @@
     </main>
 
     <script src="js/createExam.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

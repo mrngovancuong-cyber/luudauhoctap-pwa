@@ -20,7 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let gradeDistributionChart = null;
     let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
-
+    /**
+     * Lấy màu chữ phù hợp cho biểu đồ dựa trên theme hiện tại.
+     * @returns {string} Mã màu hex.
+     */
+    function getChartForeColor() {
+      // Kiểm tra thuộc tính data-theme trên thẻ <html>
+      if (document.documentElement.getAttribute('data-theme') === 'light') {
+        return '#431407'; // Màu chữ đậm của theme Sáng (Coffee)
+      }
+      return '#f3e9e0'; // Màu chữ mặc định của theme Tối (Coffee)
+    }
 // =================================================================
 //                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN (PHIÊN BẢN MỚI)
 // =================================================================
@@ -170,7 +180,7 @@ function renderChartsAndDetails(data) {
         chart: { 
             type: 'bar', 
             height: 350, 
-            foreColor: '#e5e7eb',
+            foreColor: getChartForeColor(),
             background: 'transparent'
         },
         // SỬA LỖI Ở ĐÂY: Dùng toán tử ba ngôi để kiểm tra gradeData
@@ -184,7 +194,7 @@ function renderChartsAndDetails(data) {
         title: { 
             text: 'Phân bổ Điểm số', 
             align: 'left', 
-            style: { fontSize: '18px', color: '#f3e9e0' } 
+            style: { fontSize: '18px', color: getChartForeColor() } 
         },
         // Thêm trạng thái "Không có dữ liệu" để hướng dẫn người dùng
         noData: {
@@ -192,11 +202,11 @@ function renderChartsAndDetails(data) {
             align: 'center',
             verticalAlign: 'middle',
             style: {
-                color: '#9CA3AF', // Màu xám mờ
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#9a3412' : '#a18f83',
                 fontSize: '14px',
             }
         },
-        tooltip: { theme: 'dark' }
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' }
     };
     
     // Logic render/update giữ nguyên
@@ -297,7 +307,7 @@ function resetOverviewUI() {
  */
 function attachEventListeners() {
     const viewReportBtn = document.getElementById('view-report-btn');
-
+    const themeToggleBtn = document.getElementById('theme-toggle-btn'); // <-- Thêm dòng này
     // Hàm kiểm tra và kích hoạt nút "Xem báo cáo"
     const checkFilters = () => {
         const examSelected = examSelect.value !== "";
@@ -358,6 +368,31 @@ const studentViewBtn = document.getElementById('student-view-btn');
             }
             sessionStorage.removeItem('studentInfo'); 
             window.location.href = '/'; 
+        });
+    }
+if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            // Chờ một chút để theme-switcher.js kịp đổi theme
+            setTimeout(() => {
+                console.log("Theme đã đổi, đang vẽ lại biểu đồ tổng quan...");
+                // Lấy dữ liệu hiện tại của biểu đồ và vẽ lại
+                // Chúng ta cần lấy lại dữ liệu từ chính đối tượng chart
+                if (gradeDistributionChart && gradeDistributionChart.w.globals.series.length > 0) {
+                    const currentSeriesData = gradeDistributionChart.w.globals.series[0];
+                    const currentCategories = gradeDistributionChart.w.globals.labels;
+                    
+                    // Tạo lại đối tượng gradeData để truyền vào hàm render
+                    const gradeData = {};
+                    currentCategories.forEach((cat, index) => {
+                        gradeData[cat] = currentSeriesData[index];
+                    });
+
+                    renderGradeDistributionChart(gradeData);
+                } else {
+                    // Nếu biểu đồ đang trống, chỉ cần vẽ lại nó ở trạng thái trống
+                    renderGradeDistributionChart(null);
+                }
+            }, 10);
         });
     }
 }

@@ -1,0 +1,98 @@
+/* css/theme.css */
+
+/* =====================================================
+   BẢNG MÀU TỔNG HỢP CHO TOÀN BỘ HỆ THỐNG
+   ===================================================== */
+
+/* ----- 1. CHỦ ĐỀ CHO TRANG HỌC SINH (Index, Exam) ----- */
+
+/* Chế độ Tối - Blue Theme (Mặc định) */
+:root,
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --bg-elev: #10192e;
+  --bg-card: #0f172a;
+  --bg-answer: #0f172a;
+  --border: #1f2a44;
+  --text: #e5e7eb;
+  --muted: #9aa5b1;
+  --primary: #2563eb;
+  --accent: #10b981;
+  --bg-input: #0f172a;
+  --text-prompt: #e5e7eb;
+  --text-muted: #9aa5b1;
+  --bg-explain: rgba(31, 42, 68, 0.3);
+  --ok: #22c55e;
+  --bad: #ef4444;
+  --timer-color: #facc15;
+}
+
+/* Chế độ Sáng - Light Blue Theme */
+[data-theme="light"] {
+  --bg: #f0f9ff;
+  --bg-elev: #cceeff;
+  --bg-card: #ffffff;
+  --bg-answer: #e0f2fe; 
+  --border: #bae6fd;
+  --text: #083344;
+  --muted: #075985;
+  --primary: #0ea5e9;
+  --accent: #059669;
+  --bg-input: #e0f2fe;
+  --text-prompt: #083344;
+  --text-muted: #082f49;
+  --bg-explain: #e0f2fe;
+  --ok: #16a34a;
+  --bad: #dc2626;
+  --timer-color: #b91c1c;
+}
+
+/* ----- 2. CHỦ ĐỀ RIÊNG CHO TRANG DASHBOARD GIÁO VIÊN ----- */
+
+/* Ghi đè lại màu khi trang là Dashboard (Chế độ Tối - Coffee Theme) */
+body.dashboard-page[data-theme="dark"] {
+  --bg: #1e1a17;
+  --bg-elev: #2d2621;
+  --bg-card: #2d2621;
+  --border: #443b35;
+  --text: #f3e9e0;
+  --muted: #a18f83;
+  --primary: #818cf8;
+  --accent: #2dd4bf;
+  --ok: #4ade80;
+  --bad: #f87171;
+  --warn: #facc15;
+}
+
+/* Ghi đè lại màu khi trang là Dashboard (Chế độ Sáng - Light Coffee Theme) */
+body.dashboard-page[data-theme="light"] {
+  --bg: #fefbf6;
+  --bg-elev: #fae8d3;
+  --bg-card: #ffffff;
+  --border: #f5d7b5;
+  --text: #431407;
+  --muted: #9a3412;
+  --primary: #7c3aed;
+  --accent: #0d9488;
+  --ok: #15803d;
+  --bad: #b91c1c;
+  --warn: #f59e0b;
+}
+
+/* =====================================================
+   QUY TẮC HIỂN THỊ LOGO VÀ ICON
+   ===================================================== */
+
+.theme-toggle-cluster {
+    display: flex; align-items: center; gap: 0.75rem;
+    background-color: transparent; border: none; padding: 0; cursor: pointer;
+}
+
+.theme-icon { font-size: 1.8rem; }
+
+/* Mặc định, logo sáng bị ẩn */
+.logo-light-theme { display: none; }
+
+/* Khi theme sáng, ẩn logo tối và hiện logo sáng */
+[data-theme="light"] .logo-dark-theme { display: none; }
+[data-theme="light"] .logo-light-theme { display: block; }

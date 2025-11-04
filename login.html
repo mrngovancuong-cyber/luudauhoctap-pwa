@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Bảng điều khiển Giáo viên</title>
-    
+    <link rel="stylesheet" href="css/theme.css">
     <!-- SỬ DỤNG LẠI CSS CỦA DASHBOARD -->
     <link rel="stylesheet" href="css/styleDashboard.css">
     
@@ -75,12 +75,16 @@
         }
     </style>
 </head>
-<body>
+<body class="dashboard-page">
     <!-- TÁI SỬ DỤNG HEADER TỪ DASHBOARD.HTML -->
     <header class="sticky-header">
         <div class="header-top">
             <div class="header-left">
-                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+                <button id="theme-toggle-btn" class="theme-toggle-cluster" title="Chuyển đổi giao diện Sáng/Tối">
+    		<span id="theme-icon" class="theme-icon"></span>
+    		<img src="icons/logo HC_1.png" alt="Logo Ham Choi Education" class="logo logo-dark-theme">
+    		<img src="icons/logo HC_2.png" alt="Logo Ham Choi Education" class="logo logo-light-theme"> <!-- Logo cho nền sáng -->
+		</button>
             </div>
             <div class="header-center">
                 <h1 class="title">BẢNG ĐIỀU KHIỂN DÀNH CHO GIÁO VIÊN</h1>
@@ -111,5 +115,6 @@
 
     <!-- Liên kết đến file JS (không thay đổi) -->
     <script src="js/login.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

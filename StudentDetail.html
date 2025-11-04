@@ -9,19 +9,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
-        
+    <link rel="stylesheet" href="css/theme.css">    
     <!-- Quan trọng: Sử dụng chung file CSS với Dashboard để đảm bảo giao diện nhất quán -->
     <link rel="stylesheet" href="css/styleDashboard.css">
 </head>
-<body>
+<body class="dashboard-page">
     <!-- =================================================================
          HEADER - KẾ THỪA TỪ DASHBOARD VÀ CÓ CHỈNH SỬA
     ================================================================== -->
     <header class="sticky-header">
         <div class="header-top">
             <div class="header-left">
-                <!-- Logo bên trái (giữ nguyên) -->
-                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+                <button id="theme-toggle-btn" class="theme-toggle-cluster" title="Chuyển đổi giao diện Sáng/Tối">
+    		<span id="theme-icon" class="theme-icon"></span>
+    		<img src="icons/logo HC_1.png" alt="Logo Ham Choi Education" class="logo logo-dark-theme">
+    		<img src="icons/logo HC_2.png" alt="Logo Ham Choi Education" class="logo logo-light-theme"> <!-- Logo cho nền sáng -->
+		</button>
             </div>
             <div class="header-center">
                 <!-- Tiêu đề của trang này -->
@@ -142,5 +145,6 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts/dist/apexcharts.min.js"></script>
     <!-- Sau đó mới tải file script của chúng ta -->
     <script src="js/studentDetail.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

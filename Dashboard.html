@@ -9,14 +9,20 @@
 
     <!-- Link thư viện biểu đồ, ví dụ: ApexCharts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="css/theme.css">    
     <link rel="stylesheet" href="css/styleDashboard.css">
+    
 </head>
-<body>
+<body class="dashboard-page">
 <header class="sticky-header">
         <!-- (Giữ nguyên nội dung header của bạn) -->
         <div class="header-top">
             <div class="header-left">
-                <img src="/icons/logo.png" alt="Logo Ham Choi Education" class="logo">
+                <button id="theme-toggle-btn" class="theme-toggle-cluster" title="Chuyển đổi giao diện Sáng/Tối">
+    		<span id="theme-icon" class="theme-icon"></span>
+    		<img src="icons/logo HC_1.png" alt="Logo Ham Choi Education" class="logo logo-dark-theme">
+    		<img src="icons/logo HC_2.png" alt="Logo Ham Choi Education" class="logo logo-light-theme"> <!-- Logo cho nền sáng -->
+		</button>
             </div>
             <div class="header-center">
                 <h1 class="title">BẢNG ĐIỀU KHIỂN DÀNH CHO GIÁO VIÊN</h1>
@@ -132,5 +138,6 @@
 </div>
 
     <script src="js/dashboard.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>

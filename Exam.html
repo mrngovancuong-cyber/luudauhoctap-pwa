@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
   <title>Lưu Dấu Học Tập</title>
+  <link rel="stylesheet" href="css/theme.css">
   <!-- Liên kết CSS mới -->
   <link rel="stylesheet" href="css/styleD.css">
 <link rel="manifest" href="/manifest.json" />
@@ -50,9 +51,11 @@
   <div class="header-top">
     <!-- Cột trái: Logo -->
     <div class="header-left">
-      <a href="/" title="Quay về Trang chủ">
-        <img src="icons/logo.png" alt="Logo" class="logo">
-      </a>
+        <button id="theme-toggle-btn" class="theme-toggle-cluster" title="Chuyển đổi giao diện Sáng/Tối">
+    	<span id="theme-icon" class="theme-icon"></span>
+    	<img src="icons/logo HC_1.png" alt="Logo Ham Choi Education" class="logo logo-dark-theme">
+    	<img src="icons/logo HC_2.png" alt="Logo Ham Choi Education" class="logo logo-light-theme"> <!-- Logo cho nền sáng -->
+	</button>
     </div>
 
     <!-- Cột giữa: Tên đề bài -->
@@ -154,6 +157,6 @@
     });
   }
 </script>
-
+<script src="js/theme-switcher.js"></script>
 </body>
 </html>

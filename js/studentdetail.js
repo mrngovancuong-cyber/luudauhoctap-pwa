@@ -45,6 +45,18 @@
     let deviceUsageChart = null;
     let studyTimeChart = null;
     let currentStudentHistoryData = null;
+    let currentStudentData = null; // <-- THÊM DÒNG NÀY
+
+/**
+ * Lấy màu chữ phù hợp cho biểu đồ dựa trên theme hiện tại.
+ * @returns {string} Mã màu hex.
+ */
+function getChartForeColor() {
+  if (document.documentElement.getAttribute('data-theme') === 'light') {
+    return '#431407'; // Màu chữ đậm của theme Sáng (Coffee)
+  }
+  return '#f3e9e0'; // Màu chữ mặc định của theme Tối (Coffee)
+}
 
     // =================================================================
     //                    LUỒNG KHỞI TẠO CHÍNH
@@ -225,6 +237,7 @@ function generateStudyTimeSummary(timeData) {
 }
 
     function renderData(data) {
+	currentStudentData = data; // <-- THÊM DÒNG NÀY NGAY ĐẦU HÀM
 	if(studentIdInput) {
             const urlParams = new URLSearchParams(window.location.search);
             studentIdInput.value = urlParams.get('id');
@@ -261,7 +274,7 @@ function generateStudyTimeSummary(timeData) {
 
     function renderScoreTrendChart(scoreData) {
     const options = {
-        chart: { type: 'line', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' },
+        chart: { type: 'line', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() },
         series: [
             { name: 'Điểm của em', data: scoreData.map(item => item.score) },
             { name: 'Điểm TB Lớp', data: scoreData.map(item => item.classAverage) }
@@ -269,8 +282,8 @@ function generateStudyTimeSummary(timeData) {
         xaxis: { categories: scoreData.map(item => item.examTitle) },
         yaxis: { min: 0, max: 10 },
         stroke: { curve: 'smooth', width: [4, 2], dashArray: [0, 5] },
-        title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } },
-        tooltip: { theme: 'dark', style: { fontSize: '12px', fontFamily: "'Be Vietnam Pro', sans-serif",}, y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } },
+        title: { text: 'Xu hướng Điểm số (so với Trung bình lớp)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } },
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark', style: { fontSize: '12px', fontFamily: "'Be Vietnam Pro', sans-serif" }, y: { formatter: (val) => val ? parseFloat(val).toFixed(2) : 'N/A' } },
         grid: { borderColor: '#555' }
     };
     if (scoreTrendChart) { scoreTrendChart.updateOptions(options); } 
@@ -279,18 +292,19 @@ function generateStudyTimeSummary(timeData) {
 
     function renderPerformanceQuadrantChart(quadrantData) {
     const options = {
-        chart: { type: 'scatter', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb', zoom: { enabled: true } },
+        chart: { type: 'scatter', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor(), zoom: { enabled: true } },
         series: [{ name: "Bài làm", data: quadrantData.map(item => [item.x, item.y]) }],
         xaxis: { tickAmount: 10, labels: { formatter: (val) => `${val.toFixed(0)}%` }, title: { text: '% Thời gian sử dụng' } },
         yaxis: { tickAmount: 5, min: 0, max: 10, title: { text: 'Điểm số' } },
-        title: { text: 'Phân tích Phong cách làm bài', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } },
-        tooltip: { theme: 'dark',
+        title: { text: 'Phân tích Phong cách làm bài', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } },
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark',
             custom: function({ seriesIndex, dataPointIndex, w }) {
                 const data = quadrantData[dataPointIndex];
-                return `<div class="apexcharts-tooltip-title" style="background: #333; border-bottom: 1px solid #555;">${data.examTitle}</div>` +
-               `<div class="apexcharts-tooltip-series-group" style="background: #333; padding: 5px 10px;">` +
-               `<span>Điểm: <strong>${data.y.toFixed(2)}</strong></span><br>` +
-               `<span>Thời gian: <strong>${data.x.toFixed(0)}%</strong></span></div>`;
+                const themeClass = document.documentElement.getAttribute('data-theme') === 'light' ? 'apexcharts-tooltip-light' : '';
+                return `<div class="apexcharts-tooltip-title ${themeClass}">${data.examTitle}</div>` +
+                       `<div class="apexcharts-tooltip-series-group ${themeClass}" style="padding: 5px 10px;">` +
+                       `<span>Điểm: <strong>${data.y.toFixed(2)}</strong></span><br>` +
+                       `<span>Thời gian: <strong>${data.x.toFixed(0)}%</strong></span></div>`;
             }
         },
         grid: { borderColor: '#555' }
@@ -322,13 +336,13 @@ function generateStudyTimeSummary(timeData) {
 
     function renderTopicStrengthChart(topicData) {
     const options = { 
-        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() }, 
         series: [{ name: 'Tỷ lệ đúng', data: topicData.map(item => (item.accuracy * 100).toFixed(1)) }], 
         xaxis: { categories: topicData.map(item => item.topic) }, 
         yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, 
         plotOptions: { bar: { horizontal: true } }, 
-        title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { style: { color: '#333' }, y: { formatter: (val) => `${val}%` } },
+        title: { text: 'Độ vững kiến thức theo Chủ đề', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } }, 
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark', y: { formatter: (val) => `${val}%` } },
         grid: { borderColor: '#555' }
     };
     if (topicStrengthChart) { topicStrengthChart.updateOptions(options); } else { topicStrengthChart = new ApexCharts(topicStrengthChartContainer, options); topicStrengthChart.render(); }
@@ -338,26 +352,26 @@ function generateStudyTimeSummary(timeData) {
     const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
     levelData.sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
     const options = { 
-        chart: { type: 'radar', height: 500, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        chart: { type: 'radar', height: 500, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() }, 
         series: [{ name: 'Tỷ lệ đúng', data: levelData.map(item => (item.accuracy * 100).toFixed(1)) }], 
         labels: levelData.map(item => item.level), 
         yaxis: { min: 0, max: 100, labels: { formatter: (val) => `${val}%` } }, 
-        title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } },
+        title: { text: 'Năng lực tư duy theo Cấp độ', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } }, 
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark', y: { formatter: (val) => `${val}%` } },
         grid: { borderColor: '#555' },
-        legend: { labels: { colors: '#f3e9e0' } }
+        legend: { labels: { colors: getChartForeColor() } }
     };
     if (levelStrengthChart) { levelStrengthChart.updateOptions(options); } else { levelStrengthChart = new ApexCharts(levelStrengthChartContainer, options); levelStrengthChart.render(); }
 }
     
     function renderLeaveCountChart(leaveData) {
     const options = { 
-        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() }, 
         series: [{ name: 'Số lần rời trang', data: leaveData.map(item => item.count) }], 
         xaxis: { categories: leaveData.map(item => item.examTitle) }, 
         yaxis: { labels: { formatter: (val) => Math.round(val) } }, 
-        title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { theme: 'dark' },
+        title: { text: 'Mức độ tập trung (Số lần rời trang)', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } }, 
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
         grid: { borderColor: '#555' }
     };
     if (leaveCountChart) { leaveCountChart.updateOptions(options); } else { leaveCountChart = new ApexCharts(leaveCountChartContainer, options); leaveCountChart.render(); }
@@ -365,27 +379,27 @@ function generateStudyTimeSummary(timeData) {
 
     function renderDeviceUsageChart(deviceData) {
     const options = { 
-        chart: { type: 'donut', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        chart: { type: 'donut', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() }, 
         series: deviceData.map(item => item.count), 
         labels: deviceData.map(item => item.device), 
-        title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        legend: { position: 'bottom', labels: { colors: '#f3e9e0' } }, 
-        tooltip: { theme: 'dark', style: { color: '#333' }, y: { formatter: (val) => `${val} lần` } }
+        title: { text: 'Thói quen sử dụng thiết bị', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } }, 
+        legend: { position: 'bottom', labels: { colors: getChartForeColor() } }, 
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark', y: { formatter: (val) => `${val} lần` } }
     };
     if (deviceUsageChart) { deviceUsageChart.updateOptions(options); } else { deviceUsageChart = new ApexCharts(deviceUsageChartContainer, options); deviceUsageChart.render(); }
 }
     
     function renderStudyTimeChart(timeData) {
     const options = { 
-        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: '#e5e7eb' }, 
+        chart: { type: 'bar', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() }, 
         series: [{ name: 'Số bài làm', data: timeData.map(item => item.count) }], 
         xaxis: { categories: timeData.map(item => item.timeSlot) }, 
         yaxis: { labels: { formatter: (val) => Math.round(val) } }, 
         plotOptions: { bar: { distributed: true, borderRadius: 4, horizontal: false, } }, 
         colors: ['#ef4444', '#f59e0b', '#22c55e', '#f59e0b', '#14b8a6', '#4f46e5', '#ef4444'], 
         legend: { show: false }, 
-        title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: '#f3e9e0' } }, 
-        tooltip: { theme: 'dark', style: { color: '#333' }, },
+        title: { text: 'Phân bố Thời gian làm bài trong ngày', align: 'left', style: { fontSize: '18px', fontWeight: '600', color: getChartForeColor() } }, 
+        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' },
         grid: { borderColor: '#555' }
     };
     if (studyTimeChart) { studyTimeChart.updateOptions(options); } else { studyTimeChart = new ApexCharts(studyTimeChartContainer, options); studyTimeChart.render(); }
@@ -467,7 +481,8 @@ function generateStudyTimeSummary(timeData) {
     }
     
     function attachEventListeners() {
-        tabButtons.forEach(btn => btn.addEventListener('click', handleTabClick));
+        const themeToggleBtn = document.getElementById('theme-toggle-btn'); // <-- Thêm dòng này
+	tabButtons.forEach(btn => btn.addEventListener('click', handleTabClick));
         
         // Gắn sự kiện cho các nút "Hành vi" trong bảng lịch sử
         historyTableBody.addEventListener('click', (event) => {
@@ -487,6 +502,20 @@ function generateStudyTimeSummary(timeData) {
             	searchStudent();
             }
 	});
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            // Chờ một chút để theme-switcher.js kịp đổi theme
+            setTimeout(() => {
+                // Nếu đang có dữ liệu của học sinh, hãy vẽ lại tất cả
+                if (currentStudentData) {
+                    console.log("Theme đã đổi, đang vẽ lại các biểu đồ chi tiết...");
+                    // Gọi lại hàm render chính để vẽ lại tất cả biểu đồ với màu mới
+                    renderData(currentStudentData);
+                }
+            }, 10);
+        });
+    }
+
     }
 
     // --- KHỞI CHẠY ---
