@@ -1,27 +1,31 @@
-// File: js/pwa-installer.js
+// File: js/pwa-installer.js (PHIÊN BẢN SỬA LỖI ĐƯỜNG DẪN)
 
 (function() {
-    // Chờ cho đến khi trang đã tải xong hoàn toàn
     window.addEventListener('load', () => {
-        // --- 1. Xác định loại ứng dụng (học sinh hay giáo viên) ---
         const isTeacherApp = document.documentElement.id === 'teacher-app';
 
-        // --- 2. Tạo đối tượng Manifest cơ bản ---
-        const baseManifest = {
-    "name": "Lưu Dấu Học Tập",
-    "short_name": "LDHT",
-    "description": "Nền tảng Luyện tập và Phân tích Học tập",
-    "display": "standalone",
-    "orientation": "any",
-    // THAY THẾ HOÀN TOÀN KHỐI `icons` BẰNG KHỐI NÀY
-    "icons": [
-        { "src": "/icons/icon-192x192.png", "type": "image/png", "sizes": "192x192" },
-        { "src": "/icons/icon-512x512.png", "type": "image/png", "sizes": "512x512" },
-        { "src": "/icons/maskable_icon_x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-    ]
-};
+        // =============================================================
+        // === BẮT ĐẦU SỬA LỖI ===
+        // =============================================================
 
-        // --- 3. Tùy chỉnh Manifest dựa trên loại ứng dụng ---
+        // 1. Lấy gốc của URL trang web một cách an toàn
+        const origin = window.location.origin;
+
+        // 2. Định nghĩa các đường dẫn đầy đủ
+        const baseManifest = {
+            "name": "Lưu Dấu Học Tập",
+            "short_name": "LDHT",
+            "description": "Nền tảng Luyện tập và Phân tích Học tập",
+            "display": "standalone",
+            "orientation": "any",
+            "icons": [
+                // Sử dụng đường dẫn đầy đủ
+                { "src": `${origin}/icons/icon-192x192.png`, "type": "image/png", "sizes": "192x192" },
+                { "src": `${origin}/icons/icon-512x512.png`, "type": "image/png", "sizes": "512x512" },
+                { "src": `${origin}/icons/maskable_icon_x512.png`, "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+            ]
+        };
+
         let finalManifest;
 
         if (isTeacherApp) {
@@ -29,26 +33,34 @@
                 ...baseManifest,
                 "name": "LDHT - Dashboard Giáo viên",
                 "short_name": "GV Dashboard",
-                "start_url": "/login.html", // Luôn bắt đầu từ trang đăng nhập
-                "background_color": "#1e1a17", // Màu nền theme Coffee
+                "start_url": `${origin}/login.html`, // Sử dụng đường dẫn đầy đủ
+                "background_color": "#1e1a17",
                 "theme_color": "#1e1a17"
             };
         } else {
-            // Đây là ứng dụng của học sinh
             finalManifest = {
                 ...baseManifest,
-                "start_url": "/Index.html", // Bắt đầu từ trang chủ HS
-                "background_color": "#0b1220", // Màu nền theme Blue
+                "start_url": `${origin}/Index.html`, // Sử dụng đường dẫn đầy đủ
+                "background_color": "#0b1220",
                 "theme_color": "#0b1220"
             };
         }
 
-        // --- 4. Tạo và Gắn Manifest "ảo" ---
+        // =============================================================
+        // === KẾT THÚC SỬA LỖI ===
+        // =============================================================
+
+        // Phần còn lại của code giữ nguyên
         const manifestString = JSON.stringify(finalManifest);
         const blob = new Blob([manifestString], { type: 'application/json' });
         const manifestURL = URL.createObjectURL(blob);
 
-        // Tạo thẻ link và chèn vào <head>
+        // Xóa manifest cũ nếu có để tránh xung đột
+        const oldManifest = document.querySelector('link[rel="manifest"]');
+        if (oldManifest) {
+            oldManifest.remove();
+        }
+
         const linkEl = document.createElement('link');
         linkEl.rel = 'manifest';
         linkEl.href = manifestURL;
