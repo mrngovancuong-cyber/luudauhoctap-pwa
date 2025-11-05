@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
   <title>Lưu Dấu Học Tập</title>
-  
+  <!-- Dán khối này vào thẻ <head> của tất cả 6 file HTML -->
+<meta name="theme-color" content="#0b1220"> <!-- Màu nền mặc định (Tối) -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
   <!-- Liên kết CSS mới -->
   <link rel="stylesheet" href="css/styleD.css">
   <link rel="stylesheet" href="css/theme.css">
@@ -154,10 +160,13 @@
 <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("service-worker.js").catch(console.error);
+      navigator.serviceWorker.register("/service-worker.js")
+        .then(reg => console.log('Service Worker registered.'))
+        .catch(err => console.error('SW registration failed:', err));
     });
   }
 </script>
+<script src="js/pwa-installer.js"></script> <!-- THÊM DÒNG NÀY -->
 <script src="js/theme-switcher.js"></script>
 </body>
 </html>

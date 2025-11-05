@@ -1168,13 +1168,12 @@ $('#btn-clear')?.addEventListener('click', ()=>{
   });
 }
 
-function escapeHtml(str){
-  if (typeof str !== 'string') return '';
-  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
-  return str.replace(/[&<>"']/g, (m) => map[m]);
+function escapeHtml(str) {
+  const inputString = String(str || ''); // Chuyển đổi mọi thứ thành chuỗi an toàn
+  if (inputString === '') return '';
+  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'};
+  return inputString.replace(/[&<>"']/g, (m) => map[m]);
 }
-
-// Dán hàm này vào gần cuối file appF.js
 
 /**
  * Tìm tất cả các hình ảnh có class 'lazy-image' và chỉ tải chúng

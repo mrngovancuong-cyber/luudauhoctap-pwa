@@ -125,7 +125,9 @@ function getChartForeColor() {
  * Phân tích dữ liệu xu hướng điểm số và tạo câu tóm tắt.
  */
 function generateScoreTrendSummary(scoreData) {
-    if (!scoreData || scoreData.length < 2) return "Chưa đủ dữ liệu để nhận xét xu hướng.";
+        if (!scoreData || scoreData.length < 2) {
+        return "Chưa đủ dữ liệu để nhận xét xu hướng.";
+    }
     
     const scores = scoreData.map(d => d.score);
     const firstScore = scores[0];
@@ -321,6 +323,21 @@ function generateStudyTimeSummary(timeData) {
             return;
         }
         historyData.forEach((item, index) => {
+	// === BẮT ĐẦU PHẦN GIA CỐ ===
+
+	    // Kiểm tra an toàn cho điểm số. Nếu không có hoặc không phải là số, hiển thị 'N/A'.
+	    const scoreDisplay = (typeof item.score === 'number') 
+	        ? item.score.toFixed(2) 
+        	: 'N/A';
+
+	    // Kiểm tra an toàn cho các giá trị khác để đề phòng
+	    const examTitleDisplay = item.examTitle || 'Không có tên';
+	    const timeSpentDisplay = item.timeSpent || 'N/A';
+	    // Dùng ?? (Nullish Coalescing) để xử lý đúng trường hợp leaveCount = 0
+	    const leaveCountDisplay = item.leaveCount ?? 'N/A'; 
+    	    const submittedAtDisplay = item.submittedAt || 'N/A';
+       	    // === KẾT THÚC PHẦN GIA CỐ ===
+    
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${item.examTitle}</td>
@@ -332,7 +349,16 @@ function generateStudyTimeSummary(timeData) {
             `;
             historyTableBody.appendChild(row);
         });
-    }
+    // Gắn lại sự kiện cho nút bấm một cách an toàn hơn
+	historyTableBody.querySelectorAll('.action-btn-small').forEach(button => {
+    	    button.addEventListener('click', (event) => {
+        	const itemIndex = event.target.dataset.index;
+        	// Kiểm tra xem dữ liệu có tồn tại ở index đó không trước khi hiển thị modal
+        	if (currentStudentHistoryData && currentStudentHistoryData[itemIndex]) {
+            	    showBehaviorModal(currentStudentHistoryData[itemIndex]);
+        	}
+    	});
+});
 
     function renderTopicStrengthChart(topicData) {
     const options = { 

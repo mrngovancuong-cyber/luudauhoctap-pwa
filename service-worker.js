@@ -1,14 +1,43 @@
 // service-worker.js - Chiến lược "Network First, Falling Back to Cache"
 
-const CACHE_NAME = 'ltkt-online-v2'; // Tăng phiên bản cache để xóa cache cũ
+const CACHE_NAME = 'ldht-cache-v3'; // TĂNG PHIÊN BẢN
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/css/styleD.css',
-  '/js/appF.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  // --- Các trang HTML ---
+  '/', '/Index.html', '/exam.html', '/Dashboard.html', '/login.html', '/CreateExam.html', '/StudentDetail.html',
+
+  // --- Các file CSS ---
+  '/css/styleHome.css', '/css/styleD.css', '/css/styleDashboard.css', '/css/theme.css', 
+
+  // --- Các file JS ---
+  '/js/home.js', '/js/appF.js', '/js/dashboard.js', '/js/login.js',
+  '/js/createExam.js', '/js/studentDetail.js', '/js/theme-switcher.js', '/js/pwa-installer.js',
+
+  // --- Cấu hình PWA và Icon (CHUẨN HÓA) ---
+  '/manifest.webmanifest',
+  '/apple-touch-icon.png',
+  '/favicon.ico',
+  '/favicon-16x16.png',
+  '/favicon-32x32.png',
+  '/icons/icon-72x72.png',
+  '/icons/icon-96x96.png',
+  '/icons/icon-128x128.png',
+  '/icons/icon-144x144.png',
+  '/icons/icon-152x152.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-384x384.png',
+  '/icons/icon-512x512.png',
+  '/icons/maskable_icon_x512.png',
+
+  // --- Logo chính ---
+  '/icons/logo HC_1.png',
+  '/icons/logo HC_2.png',
+  '/icons/LDHT logo.png',
+
+  // --- (Tùy chọn) Thư viện bên ngoài ---
+  'https://cdn.jsdelivr.net/npm/apexcharts',
+  'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js',
+  'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+  'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js'
 ];
 
 // Sự kiện 'install': Cache các file tĩnh cốt lõi để đảm bảo app có thể chạy offline lần đầu

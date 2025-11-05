@@ -1,8 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html id="teacher-app" lang="vi">
 <head>
     <!-- ... (head content: meta, title, link to a new CSS file like styleDashboard.css) ... -->
     <title>Dashboard Giáo viên</title>
+    <!-- Dán khối này vào thẻ <head> của tất cả 6 file HTML -->
+<meta name="theme-color" content="#0b1220"> <!-- Màu nền mặc định (Tối) -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
@@ -139,5 +146,15 @@
 
     <script src="js/dashboard.js"></script>
     <script src="js/theme-switcher.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/service-worker.js")
+        .then(reg => console.log('Service Worker registered.'))
+        .catch(err => console.error('SW registration failed:', err));
+    });
+  }
+</script>
+<script src="js/pwa-installer.js"></script> <!-- THÊM DÒNG NÀY -->
 </body>
 </html>
