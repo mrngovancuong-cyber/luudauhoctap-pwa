@@ -1,71 +1,44 @@
-// File: js/pwa-installer.js (PHIÊN BẢN SỬA LỖI ĐƯỜNG DẪN)
+// File: js/pwa-installer.js (Phiên bản chỉ dành cho Học sinh)
 
 (function() {
     window.addEventListener('load', () => {
+        // --- 1. Xác định xem có phải trang của giáo viên không ---
         const isTeacherApp = document.documentElement.id === 'teacher-app';
 
-        // =============================================================
-        // === BẮT ĐẦU SỬA LỖI ===
-        // =============================================================
+        // --- 2. Nếu là trang của giáo viên, DỪNG LẠI, không làm gì cả ---
+        if (isTeacherApp) {
+            console.log("Đây là trang của giáo viên, PWA không được kích hoạt.");
+            return; 
+        }
 
-        // 1. Lấy gốc của URL trang web một cách an toàn
+        // --- 3. Nếu là trang của học sinh, tiếp tục tạo Manifest ---
+        console.log("Đây là trang của học sinh, đang tạo PWA Manifest...");
+
         const origin = window.location.origin;
 
-        // 2. Định nghĩa các đường dẫn đầy đủ
-        const baseManifest = {
+        const studentManifest = {
             "name": "Lưu Dấu Học Tập",
             "short_name": "LDHT",
             "description": "Nền tảng Luyện tập và Phân tích Học tập",
             "display": "standalone",
             "orientation": "any",
+            "start_url": `${origin}/Index.html?source=pwa`,
+            "background_color": "#0b1220",
+            "theme_color": "#0b1220",
             "icons": [
-                // Sử dụng đường dẫn đầy đủ
                 { "src": `${origin}/icons/icon-192x192.png`, "type": "image/png", "sizes": "192x192" },
                 { "src": `${origin}/icons/icon-512x512.png`, "type": "image/png", "sizes": "512x512" },
                 { "src": `${origin}/icons/maskable_icon_x512.png`, "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
             ]
         };
 
-        let finalManifest;
-
-        if (isTeacherApp) {
-            finalManifest = {
-                ...baseManifest,
-                "name": "LDHT - Dashboard Giáo viên",
-                "short_name": "GV Dashboard",
-                "start_url": `${origin}/login.html`, // Sử dụng đường dẫn đầy đủ
-                "background_color": "#1e1a17",
-                "theme_color": "#1e1a17"
-            };
-        } else {
-            finalManifest = {
-                ...baseManifest,
-                "start_url": `${origin}/Index.html`, // Sử dụng đường dẫn đầy đủ
-                "background_color": "#0b1220",
-                "theme_color": "#0b1220"
-            };
-        }
-
-        // =============================================================
-        // === KẾT THÚC SỬA LỖI ===
-        // =============================================================
-
-        // Phần còn lại của code giữ nguyên
-        const manifestString = JSON.stringify(finalManifest);
+        const manifestString = JSON.stringify(studentManifest);
         const blob = new Blob([manifestString], { type: 'application/json' });
         const manifestURL = URL.createObjectURL(blob);
-
-        // Xóa manifest cũ nếu có để tránh xung đột
-        const oldManifest = document.querySelector('link[rel="manifest"]');
-        if (oldManifest) {
-            oldManifest.remove();
-        }
 
         const linkEl = document.createElement('link');
         linkEl.rel = 'manifest';
         linkEl.href = manifestURL;
         document.head.appendChild(linkEl);
-
-        console.log(`PWA Manifest động đã được tạo cho: ${isTeacherApp ? 'Giáo viên' : 'Học sinh'}`);
     });
 })();
