@@ -304,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         	}
     	});
 });
+}
 
     function renderTopicStrengthChart(topicData) {
     const options = { 
