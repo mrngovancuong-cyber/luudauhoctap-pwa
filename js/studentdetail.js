@@ -1,6 +1,8 @@
-// File: /js/studentDetail.js
+// File: /js/studentDetail.js (PHIÊN BẢN SỬA LỖI CÚ PHÁP)
 
-  
+// Bọc toàn bộ code trong DOMContentLoaded để đảm bảo các phần tử HTML đã tồn tại
+document.addEventListener('DOMContentLoaded', () => {
+
     // ---  KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG CHI TIẾT ---
     const API_URL = '/api/';
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -45,25 +47,24 @@
     let deviceUsageChart = null;
     let studyTimeChart = null;
     let currentStudentHistoryData = null;
-    let currentStudentData = null; // <-- THÊM DÒNG NÀY
+    let currentStudentData = null;
 
-/**
- * Lấy màu chữ phù hợp cho biểu đồ dựa trên theme hiện tại.
- * @returns {string} Mã màu hex.
- */
-function getChartForeColor() {
-  if (document.documentElement.getAttribute('data-theme') === 'light') {
-    return '#431407'; // Màu chữ đậm của theme Sáng (Coffee)
-  }
-  return '#f3e9e0'; // Màu chữ mặc định của theme Tối (Coffee)
-}
+    // =================================================================
+    //                    CÁC HÀM TIỆN ÍCH
+    // =================================================================
+
+    function getChartForeColor() {
+      if (document.documentElement.getAttribute('data-theme') === 'light') {
+        return '#431407';
+      }
+      return '#f3e9e0';
+    }
 
     // =================================================================
     //                    LUỒNG KHỞI TẠO CHÍNH
     // =================================================================
 
     async function initializeDetailView() {
-        // 1. Kiểm tra đăng nhập
         const token = localStorage.getItem('authToken');
         if (!token) {
             alert("Bạn chưa đăng nhập. Đang chuyển về trang đăng nhập.");
@@ -71,7 +72,6 @@ function getChartForeColor() {
             return;
         }
 
-        // 2. Lấy studentId từ tham số 'id' trên URL
         const urlParams = new URLSearchParams(window.location.search);
         const studentId = urlParams.get('id');
 
@@ -80,7 +80,6 @@ function getChartForeColor() {
             return;
         }
         
-        // 3. Gọi API để lấy dữ liệu chi tiết của học sinh đó
         try {
             const url = `${API_URL}?action=getStudentAnalytics&studentId=${studentId}`;
             const response = await fetch(url, {
@@ -88,7 +87,6 @@ function getChartForeColor() {
             });
 
             if (!response.ok) {
-                // Xử lý các lỗi HTTP như 401, 500...
                 if (response.status === 401) throw new Error("Unauthorized");
                 throw new Error(`Lỗi server: ${response.statusText}`);
             }
@@ -96,14 +94,13 @@ function getChartForeColor() {
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
             
-            // 4. Hiển thị dữ liệu lên giao diện
             renderData(result.data);
             
-            // Ẩn spinner và hiện nội dung
             showLoading(false);
             resultSection.classList.remove('hidden');
 
         } catch (error) {
+            console.error("Lỗi khi tải dữ liệu chi tiết:", error);
             if (error.message.includes("Unauthorized")) {
                 alert("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
                 localStorage.removeItem('authToken');
@@ -112,168 +109,116 @@ function getChartForeColor() {
             } else {
                 showError(`Không thể tải dữ liệu học sinh: ${error.message}`);
             }
+            showLoading(false);
         }
+    }
+
+    // =================================================================
+    //                 CÁC HÀM TÓM TẮT DỮ LIỆU
+    // =================================================================
+
+    function generateScoreTrendSummary(scoreData) {
+        if (!scoreData || scoreData.length < 2) return "Chưa đủ dữ liệu để nhận xét xu hướng.";
+        const scores = scoreData.map(d => d.score);
+        const firstScore = scores[0];
+        const lastScore = scores[scores.length - 1];
+        const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+        let summary = `Điểm trung bình các bài là <strong>${avgScore.toFixed(2)}</strong>. `;
+        if (lastScore > firstScore + 1 && lastScore > avgScore) summary += `Ghi nhận xu hướng <strong>tiến bộ rõ rệt</strong>.`;
+        else if (lastScore < firstScore - 1 && lastScore < avgScore) summary += `Cần chú ý xu hướng điểm số đang <strong>đi xuống</strong>.`;
+        else summary += `Phong độ của em khá <strong>ổn định</strong>.`;
+        return summary;
+    }
+
+    function generatePerformanceQuadrantSummary(quadrantData) {
+        if (!quadrantData || quadrantData.length === 0) return "Chưa có dữ liệu.";
+        const avgTime = quadrantData.reduce((a, item) => a + item.x, 0) / quadrantData.length;
+        const avgScore = quadrantData.reduce((a, item) => a + item.y, 0) / quadrantData.length;
+        let style = "";
+        if (avgTime < 50 && avgScore >= 7.5) style = "<strong>Nhanh và Hiệu quả</strong>.";
+        else if (avgTime < 50 && avgScore < 6) style = "<strong>Nhanh nhưng còn ẩu</strong>.";
+        else if (avgTime >= 70 && avgScore >= 7.5) style = "<strong>Cẩn thận và Chắc chắn</strong>.";
+        else if (avgTime >= 70 && avgScore < 6) style = "<strong>Còn lúng túng</strong>.";
+        else style = "<strong>Cân bằng</strong>.";
+        return `Phong cách làm bài của em thuộc nhóm ${style}`;
+    }
+
+    function generateTopicStrengthSummary(topicData) {
+        if (!topicData || topicData.length === 0) return "Chưa có dữ liệu.";
+        const strongTopics = topicData.filter(t => t.accuracy >= 0.8).map(t => t.topic);
+        const weakTopics = topicData.filter(t => t.accuracy < 0.5).map(t => t.topic);
+        if (strongTopics.length === 0 && weakTopics.length === 0) return "Kiến thức khá <strong>đồng đều</strong>.";
+        let summary = "";
+        if (strongTopics.length > 0) summary += `Em <strong>rất vững</strong> ở các chủ đề: <strong>${strongTopics.join(', ')}</strong>. `;
+        if (weakTopics.length > 0) summary += `Cần <strong>củng cố thêm</strong>: <strong>${weakTopics.join(', ')}</strong>.`;
+        return summary.trim();
+    }
+    
+    function generateLeaveCountSummary(leaveData) {
+        if (!leaveData || leaveData.length === 0) return "Chưa có dữ liệu.";
+        const avgLeaves = leaveData.reduce((a, item) => a + item.count, 0) / leaveData.length;
+        if (avgLeaves === 0) return "<strong>Tập trung tuyệt đối</strong>, không rời màn hình.";
+        else if (avgLeaves < 2) return `Mức độ tập trung <strong>rất tốt</strong> (trung bình ${avgLeaves.toFixed(1)} lần rời trang).`;
+        else if (avgLeaves < 5) return `Cần cải thiện sự tập trung (trung bình ${avgLeaves.toFixed(1)} lần rời trang).`;
+        else return `Báo động! Mức độ tập trung <strong>rất thấp</strong> (trung bình ${avgLeaves.toFixed(1)} lần rời trang).`;
+    }
+
+    function generateDeviceUsageSummary(deviceData) {
+        if (!deviceData || deviceData.length === 0) return "Chưa có dữ liệu.";
+        const sortedDevices = [...deviceData].sort((a, b) => b.count - a.count);
+        const primaryDevice = sortedDevices[0];
+        return `Thiết bị chủ yếu là <strong>${primaryDevice.device}</strong> (${((primaryDevice.count / sortedDevices.reduce((a, d) => a + d.count, 0)) * 100).toFixed(0)}%).`;
+    }
+
+    function generateStudyTimeSummary(timeData) {
+        if (!timeData || timeData.length === 0) return "Chưa có dữ liệu.";
+        const sortedTimes = [...timeData].sort((a, b) => b.count - a.count);
+        const favoriteTime = sortedTimes[0];
+        let comment = "";
+        if (favoriteTime.timeSlot.includes("Khuya") || favoriteTime.timeSlot.includes("Đêm")) comment = "Nên sắp xếp học sớm hơn để bảo vệ sức khỏe.";
+        else if (favoriteTime.timeSlot.includes("Sáng")) comment = "Đây là khung giờ vàng để học, rất tốt!";
+        return `Thường làm bài vào <strong>${favoriteTime.timeSlot}</strong>. ${comment}`;
     }
 
     // =================================================================
     //                 CÁC HÀM RENDER DỮ LIỆU VÀ BIỂU ĐỒ
     // =================================================================
 
-// DÁN 6 HÀM NÀY VÀO TRƯỚC HÀM renderData(data)
-
-/**
- * Phân tích dữ liệu xu hướng điểm số và tạo câu tóm tắt.
- */
-function generateScoreTrendSummary(scoreData) {
-        if (!scoreData || scoreData.length < 2) {
-        return "Chưa đủ dữ liệu để nhận xét xu hướng.";
-    }
-    
-    const scores = scoreData.map(d => d.score);
-    const firstScore = scores[0];
-    const lastScore = scores[scores.length - 1];
-    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-    
-    let summary = `Điểm trung bình các bài là  <strong>${avgScore.toFixed(2)}</strong>. `;
-    if (lastScore > firstScore + 1 && lastScore > avgScore) {
-        summary += `Ghi nhận xu hướng  <strong>tiến bộ rõ rệt</strong>, với điểm số gần đây cao hơn đáng kể so với trước đây.`;
-    } else if (lastScore < firstScore - 1 && lastScore < avgScore) {
-        summary += `Cần chú ý xu hướng điểm số đang  <strong>đi xuống</strong>. Em cần xem lại các phần kiến thức còn yếu.`;
-    } else {
-        summary += `Phong độ của em khá  <strong>ổn định</strong> qua các bài làm.`;
-    }
-    return summary;
-}
-
-/**
- * Phân tích dữ liệu phong cách làm bài và tạo câu tóm tắt.
- */
-function generatePerformanceQuadrantSummary(quadrantData) {
-    if (!quadrantData || quadrantData.length === 0) return "Chưa có dữ liệu về phong cách làm bài.";
-
-    const avgTime = quadrantData.reduce((a, item) => a + item.x, 0) / quadrantData.length;
-    const avgScore = quadrantData.reduce((a, item) => a + item.y, 0) / quadrantData.length;
-
-    let style = "";
-    if (avgTime < 50 && avgScore >= 7.5) style = "<strong>Nhanh và Hiệu quả</strong>. Em có khả năng xử lý bài tốt dưới áp lực thời gian.";
-    else if (avgTime < 50 && avgScore < 6) style = "<strong>Nhanh nhưng còn ẩu</strong>. Em có xu hướng hoàn thành bài sớm nhưng cần cẩn thận hơn để tránh lỗi sai không đáng có.";
-    else if (avgTime >= 70 && avgScore >= 7.5) style = "<strong>Cẩn thận và Chắc chắn</strong>. Em dành nhiều thời gian để đảm bảo câu trả lời chính xác.";
-    else if (avgTime >= 70 && avgScore < 6) style = "<strong>Còn lúng túng</strong>. Em mất khá nhiều thời gian nhưng kết quả chưa cao, cho thấy có thể em đang gặp khó khăn với kiến thức nền tảng.";
-    else style = "<strong>Cân bằng</strong>. Em có sự phân bổ thời gian và kết quả ở mức độ hợp lý.";
-    return `Nhìn chung, phong cách làm bài của em thuộc nhóm  ${style}`;
-}
-
-/**
- * Phân tích độ vững kiến thức theo chủ đề và tạo câu tóm tắt.
- */
-function generateTopicStrengthSummary(topicData) {
-    if (!topicData || topicData.length === 0) return "Chưa có dữ liệu phân tích theo chủ đề.";
-
-    const strongTopics = topicData.filter(t => t.accuracy >= 0.8).map(t => t.topic);
-    const weakTopics = topicData.filter(t => t.accuracy < 0.5).map(t => t.topic);
-
-    if (strongTopics.length === 0 && weakTopics.length === 0) {
-        return "Kiến thức của em ở các chủ đề khá  <strong>đồng đều</strong>, không có phần nào quá yếu hoặc quá mạnh.";
-    }
-
-    let summary = "";
-    if (strongTopics.length > 0) {
-        summary += `Em tỏ ra  <strong>rất vững</strong> ở các chủ đề:  <strong>${strongTopics.join(', ')}</strong>. `;
-    }
-    if (weakTopics.length > 0) {
-        summary += `Tuy nhiên, em cần  <strong>củng cố thêm</strong> kiến thức ở các chủ đề:  <strong>${weakTopics.join(', ')}</strong>.`;
-    }
-    return summary.trim();
-}
-
-/**
- * Phân tích số lần rời trang và tạo câu tóm tắt.
- */
-function generateLeaveCountSummary(leaveData) {
-    if (!leaveData || leaveData.length === 0) return "Chưa có dữ liệu về mức độ tập trung.";
-
-    const totalLeaves = leaveData.reduce((a, item) => a + item.count, 0);
-    const avgLeaves = totalLeaves / leaveData.length;
-
-    if (avgLeaves === 0) {
-        return "Xuất sắc! Em thể hiện sự  <strong>tập trung tuyệt đối</strong> và không rời khỏi màn hình trong suốt quá trình làm bài.";
-    } else if (avgLeaves < 2) {
-        return `Mức độ tập trung của em  <strong>rất tốt</strong>, với trung bình chỉ khoảng ${avgLeaves.toFixed(1)} lần rời trang mỗi bài.`;
-    } else if (avgLeaves < 5) {
-        return `Em cần cải thiện sự tập trung hơn. Trung bình em rời trang khoảng  ${avgLeaves.toFixed(1)} lần mỗi bài, điều này có thể ảnh hưởng đến kết quả.`;
-    } else {
-        return `Báo động! Mức độ tập trung của em  <strong>rất thấp</strong> (trung bình ${avgLeaves.toFixed(1)} lần rời trang). Em cần tìm một không gian yên tĩnh và tránh các yếu tố gây xao nhãng khi làm bài.`;
-    }
-}
-
-/**
- * Phân tích thói quen sử dụng thiết bị và tạo câu tóm tắt.
- */
-function generateDeviceUsageSummary(deviceData) {
-    if (!deviceData || deviceData.length === 0) return "Chưa có dữ liệu về thói quen sử dụng thiết bị.";
-    
-    // Sắp xếp để tìm thiết bị dùng nhiều nhất
-    const sortedDevices = [...deviceData].sort((a, b) => b.count - a.count);
-    const primaryDevice = sortedDevices[0];
-    
-    return `Thiết bị học tập chủ yếu của em là  <strong>${primaryDevice.device}</strong> (chiếm ${((primaryDevice.count / sortedDevices.reduce((a, d) => a + d.count, 0)) * 100).toFixed(0)}%).`;
-}
-
-/**
- * Phân tích thời gian học và tạo câu tóm tắt.
- */
-function generateStudyTimeSummary(timeData) {
-    if (!timeData || timeData.length === 0) return "Chưa có dữ liệu về thời gian làm bài.";
-
-    const sortedTimes = [...timeData].sort((a, b) => b.count - a.count);
-    const favoriteTime = sortedTimes[0];
-
-    let comment = "";
-    if (favoriteTime.timeSlot.includes("Khuya") || favoriteTime.timeSlot.includes("Đêm")) {
-        comment = "Tuy nhiên, việc thường xuyên thức khuya học bài có thể ảnh hưởng đến sức khỏe. Em nên cố gắng sắp xếp thời gian học sớm hơn.";
-    } else if (favoriteTime.timeSlot.includes("Sáng")) {
-        comment = "Đây là khung giờ vàng để học tập, rất đáng khen!";
-    }
-
-    return `Em có xu hướng làm bài nhiều nhất vào khung giờ  <strong>${favoriteTime.timeSlot}</strong>. ${comment}`;
-}
-
     function renderData(data) {
-	currentStudentData = data; // <-- THÊM DÒNG NÀY NGAY ĐẦU HÀM
-	if(studentIdInput) {
+        currentStudentData = data;
+        if(studentIdInput) {
             const urlParams = new URLSearchParams(window.location.search);
             studentIdInput.value = urlParams.get('id');
-    	}
+        }
         studentNameDisplay.textContent = data.profile.name;
         studentClassDisplay.textContent = `Lớp: ${data.profile.class}`;
         currentStudentHistoryData = data.history;
 
-        // Kích hoạt việc render cho tất cả các tab
+        // Render biểu đồ
         renderScoreTrendChart(data.overview.scoreTrend);
         renderPerformanceQuadrantChart(data.overview.performanceQuadrant);
-        renderHistoryTable(data.history);
         renderTopicStrengthChart(data.skills.byTopic);
         renderLevelStrengthChart(data.skills.byLevel);
-        renderBehaviorWarnings(data.behavior.suspiciousNotes);
         renderLeaveCountChart(data.behavior.leaveCountTrend);
         renderDeviceUsageChart(data.behavior.deviceUsage);
         renderStudyTimeChart(data.behavior.studyTimeDistribution);
-
-    // THÊM TOÀN BỘ KHỐI CODE NÀY VÀO CUỐI HÀM
-    
-    // --- Điền nội dung cho các ô tóm tắt ---
-    document.getElementById('score-trend-summary').innerHTML = generateScoreTrendSummary(data.overview.scoreTrend);
-    document.getElementById('performance-quadrant-summary').innerHTML = generatePerformanceQuadrantSummary(data.overview.performanceQuadrant);
-    document.getElementById('topic-strength-summary').innerHTML = generateTopicStrengthSummary(data.skills.byTopic);
-    
-    // Hàm này chưa có dữ liệu, sẽ làm sau nếu cần
-    // document.getElementById('level-strength-summary').innerHTML = generateLevelStrengthSummary(data.skills.byLevel); 
-    
-    document.getElementById('leave-count-summary').innerHTML = generateLeaveCountSummary(data.behavior.leaveCountTrend);
-    document.getElementById('device-usage-summary').innerHTML = generateDeviceUsageSummary(data.behavior.deviceUsage);
-    document.getElementById('study-time-summary').innerHTML = generateStudyTimeSummary(data.behavior.studyTimeDistribution);
+        
+        // Render bảng và cảnh báo
+        renderHistoryTable(data.history);
+        renderBehaviorWarnings(data.behavior.suspiciousNotes);
+        
+        // Render tóm tắt
+        document.getElementById('score-trend-summary').innerHTML = generateScoreTrendSummary(data.overview.scoreTrend);
+        document.getElementById('performance-quadrant-summary').innerHTML = generatePerformanceQuadrantSummary(data.overview.performanceQuadrant);
+        document.getElementById('topic-strength-summary').innerHTML = generateTopicStrengthSummary(data.skills.byTopic);
+        document.getElementById('leave-count-summary').innerHTML = generateLeaveCountSummary(data.behavior.leaveCountTrend);
+        document.getElementById('device-usage-summary').innerHTML = generateDeviceUsageSummary(data.behavior.deviceUsage);
+        document.getElementById('study-time-summary').innerHTML = generateStudyTimeSummary(data.behavior.studyTimeDistribution);
     }
-
+    
+    // ... (Tất cả các hàm render...Chart của bạn nằm ở đây)
+    // Tôi sẽ dán lại các hàm này với phiên bản đã tích hợp theme-aware
+    
     function renderScoreTrendChart(scoreData) {
     const options = {
         chart: { type: 'line', height: 350, fontFamily: "'Be Vietnam Pro', sans-serif", foreColor: getChartForeColor() },
@@ -459,19 +404,18 @@ function generateStudyTimeSummary(timeData) {
         }
     }
 
+
     // =================================================================
     //                    HÀM TIỆN ÍCH VÀ SỰ KIỆN
     // =================================================================
 
     function searchStudent() {
-    	const studentId = studentIdInput.value.trim();
-    	if (!studentId) {
-       	    alert('Vui lòng nhập Mã số học sinh.');
+        const studentId = studentIdInput.value.trim();
+        if (!studentId) {
+           alert('Vui lòng nhập Mã số học sinh.');
             return;
-    }
-    
-    // Tải lại trang chi tiết với ID mới trong URL
-    	window.location.href = `/StudentDetail.html?id=${studentId}`;
+        }
+        window.location.href = `/StudentDetail.html?id=${studentId}`;
     }
 
     function showLoading(isLoading) {
@@ -497,9 +441,9 @@ function generateStudyTimeSummary(timeData) {
         if (!data) return;
         modalTitle.textContent = `Phân tích Hành vi: ${data.examTitle}`;
         let content = '<ul>';
-        if (data.behaviorDetails.fastWrong.length > 0) content += `<li>Làm ẩu (sai nhanh): <strong>Câu ${data.behaviorDetails.fastWrong.join(', ')}</strong></li>`;
-        if (data.behaviorDetails.slowWrong.length > 0) content += `<li>Lúng túng (sai chậm): <strong>Câu ${data.behaviorDetails.slowWrong.join(', ')}</strong></li>`;
-        if (data.behaviorDetails.changedAnswers.length > 0) content += `<li>Phân vân (đổi đáp án): <strong>Câu ${data.behaviorDetails.changedAnswers.join(', ')}</strong></li>`;
+        if (data.behaviorDetails?.fastWrong?.length > 0) content += `<li>Làm ẩu (sai nhanh): <strong>Câu ${data.behaviorDetails.fastWrong.join(', ')}</strong></li>`;
+        if (data.behaviorDetails?.slowWrong?.length > 0) content += `<li>Lúng túng (sai chậm): <strong>Câu ${data.behaviorDetails.slowWrong.join(', ')}</strong></li>`;
+        if (data.behaviorDetails?.changedAnswers?.length > 0) content += `<li>Phân vân (đổi đáp án): <strong>Câu ${data.behaviorDetails.changedAnswers.join(', ')}</strong></li>`;
         if (content === '<ul>') content += '<li>Không có ghi nhận hành vi nào đặc biệt.</li>';
         content += '</ul>';
         modalBody.innerHTML = content;
@@ -507,44 +451,41 @@ function generateStudyTimeSummary(timeData) {
     }
     
     function attachEventListeners() {
-        const themeToggleBtn = document.getElementById('theme-toggle-btn'); // <-- Thêm dòng này
-	tabButtons.forEach(btn => btn.addEventListener('click', handleTabClick));
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        tabButtons.forEach(btn => btn.addEventListener('click', handleTabClick));
         
-        // Gắn sự kiện cho các nút "Hành vi" trong bảng lịch sử
         historyTableBody.addEventListener('click', (event) => {
             if (event.target.classList.contains('action-btn-small')) {
                 const itemIndex = event.target.dataset.index;
-                showBehaviorModal(currentStudentHistoryData[itemIndex]);
+                if (currentStudentHistoryData && currentStudentHistoryData[itemIndex]) {
+                    showBehaviorModal(currentStudentHistoryData[itemIndex]);
+                }
             }
         });
 
-        modalCloseBtn.addEventListener('click', () => behaviorModal.classList.add('hidden'));
-        behaviorModal.addEventListener('click', (event) => {
+        if(modalCloseBtn) modalCloseBtn.addEventListener('click', () => behaviorModal.classList.add('hidden'));
+        if(behaviorModal) behaviorModal.addEventListener('click', (event) => {
             if (event.target === behaviorModal) behaviorModal.classList.add('hidden');
         });
-	searchBtn.addEventListener('click', searchStudent);
-    	studentIdInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-            	searchStudent();
-            }
-	});
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            // Chờ một chút để theme-switcher.js kịp đổi theme
-            setTimeout(() => {
-                // Nếu đang có dữ liệu của học sinh, hãy vẽ lại tất cả
-                if (currentStudentData) {
-                    console.log("Theme đã đổi, đang vẽ lại các biểu đồ chi tiết...");
-                    // Gọi lại hàm render chính để vẽ lại tất cả biểu đồ với màu mới
-                    renderData(currentStudentData);
-                }
-            }, 10);
+        if(searchBtn) searchBtn.addEventListener('click', searchStudent);
+        if(studentIdInput) studentIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchStudent();
         });
-    }
-
+        
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                setTimeout(() => {
+                    if (currentStudentData) {
+                        console.log("Theme đã đổi, đang vẽ lại biểu đồ chi tiết...");
+                        renderData(currentStudentData);
+                    }
+                }, 10);
+            });
+        }
     }
 
     // --- KHỞI CHẠY ---
+    attachEventListeners();
     initializeDetailView();
-    attachEventListeners(); // Gắn các sự kiện cho các nút
-});
+
+}); // <-- DẤU NGOẶC ĐÓNG CUỐI CÙNG QUAN TRỌNG
