@@ -617,3 +617,45 @@ button, input, select, textarea {
     color: var(--accent);
     border-color: var(--accent);
 }
+
+/* =====================================================
+   BỔ SUNG VÀ HOÀN THIỆN CSS CHO HIỆU ỨNG LOADING
+   ===================================================== */
+
+/* ----- 1. Bổ sung quy tắc cho Lớp phủ ở Chế độ Sáng ----- */
+[data-theme="light"] .loading-overlay {
+    background-color: rgba(254, 251, 246, 0.8); /* Màu nền sáng mờ */
+}
+
+/* ----- 2. Bổ sung toàn bộ quy tắc cho Loading Inline (cho StudentDetail.html) ----- */
+.loading-inline {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    width: 100%;
+}
+
+.loading-inline .spinner {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(161, 143, 131, 0.3); /* Dùng màu --muted của theme tối */
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite; /* Tái sử dụng animation đã có */
+}
+
+/* Quy tắc cho spinner của loading-inline ở theme sáng */
+[data-theme="light"] .loading-inline .spinner {
+    border-color: rgba(154, 52, 18, 0.2); /* Dùng màu --muted của theme sáng */
+    border-top-color: var(--primary);
+}
+
+.loading-inline p {
+    margin-top: 1.5rem;
+    font-size: 1.2rem;
+    color: var(--muted);
+    font-weight: 600;
+}
