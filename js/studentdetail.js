@@ -547,3 +547,4 @@ function generateStudyTimeSummary(timeData) {
     // --- KHỞI CHẠY ---
     initializeDetailView();
     attachEventListeners(); // Gắn các sự kiện cho các nút
+});
