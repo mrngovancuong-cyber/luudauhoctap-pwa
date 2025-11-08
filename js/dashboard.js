@@ -1,406 +1,387 @@
-// File: /js/dashboard.js (PHIÊN BẢN TINH GỌN)
+// File: /js/dashboard.js (PHIÊN BẢN HOÀN CHỈNH - HỖ TRỢ 2 CHẾ ĐỘ XEM)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- KHAI BÁO CÁC PHẦN TỬ DOM CỦA TRANG TỔNG QUAN ---
+    // =================================================================
+    //                    KHAI BÁO BIẾN TOÀN CỤC
+    // =================================================================
     const API_URL = '/api/';
+    let currentUser = null;
+    let mainChart = null; // Dùng chung cho cả 2 chế độ xem
 
+    // --- DOM Elements ---
+    // Chế độ xem
+    const viewModeRadios = document.querySelectorAll('input[name="viewMode"]');
+    const filterByExamGroup = document.getElementById('filter-by-exam');
+    const filterByClassGroup = document.getElementById('filter-by-class');
+    const viewReportBtn = document.getElementById('view-report-btn');
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
+    
+    // Bộ lọc
     const examSelect = document.getElementById('exam-select');
     const classSelect = document.getElementById('class-select');
-    const classOverviewSection = document.getElementById('class-overview-section');
+    const classSummarySelect = document.getElementById('class-summary-select');
+    const startDateInput = document.getElementById('start-date-input');
+    const endDateInput = document.getElementById('end-date-input');
+    
+    // Tìm kiếm HS
+    const searchBtn = document.getElementById('search-btn');
+    const studentIdInput = document.getElementById('student-id-input');
+    
+    // Khu vực hiển thị
+    const overviewLoadingOverlay = document.getElementById('overview-loading-overlay');
     const kpisContainer = document.getElementById('overview-kpis');
-    const gradeDistributionChartContainer = document.getElementById('grade-distribution-chart');
+    const mainChartContainer = document.getElementById('grade-distribution-chart'); // Tái sử dụng chart container
     const hardestQuestionsList = document.getElementById('hardest-questions-list');
     const topPerformersList = document.getElementById('top-performers-list');
     const bottomPerformersList = document.getElementById('bottom-performers-list');
-    
-    const searchBtn = document.getElementById('search-btn');
-    const studentIdInput = document.getElementById('student-id-input');
-    const overviewLoadingOverlay = document.getElementById('overview-loading-overlay');
     const studentViewBtn = document.getElementById('student-view-btn');
-    const startDateInput = document.getElementById('start-date-input');
-    const endDateInput = document.getElementById('end-date-input');
-    const resetFiltersBtn = document.getElementById('reset-filters-btn');
-    let gradeDistributionChart = null;
-    let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
-    /**
-     * Lấy màu chữ phù hợp cho biểu đồ dựa trên theme hiện tại.
-     * @returns {string} Mã màu hex.
-     */
-    function getChartForeColor() {
-      // Kiểm tra thuộc tính data-theme trên thẻ <html>
-      if (document.documentElement.getAttribute('data-theme') === 'light') {
-        return '#431407'; // Màu chữ đậm của theme Sáng (Coffee)
-      }
-      return '#f3e9e0'; // Màu chữ mặc định của theme Tối (Coffee)
-    }
-// =================================================================
-//                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN (PHIÊN BẢN MỚI)
-// =================================================================
 
-/**
- * Hàm chính: Tải dữ liệu ban đầu cho các bộ lọc.
- */
-async function main() {
-    // --- PHẦN KIỂM TRA ĐĂNG NHẬP (GIỮ NGUYÊN TỪ CODE CỦA BẠN) ---
-    const token = localStorage.getItem('authToken');
-    if (!token) { window.location.href = '/login.html'; return; }
-    try {
-        currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        if (!currentUser) throw new Error("Missing user info");
-    } catch (error) {
-        alert("Thông tin người dùng không hợp lệ. Vui lòng đăng nhập lại.");
-        localStorage.clear(); // Xóa hết cho an toàn
-        window.location.href = '/login.html';
-        return;
-    }
-    // --- KẾT THÚC PHẦN KIỂM TRA ---
+    // =================================================================
+    //                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN
+    // =================================================================
 
-    attachEventListeners();
-    renderGradeDistributionChart(null); // Vẽ biểu đồ trống
-
-    // Tải danh sách đề bài ban đầu
-    try {
-        const examListResult = await fetchApi('getExamList');
-        const publishedExams = examListResult.data.filter(exam => exam.status === 'published');
-
-        if (publishedExams.length > 0) {
-            examSelect.innerHTML = 
-                `<option value="">-- Chọn bài tập --</option>` + 
-                publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
-        } else {
-            examSelect.innerHTML = `<option value="">-- Không có bài tập --</option>`;
-            examSelect.disabled = true;
-            classSelect.disabled = true;
-            viewReportBtn.disabled = true;
+    async function main() {
+        const token = localStorage.getItem('authToken');
+        if (!token) { window.location.href = '/login.html'; return; }
+        try {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) throw new Error("Missing user info");
+        } catch (error) {
+            alert("Thông tin người dùng không hợp lệ. Vui lòng đăng nhập lại.");
+            localStorage.clear();
+            window.location.href = '/login.html';
+            return;
         }
-    } catch (error) {
-        handleApiError(error, "Lỗi khi tải danh sách bài tập");
+
+        attachEventListeners();
+        renderGradeDistributionChart(null); // Vẽ biểu đồ trống ban đầu
+
+        try {
+            const examListResult = await fetchApi('getExamList');
+            const publishedExams = examListResult.data.filter(exam => exam.status === 'published');
+
+            if (publishedExams.length > 0) {
+                examSelect.innerHTML = 
+                    `<option value="">-- Chọn bài tập --</option>` + 
+                    publishedExams.map(exam => `<option value="${exam.examId}">${exam.title}</option>`).join('');
+            } else {
+                examSelect.innerHTML = `<option value="">-- Không có bài tập --</option>`;
+                examSelect.disabled = true;
+            }
+        } catch (error) {
+            handleApiError(error, "Lỗi khi tải danh sách bài tập");
+        }
     }
-}
 
+    function attachEventListeners() {
+        // 1. Sự kiện chuyển chế độ xem
+        viewModeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const mode = e.target.value;
+                document.querySelectorAll('.view-mode-label').forEach(label => label.classList.remove('active'));
+                e.target.closest('.view-mode-label').classList.add('active');
+
+                if (mode === 'byExam') {
+                    filterByExamGroup.classList.remove('hidden');
+                    filterByClassGroup.classList.add('hidden');
+                } else {
+                    filterByExamGroup.classList.add('hidden');
+                    filterByClassGroup.classList.remove('hidden');
+                    populateClassesForSummary();
+                }
+                resetOverviewUI();
+                checkFilters();
+            });
+        });
+
+        // 2. Sự kiện thay đổi các dropdown
+        examSelect.addEventListener('change', handleExamSelectChange);
+        classSelect.addEventListener('change', checkFilters);
+        classSummarySelect.addEventListener('change', checkFilters);
+
+        // 3. Sự kiện nhấn nút
+        viewReportBtn.addEventListener('click', handleViewReportClick);
+        resetFiltersBtn.addEventListener('click', handleResetFiltersClick);
+        searchBtn.addEventListener('click', searchStudent);
+        
+        // 4. Sự kiện phím
+        studentIdInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchStudent();
+        });
+
+        // 5. Sự kiện tiện ích
+        if (studentViewBtn) {
+            studentViewBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                sessionStorage.setItem('teacherPreviewInfo', JSON.stringify(currentUser));
+                window.location.href = '/';
+            });
+        }
+    }
 
     // =================================================================
-    //                    CÁC HÀM API VÀ RENDER
+    //                    CÁC HÀM XỬ LÝ SỰ KIỆN
     // =================================================================
+
+    async function handleExamSelectChange() {
+        const selectedExamId = examSelect.value;
+        classSelect.innerHTML = '<option value="">-- Đang tải lớp --</option>';
+        classSelect.disabled = true;
+        checkFilters();
+
+        if (!selectedExamId) {
+            classSelect.innerHTML = '<option value="">-- Chọn bài tập trước --</option>';
+            resetOverviewUI();
+            return;
+        }
+
+        try {
+            const classesResult = await fetchApi('getClassesForExam', { examId: selectedExamId });
+            populateClassSelect(classesResult.data);
+        } catch (error) {
+            handleApiError(error, "Không thể tải danh sách lớp");
+        }
+    }
+
+    function handleViewReportClick() {
+        const mode = document.querySelector('input[name="viewMode"]:checked').value;
+        overviewLoadingOverlay.classList.add('active');
+
+        const params = {
+            startDate: startDateInput.value || null,
+            endDate: endDateInput.value || null,
+        };
+
+        if (mode === 'byExam') {
+            params.examId = examSelect.value;
+            params.classId = classSelect.value === "ALL" ? null : classSelect.value;
+            fetchAndDisplayClassOverview(params);
+        } else {
+            params.classId = classSummarySelect.value;
+            fetchApi('getClassSummary', params)
+                .then(result => renderClassSummary(result.data))
+                .catch(error => handleApiError(error, "Không thể tải báo cáo lớp"))
+                .finally(() => overviewLoadingOverlay.classList.remove('active'));
+        }
+    }
+    
+    function handleResetFiltersClick() {
+        startDateInput.value = '';
+        endDateInput.value = '';
+        // Nếu nút xem báo cáo đang hoạt động, tự động tải lại
+        if (!viewReportBtn.disabled) {
+            viewReportBtn.click();
+        }
+    }
+
+    // =================================================================
+    //                    CÁC HÀM GỌI API & RENDER
+    // =================================================================
+
     async function fetchApi(action, params = {}) {
         const token = localStorage.getItem('authToken');
         if (!token) throw new Error("401 Unauthorized: Missing token");
         
-        const urlParams = new URLSearchParams({ action, ...params });
-        const url = `${API_URL}?${urlParams.toString()}`;
+        params.authToken = `Bearer ${token}`;
         
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const urlParams = new URLSearchParams({ action, ...params });
+        const response = await fetch(`${API_URL}?${urlParams.toString()}`);
 
         const result = await response.json();
-        if (!result.success) throw new Error(result.message);
+        if (result.success === false) throw new Error(result.message);
         return result;
     }
 
-// THAY THẾ HÀM fetchAndDisplayClassOverview BẰNG PHIÊN BẢN NÀY
+    async function fetchAndDisplayClassOverview(params) {
+        try {
+            const kpiResult = await fetchApi('getClassKPIs', params);
+            renderKPIsAndLists(kpiResult.data);
 
-/**
- * Hàm tải và hiển thị dữ liệu tổng quan, giữ nguyên logic 2 giai đoạn
- * và thêm hỗ trợ khoảng thời gian.
- */
-async function fetchAndDisplayClassOverview(examId, classId, startDate, endDate) {
-    if (overviewLoadingOverlay) overviewLoadingOverlay.classList.add('active');
-    
-    // Tạo đối tượng params chung cho cả hai lần gọi API
-    const params = { examId };
-    if (classId) params.classId = classId;
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
+            const detailsResult = await fetchApi('getClassDetails', params);
+            renderChartsAndDetails(detailsResult.data);
+        } catch (error) {
+            handleApiError(error, "Không thể tải dữ liệu tổng quan");
+            resetOverviewUI();
+        } finally {
+            overviewLoadingOverlay.classList.remove('active');
+        }
+    }
 
-    // Giai đoạn A: Tải nhanh
-    try {
-        const kpiResult = await fetchApi('getClassKPIs', params);
-        renderKPIsAndLists(kpiResult.data);
-    } catch (error) {
-        handleApiError(error, "Không thể tải dữ liệu tổng quan");
-        if (overviewLoadingOverlay) overviewLoadingOverlay.classList.remove('active');
+    function renderKPIsAndLists(data) {
+        kpisContainer.innerHTML = `
+            <div class="kpi-card"><h3>Tỷ lệ tham gia</h3><p>${data.kpis.submissionCount} / ${data.kpis.totalStudents}</p></div>
+            <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
+            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
+            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
+        `;
+        const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.score}</span></li>`;
+        topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>(Không có)</li>';
+        bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>(Không có)</li>';
+        attachStudentLinkListeners();
+    }
+
+    function renderChartsAndDetails(data) {
+        renderGradeDistributionChart(data.gradeDistribution);
+        hardestQuestionsList.innerHTML = data.itemAnalysis.hardestQuestions.map(q => `
+            <li>
+                <span>Câu ${q.id.replace(/.*_/, '')}</span>
+                <span class="accuracy">${q.accuracy.toFixed(0)}% đúng</span>
+            </li>
+        `).join('') || '<li>(Không có)</li>';
+    }
+
+    function renderClassSummary(data) {
         resetOverviewUI();
-        return;
+        kpisContainer.innerHTML = `
+            <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${data.kpis.totalSubmissions} / ${data.kpis.expectedSubmissions}</p></div>
+            <div class="kpi-card"><h3>Điểm TB Chung</h3><p>${data.kpis.overallAvgScore}</p></div>
+        `;
+        renderClassScoreTrendChart(data.classScoreTrend);
+        const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
+        topPerformersList.innerHTML = data.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
+        bottomPerformersList.innerHTML = data.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
+        document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
+        document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
+        const hardestQuestionsContainer = hardestQuestionsList.parentElement;
+        hardestQuestionsContainer.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
+        hardestQuestionsList.innerHTML = data.topicAnalysis.weakTopics.map(t => `
+            <li>
+                <span>${t.topic}</span>
+                <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
+            </li>
+        `).join('') || '<li>(Không có)</li>';
+        attachStudentLinkListeners();
     }
 
-    // Giai đoạn B: Tải nền
-    try {
-        const detailsResult = await fetchApi('getClassDetails', params);
-        renderChartsAndDetails(detailsResult.data);
-    } catch (error) {
-        console.error("Lỗi khi tải dữ liệu chi tiết (nền):", error);
-        gradeDistributionChartContainer.innerHTML = '<p class="error-placeholder">Lỗi tải biểu đồ.</p>';
-    } finally {
-        if (overviewLoadingOverlay) overviewLoadingOverlay.classList.remove('active');
-    }
-}
-
-/**
- * Render các thành phần tải nhanh: KPI và danh sách học sinh.
- */
-function renderKPIsAndLists(data) {
-    kpisContainer.innerHTML = `
-        <div class="kpi-card"><h3>Tỷ lệ tham gia</h3><p>${data.kpis.submissionCount} / ${data.kpis.totalStudents}</p></div>
-        <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
-        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
-        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
-    `;
-
-    const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.score}</span></li>`;
-    topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>Không có dữ liệu.</li>';
-    bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>Không có dữ liệu.</li>';
-    
-    // Gắn lại sự kiện click cho các item học sinh vừa được tạo
-    document.querySelectorAll('.student-link').forEach(item => {
-        item.addEventListener('click', () => {
-            const studentId = item.dataset.studentid;
-            if(studentId) {
-                studentIdInput.value = studentId;
-                searchStudent();
-            }
-        });
-    });
-}
-
-/**
- * Render các thành phần tải chậm: Biểu đồ và danh sách câu hỏi.
- */
-function renderChartsAndDetails(data) {
-    // Xóa placeholder trước khi vẽ
-    gradeDistributionChartContainer.innerHTML = ''; 
-    renderGradeDistributionChart(data.gradeDistribution);
-
-    hardestQuestionsList.innerHTML = data.itemAnalysis.hardestQuestions.map(q => `
-        <li>
-            <span>Câu ${q.id.includes('_') ? q.id.split('_').pop() : q.id}</span>
-            <span class="accuracy">${q.accuracy.toFixed(0)}% đúng</span>
-        </li>
-    `).join('') || '<li>Không có dữ liệu.</li>';
-}
-
+    // --- CÁC HÀM VẼ BIỂU ĐỒ ---
     function renderGradeDistributionChart(gradeData) {
-    const options = {
-        chart: { 
-            type: 'bar', 
-            height: 350, 
-            foreColor: getChartForeColor(),
-            background: 'transparent',
-	    fontFamily: "'Be Vietnam Pro', sans-serif"
-        },
-        // SỬA LỖI Ở ĐÂY: Dùng toán tử ba ngôi để kiểm tra gradeData
-        series: gradeData ? [{ name: 'Số học sinh', data: Object.values(gradeData) }] : [],
-        xaxis: { 
-            categories: gradeData ? Object.keys(gradeData) : ['0-2', '2-4', '4-6', '6-8', '8-10']
-        },
-        yaxis: { 
-            title: { text: 'Số lượng học sinh' } 
-        },
-        title: { 
-            text: 'Phân bổ Điểm số', 
-            align: 'left', 
-            style: { fontSize: '18px', color: getChartForeColor() } 
-        },
-        // Thêm trạng thái "Không có dữ liệu" để hướng dẫn người dùng
-        noData: {
-            text: 'Vui lòng chọn bài tập và lớp để xem biểu đồ',
-            align: 'center',
-            verticalAlign: 'middle',
-            style: {
-                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#9a3412' : '#a18f83',
-                fontSize: '14px',
-            }
-        },
-        tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' }
-    };
+        const options = {
+            chart: { type: 'bar', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
+            series: gradeData ? [{ name: 'Số học sinh', data: Object.values(gradeData) }] : [],
+            xaxis: { categories: gradeData ? Object.keys(gradeData) : ['0-2', '2-4', '4-6', '6-8', '8-10'] },
+            yaxis: { title: { text: 'Số lượng học sinh' } },
+            title: { text: 'Phân bổ Điểm số', align: 'left', style: { fontSize: '18px', color: getChartForeColor() } },
+            noData: { text: 'Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"' },
+            tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' }
+        };
+        if (mainChart) { mainChart.updateOptions(options, true, true, true); }
+        else { mainChart = new ApexCharts(mainChartContainer, options); mainChart.render(); }
+    }
     
-    // Logic render/update giữ nguyên
-    if (gradeDistributionChart) { 
-        gradeDistributionChart.updateOptions(options); 
-    } else { 
-        gradeDistributionChart = new ApexCharts(gradeDistributionChartContainer, options); 
-        gradeDistributionChart.render(); 
+    function renderClassScoreTrendChart(trendData) {
+        const options = {
+            chart: { type: 'line', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
+            series: [{ name: 'Điểm TB Lớp', data: trendData.map(d => d.avgScore) }],
+            xaxis: { categories: trendData.map(d => d.examTitle) },
+            yaxis: { title: { text: 'Điểm trung bình' }, min: 0, max: 10 },
+            title: { text: 'Xu hướng Điểm trung bình của Lớp', align: 'left', style: { fontSize: '18px', color: getChartForeColor() } },
+            stroke: { curve: 'smooth' },
+            noData: { text: 'Không đủ dữ liệu để vẽ biểu đồ.' },
+            tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' }
+        };
+        if (mainChart) { mainChart.updateOptions(options, true, true, true); }
+        else { mainChart = new ApexCharts(mainChartContainer, options); mainChart.render(); }
     }
-}
-
-/**
- * Chuyển hướng đến trang chi tiết khi người dùng tìm kiếm bằng mã HS.
- */
-function searchStudent() {
-    const studentId = studentIdInput.value.trim();
-    if (!studentId) {
-        alert('Vui lòng nhập Mã số học sinh.');
-        return;
-    }
-    // Chuyển hướng đến trang chi tiết với studentId trong URL
-    window.location.href = `/StudentDetail.html?id=${studentId}`;
-}
-
-/**
- * "Đổ" danh sách các lớp vào dropdown, lọc theo quyền và tối ưu hóa giao diện.
- * @param {string[]} allAssignedClasses - Mảng tất cả các lớp được giao cho đề bài.
- * @param {string} currentClassId - Lớp đang được chọn (nếu có).
- */
-function populateClassSelect(allAssignedClasses) {
-    let classesToShow = allAssignedClasses;
-    
-    if (currentUser && currentUser.role !== 'admin' && currentUser.managedClasses !== 'ALL') {
-        const managedClassesSet = new Set(currentUser.managedClasses.split(',').map(c => c.trim()));
-        classesToShow = allAssignedClasses.filter(c => managedClassesSet.has(c));
-    }
-
-    if (classesToShow.length === 0) {
-        classSelect.innerHTML = '<option value="">-- Không có lớp --</option>';
-        classSelect.disabled = true;
-        return;
-    }
-
-    // Luôn có lựa chọn "Tất cả"
-    let optionsHtml = '<option value="">-- Chọn lớp --</option>';
-    if (currentUser.role === 'admin' || currentUser.managedClasses === 'ALL' || classesToShow.length > 1) {
-        optionsHtml += '<option value="ALL">Tất cả các lớp</option>';
-    }
-
-    classesToShow.forEach(className => {
-        optionsHtml += `<option value="${className}">${className}</option>`;
-    });
-
-    classSelect.innerHTML = optionsHtml;
-    classSelect.disabled = false;
-}
 
     // =================================================================
-    //                    HÀM TIỆN ÍCH VÀ SỰ KIỆN
+    //                    HÀM TIỆN ÍCH
     // =================================================================
-
-/**
- * Đặt lại giao diện tổng quan về trạng thái ban đầu (trống).
- */
-function resetOverviewUI() {
-    // Reset các thẻ KPI
-    kpisContainer.innerHTML = `
-        <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
-        <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
-        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
-        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
-    `;
-
-    // Vẽ lại biểu đồ trống
-    renderGradeDistributionChart(null);
-
-    // Reset các danh sách
-    const placeholderText = '<li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>';
-    hardestQuestionsList.innerHTML = placeholderText;
-    topPerformersList.innerHTML = placeholderText;
-    bottomPerformersList.innerHTML = placeholderText;
-}
+    function getChartForeColor() {
+        if (document.documentElement.getAttribute('data-theme') === 'light') return '#431407';
+        return '#f3e9e0';
+    }
+    
+    function searchStudent() {
+        const studentId = studentIdInput.value.trim();
+        if (!studentId) { alert('Vui lòng nhập Mã số học sinh.'); return; }
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        let url = `/StudentDetail.html?id=${studentId}`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        window.location.href = url;
+    }
 
     function handleApiError(error, contextMessage) {
         console.error(`${contextMessage}:`, error);
-        if (error.message.includes("401 Unauthorized") || error.message.includes("hết hạn")) {
+        if (error.message.includes("401 Unauthorized")) {
             alert("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
+            localStorage.clear();
             window.location.href = '/login.html';
         } else {
             alert(`${contextMessage}: ${error.message}`);
         }
     }
-
-/**
- * Gắn tất cả các sự kiện và xử lý logic kích hoạt nút.
- */
-function attachEventListeners() {
-    const viewReportBtn = document.getElementById('view-report-btn');
-    const themeToggleBtn = document.getElementById('theme-toggle-btn'); // <-- Thêm dòng này
-    // Hàm kiểm tra và kích hoạt nút "Xem báo cáo"
-    const checkFilters = () => {
-        const examSelected = examSelect.value !== "";
-        const classSelected = classSelect.value !== "";
-        viewReportBtn.disabled = !(examSelected && classSelected);
-    };
-
-    // Khi người dùng chọn một BÀI TẬP
-    examSelect.addEventListener('change', async () => {
-        const selectedExamId = examSelect.value;
-        classSelect.innerHTML = '<option value="">-- Đang tải lớp --</option>'; // Reset dropdown lớp
-        classSelect.disabled = true;
-        checkFilters(); // Cập nhật trạng thái nút
-
-        if (!selectedExamId) {
-            if (classSelect) classSelect.innerHTML = '<option value="">-- Chọn bài tập trước --</option>';
-            resetOverviewUI(); // <--- GỌI HÀM RESET Ở ĐÂY
+    
+    function populateClassesForSummary() {
+        if (!currentUser || !currentUser.managedClasses) return;
+        if (currentUser.managedClasses === 'ALL') {
+            classSummarySelect.innerHTML = '<option value="">-- Tính năng đang phát triển cho Admin --</option>';
             return;
         }
+        const managedClasses = currentUser.managedClasses.split(',').map(c => c.trim()).sort();
+        classSummarySelect.innerHTML = 
+            '<option value="">-- Chọn lớp --</option>' +
+            managedClasses.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
 
-        // Gọi API để lấy danh sách lớp tương ứng với bài tập
-        try {
-            const classesResult = await fetchApi('getClassesForExam', { examId: selectedExamId });
-            populateClassSelect(classesResult.data); // Gọi hàm populate của bạn
-        } catch (error) {
-            handleApiError(error, "Không thể tải danh sách lớp");
+    function populateClassSelect(allAssignedClasses) {
+        let classesToShow = allAssignedClasses;
+        if (currentUser && currentUser.role !== 'admin' && currentUser.managedClasses !== 'ALL') {
+            const managedClassesSet = new Set(currentUser.managedClasses.split(',').map(c => c.trim()));
+            classesToShow = allAssignedClasses.filter(c => managedClassesSet.has(c));
         }
-    });
-
-    // Khi người dùng chọn một LỚP
-    classSelect.addEventListener('change', () => {
-    checkFilters();
-    if (classSelect.value === "") {
-        resetOverviewUI(); // <--- GỌI HÀM RESET Ở ĐÂY (KHI CHỌN LẠI DÒNG "-- Chọn lớp --")
+        if (classesToShow.length === 0) {
+            classSelect.innerHTML = '<option value="">-- Không có lớp --</option>';
+            classSelect.disabled = true; return;
+        }
+        let optionsHtml = '<option value="">-- Chọn lớp (Tùy chọn) --</option><option value="ALL">Tất cả các lớp</option>';
+        classesToShow.sort().forEach(className => {
+            optionsHtml += `<option value="${className}">${className}</option>`;
+        });
+        classSelect.innerHTML = optionsHtml;
+        classSelect.disabled = false;
     }
-    });
     
-    // Khi người dùng nhấn nút "XEM BÁO CÁO"
-    viewReportBtn.addEventListener('click', () => {
-        const selectedExamId = examSelect.value;
-        const selectedClassId = classSelect.value === "ALL" ? null : classSelect.value;
-        
-        fetchAndDisplayClassOverview(selectedExamId, selectedClassId);
-    });
-
-    // Các event listener cũ
-    searchBtn.addEventListener('click', searchStudent);
-    studentIdInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') searchStudent();
-    });
-const studentViewBtn = document.getElementById('student-view-btn');
-    if (studentViewBtn) {
-        studentViewBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const currentUserJSON = localStorage.getItem('currentUser');
-            if (currentUserJSON) {
-                sessionStorage.setItem('teacherPreviewInfo', currentUserJSON);
-            }
-            sessionStorage.removeItem('studentInfo'); 
-            window.location.href = '/'; 
-        });
+    function checkFilters() {
+        const mode = document.querySelector('input[name="viewMode"]:checked').value;
+        let isReady = false;
+        if (mode === 'byExam') {
+            isReady = examSelect.value !== "";
+        } else {
+            isReady = classSummarySelect.value !== "";
+        }
+        viewReportBtn.disabled = !isReady;
     }
-if (themeToggleBtn) {
-        themeToggleBtn.addEventListener('click', () => {
-            // Chờ một chút để theme-switcher.js kịp đổi theme
-            setTimeout(() => {
-                console.log("Theme đã đổi, đang vẽ lại biểu đồ tổng quan...");
-                // Lấy dữ liệu hiện tại của biểu đồ và vẽ lại
-                // Chúng ta cần lấy lại dữ liệu từ chính đối tượng chart
-                if (gradeDistributionChart && gradeDistributionChart.w.globals.series.length > 0) {
-                    const currentSeriesData = gradeDistributionChart.w.globals.series[0];
-                    const currentCategories = gradeDistributionChart.w.globals.labels;
-                    
-                    // Tạo lại đối tượng gradeData để truyền vào hàm render
-                    const gradeData = {};
-                    currentCategories.forEach((cat, index) => {
-                        gradeData[cat] = currentSeriesData[index];
-                    });
 
-                    renderGradeDistributionChart(gradeData);
-                } else {
-                    // Nếu biểu đồ đang trống, chỉ cần vẽ lại nó ở trạng thái trống
-                    renderGradeDistributionChart(null);
+    function resetOverviewUI() {
+        kpisContainer.innerHTML = `
+            <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
+        `;
+        renderGradeDistributionChart(null);
+        const placeholderText = '<li>Chọn bộ lọc và nhấn "Xem báo cáo"</li>';
+        hardestQuestionsList.innerHTML = placeholderText;
+        topPerformersList.innerHTML = placeholderText;
+        bottomPerformersList.innerHTML = placeholderText;
+        document.querySelector('#hardest-questions-list').parentElement.querySelector('h4').innerHTML = '💡 5 Câu hỏi cần chú ý nhất';
+        document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
+        document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
+    }
+
+    function attachStudentLinkListeners() {
+        document.querySelectorAll('.student-link').forEach(item => {
+            item.addEventListener('click', () => {
+                const studentId = item.dataset.studentid;
+                if(studentId) {
+                    studentIdInput.value = studentId;
+                    searchStudent(); // Tái sử dụng hàm search đã có logic date range
                 }
-            }, 10);
+            });
         });
     }
-}
 
     // --- BẮT ĐẦU CHẠY ỨNG DỤNG ---
     main();

@@ -46,22 +46,48 @@
         
         <!-- Hàng 1: Bộ lọc tổng quan - ĐÂY LÀ PHẦN CẦN SỬA -->
         <div class="filter-bar">
-    <select id="exam-select" class="filter-select">
-        <option value="">-- Chọn bài tập --</option>
-    </select>
-    <select id="class-select" class="filter-select">
-        <option value="">-- Chọn bài tập trước --</option>
-    </select>
 
-    <!-- THÊM CÁC PHẦN TỬ MỚI VÀO ĐÂY -->
-    <label for="start-date-input" class="date-label">Từ ngày:</label>
-    <input type="date" id="start-date-input" class="filter-select" title="Ngày bắt đầu (tùy chọn)">
-    
-    <label for="end-date-input" class="date-label">Đến ngày:</label>
-    <input type="date" id="end-date-input" class="filter-select" title="Ngày kết thúc (tùy chọn)">
+    <!-- Hàng 1: Nút gạt chọn chế độ xem -->
+    <div class="view-mode-toggle">
+        <label class="view-mode-label active">
+            <input type="radio" name="viewMode" value="byExam" checked> 
+            <span>Theo Bài tập</span>
+        </label>
+        <label class="view-mode-label">
+            <input type="radio" name="viewMode" value="byClass"> 
+            <span>Theo Lớp</span>
+        </label>
+    </div>
 
-    <button id="view-report-btn" class="action-btn" disabled>Xem báo cáo</button>
-    <button id="reset-filters-btn" class="action-btn utility-btn" title="Xóa bộ lọc ngày">&#x21BA;</button> <!-- Nút Reset -->
+    <!-- Hàng 2: Các bộ lọc chi tiết -->
+    <div class="filter-controls">
+        <!-- Bộ lọc cho chế độ "Xem theo Bài tập" (hiển thị mặc định) -->
+        <div id="filter-by-exam" class="filter-group">
+            <select id="exam-select" class="filter-select">
+                <option value="">-- Đang tải bài tập --</option>
+            </select>
+            <select id="class-select" class="filter-select">
+                <option value="">-- Chọn bài tập trước --</option>
+            </select>
+        </div>
+
+        <!-- Bộ lọc cho chế độ "Xem theo Lớp" (ẩn mặc định) -->
+        <div id="filter-by-class" class="filter-group hidden">
+            <select id="class-summary-select" class="filter-select">
+                <option value="">-- Đang tải các lớp --</option>
+            </select>
+        </div>
+        
+        <!-- Bộ lọc Ngày tháng (dùng chung cho cả 2 chế độ) -->
+        <div class="filter-group date-filters">
+            <input type="date" id="start-date-input" class="filter-select date-input" title="Ngày bắt đầu (tùy chọn)">
+            <input type="date" id="end-date-input" class="filter-select date-input" title="Ngày kết thúc (tùy chọn)">
+        </div>
+
+        <button id="view-report-btn" class="action-btn" disabled>Xem báo cáo</button>
+        <button id="reset-filters-btn" class="action-btn utility-btn" title="Xóa bộ lọc ngày">&#x21BA;</button>
+    </div>
+
 </div>
         <hr class="divider">
 

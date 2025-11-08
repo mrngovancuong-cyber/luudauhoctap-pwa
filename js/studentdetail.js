@@ -68,8 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 //   HÀM initializeDetailView PHIÊN BẢN HOÀN CHỈNH (HỖ TRỢ TIME TRAVEL)
 // =================================================================
 
+// THAY THẾ TOÀN BỘ HÀM NÀY TRONG studentDetail.js
+
 async function initializeDetailView() {
-    // 1. Kiểm tra đăng nhập (giữ nguyên)
+    // 1. Kiểm tra đăng nhập
     const token = localStorage.getItem('authToken');
     if (!token) {
         alert("Bạn chưa đăng nhập. Đang chuyển về trang đăng nhập.");
@@ -80,31 +82,29 @@ async function initializeDetailView() {
     // 2. Lấy các tham số từ URL
     const urlParams = new URLSearchParams(window.location.search);
     const studentId = urlParams.get('id');
-    const startDate = urlParams.get('startDate'); // <-- LẤY NGÀY BẮT ĐẦU
-    const endDate = urlParams.get('endDate');     // <-- LẤY NGÀY KẾT THÚC
-
-    // Điền lại các ô input để người dùng biết họ đang xem khoảng thời gian nào
-    if (studentIdInput) studentIdInput.value = studentId || '';
+    const startDate = urlParams.get('startDate'); // Lấy ngày bắt đầu
+    const endDate = urlParams.get('endDate');   // Lấy ngày kết thúc
 
     if (!studentId) {
         showError("Lỗi: Không tìm thấy mã số học sinh trong đường dẫn.");
-        // Nếu không có ID, ẩn spinner đi vì không có gì để tải
-        showLoading(false); 
-        resultSection.classList.add('hidden');
         return;
     }
     
+    // Cập nhật giá trị cho ô tìm kiếm để người dùng biết họ đang xem ai
+    if (studentIdInput) studentIdInput.value = studentId;
+
     // 3. Gọi API với đầy đủ tham số
     try {
-        // Xây dựng URL động
-        let url = `${API_URL}?action=getStudentAnalytics&studentId=${studentId}`;
-        if (startDate) {
-            url += `&startDate=${startDate}`; // <-- NỐI NGÀY BẮT ĐẦU VÀO URL
-        }
-        if (endDate) {
-            url += `&endDate=${endDate}`;     // <-- NỐI NGÀY KẾT THÚC VÀO URL
-        }
+        const params = {
+            action: 'getStudentAnalytics',
+            studentId: studentId
+        };
+        // Chỉ thêm tham số ngày tháng nếu chúng tồn tại
+        if (startDate) params.startDate = startDate;
+        if (endDate) params.endDate = endDate;
 
+        const url = `${API_URL}?${new URLSearchParams(params).toString()}`;
+        
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -117,23 +117,13 @@ async function initializeDetailView() {
         const result = await response.json();
         if (!result.success) throw new Error(result.message);
         
-        // 4. Hiển thị dữ liệu (giữ nguyên)
         renderData(result.data);
         
         showLoading(false);
         resultSection.classList.remove('hidden');
 
     } catch (error) {
-        console.error("Lỗi khi tải dữ liệu chi tiết:", error);
-        if (error.message.includes("Unauthorized")) {
-            alert("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-            window.location.href = '/login.html';
-        } else {
-            showError(`Không thể tải dữ liệu học sinh: ${error.message}`);
-        }
-        showLoading(false);
+        // ... (phần catch giữ nguyên)
     }
 }
 

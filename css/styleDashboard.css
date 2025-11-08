@@ -676,3 +676,92 @@ button, input, select, textarea {
     font-size: 1.5rem;
     line-height: 1;
 }
+
+/* =====================================================
+   CSS CHO BỘ LỌC DASHBOARD NÂNG CAO
+   ===================================================== */
+
+/* Định dạng lại container chính của bộ lọc */
+.filter-bar {
+    display: flex; /* Thay đổi từ flex thành block mặc định */
+    flex-direction: column;
+    align-items: flex-start; /* Căn các item về bên trái */
+    gap: 1rem;
+}
+
+/* --- Nút gạt chuyển chế độ xem --- */
+.view-mode-toggle {
+    display: inline-flex;
+    background-color: var(--bg);
+    border-radius: 8px;
+    padding: 4px;
+    border: 1px solid var(--border);
+}
+
+.view-mode-label {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s, color 0.2s;
+    position: relative;
+    user-select: none; /* Tránh bôi đen chữ khi click */
+}
+
+/* Ẩn nút radio gốc */
+.view-mode-label input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Style cho label được chọn */
+.view-mode-label.active {
+    background-color: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+/* --- Container cho các bộ lọc chi tiết --- */
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    align-items: center; /* Căn giữa các bộ lọc theo chiều dọc */
+    flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình nhỏ */
+}
+
+.filter-group {
+    display: flex;
+    gap: 1rem;
+    flex-grow: 1; /* Cho phép các nhóm co giãn */
+}
+
+.filter-group select {
+    min-width: 150px; /* Chiều rộng tối thiểu cho dropdown */
+    flex-grow: 1; /* Cho phép dropdown co giãn */
+}
+
+/* Ẩn nhóm filter không hoạt động */
+.filter-group.hidden {
+    display: none;
+}
+
+/* --- Bộ lọc ngày tháng --- */
+.date-filters {
+    flex-grow: 0; /* Không cho phép co giãn quá lớn */
+}
+.date-input {
+    min-width: 140px;
+}
+.date-label {
+    align-self: center; /* Căn giữa label */
+}
+
+/* --- Nút Reset --- */
+#reset-filters-btn {
+    width: 42px; /* Kích thước cố định cho nút reset */
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    line-height: 1;
+}
