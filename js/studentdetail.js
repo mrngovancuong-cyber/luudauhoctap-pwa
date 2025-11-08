@@ -64,54 +64,78 @@ document.addEventListener('DOMContentLoaded', () => {
     //                    LUỒNG KHỞI TẠO CHÍNH
     // =================================================================
 
-    async function initializeDetailView() {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            alert("Bạn chưa đăng nhập. Đang chuyển về trang đăng nhập.");
-            window.location.href = '/login.html';
-            return;
-        }
+    // =================================================================
+//   HÀM initializeDetailView PHIÊN BẢN HOÀN CHỈNH (HỖ TRỢ TIME TRAVEL)
+// =================================================================
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const studentId = urlParams.get('id');
-
-        if (!studentId) {
-            showError("Lỗi: Không tìm thấy mã số học sinh trong đường dẫn.");
-            return;
-        }
-        
-        try {
-            const url = `${API_URL}?action=getStudentAnalytics&studentId=${studentId}`;
-            const response = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) throw new Error("Unauthorized");
-                throw new Error(`Lỗi server: ${response.statusText}`);
-            }
-
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message);
-            
-            renderData(result.data);
-            
-            showLoading(false);
-            resultSection.classList.remove('hidden');
-
-        } catch (error) {
-            console.error("Lỗi khi tải dữ liệu chi tiết:", error);
-            if (error.message.includes("Unauthorized")) {
-                alert("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('currentUser');
-                window.location.href = '/login.html';
-            } else {
-                showError(`Không thể tải dữ liệu học sinh: ${error.message}`);
-            }
-            showLoading(false);
-        }
+async function initializeDetailView() {
+    // 1. Kiểm tra đăng nhập (giữ nguyên)
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        alert("Bạn chưa đăng nhập. Đang chuyển về trang đăng nhập.");
+        window.location.href = '/login.html';
+        return;
     }
+
+    // 2. Lấy các tham số từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentId = urlParams.get('id');
+    const startDate = urlParams.get('startDate'); // <-- LẤY NGÀY BẮT ĐẦU
+    const endDate = urlParams.get('endDate');     // <-- LẤY NGÀY KẾT THÚC
+
+    // Điền lại các ô input để người dùng biết họ đang xem khoảng thời gian nào
+    if (studentIdInput) studentIdInput.value = studentId || '';
+
+    if (!studentId) {
+        showError("Lỗi: Không tìm thấy mã số học sinh trong đường dẫn.");
+        // Nếu không có ID, ẩn spinner đi vì không có gì để tải
+        showLoading(false); 
+        resultSection.classList.add('hidden');
+        return;
+    }
+    
+    // 3. Gọi API với đầy đủ tham số
+    try {
+        // Xây dựng URL động
+        let url = `${API_URL}?action=getStudentAnalytics&studentId=${studentId}`;
+        if (startDate) {
+            url += `&startDate=${startDate}`; // <-- NỐI NGÀY BẮT ĐẦU VÀO URL
+        }
+        if (endDate) {
+            url += `&endDate=${endDate}`;     // <-- NỐI NGÀY KẾT THÚC VÀO URL
+        }
+
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) throw new Error("Unauthorized");
+            throw new Error(`Lỗi server: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
+        
+        // 4. Hiển thị dữ liệu (giữ nguyên)
+        renderData(result.data);
+        
+        showLoading(false);
+        resultSection.classList.remove('hidden');
+
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu chi tiết:", error);
+        if (error.message.includes("Unauthorized")) {
+            alert("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            window.location.href = '/login.html';
+        } else {
+            showError(`Không thể tải dữ liệu học sinh: ${error.message}`);
+        }
+        showLoading(false);
+    }
+}
 
     // =================================================================
     //                 CÁC HÀM TÓM TẮT DỮ LIỆU

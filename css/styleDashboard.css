@@ -659,3 +659,20 @@ button, input, select, textarea {
     color: var(--muted);
     font-weight: 600;
 }
+
+/* Thêm vào cuối file styleDashboard.css */
+.filter-bar {
+    flex-wrap: wrap; /* Cho phép các mục xuống dòng trên màn hình nhỏ */
+    align-items: center;
+}
+.date-label {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+#reset-filters-btn {
+    padding: 0.5rem;
+    width: 40px; /* Chiều rộng cố định */
+    font-size: 1.5rem;
+    line-height: 1;
+}

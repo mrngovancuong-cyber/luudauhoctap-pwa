@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentIdInput = document.getElementById('student-id-input');
     const overviewLoadingOverlay = document.getElementById('overview-loading-overlay');
     const studentViewBtn = document.getElementById('student-view-btn');
-
+    const startDateInput = document.getElementById('start-date-input');
+    const endDateInput = document.getElementById('end-date-input');
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
     let gradeDistributionChart = null;
     let currentUser = null; // Sẽ lưu thông tin giáo viên đang đăng nhập
     /**
@@ -96,22 +98,27 @@ async function main() {
         return result;
     }
 
+// THAY THẾ HÀM fetchAndDisplayClassOverview BẰNG PHIÊN BẢN NÀY
+
 /**
- * Hàm tải và hiển thị dữ liệu tổng quan sau khi nhấn nút.
+ * Hàm tải và hiển thị dữ liệu tổng quan, giữ nguyên logic 2 giai đoạn
+ * và thêm hỗ trợ khoảng thời gian.
  */
-async function fetchAndDisplayClassOverview(examId, classId) {
-    // HIỆN LỚP PHỦ
+async function fetchAndDisplayClassOverview(examId, classId, startDate, endDate) {
     if (overviewLoadingOverlay) overviewLoadingOverlay.classList.add('active');
     
-    // Giai đoạn A: Tải nhanh (không cần reset giao diện vì đã bị che)
+    // Tạo đối tượng params chung cho cả hai lần gọi API
+    const params = { examId };
+    if (classId) params.classId = classId;
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    // Giai đoạn A: Tải nhanh
     try {
-        const paramsKPI = { examId };
-        if (classId) paramsKPI.classId = classId;
-        const kpiResult = await fetchApi('getClassKPIs', paramsKPI);
+        const kpiResult = await fetchApi('getClassKPIs', params);
         renderKPIsAndLists(kpiResult.data);
     } catch (error) {
         handleApiError(error, "Không thể tải dữ liệu tổng quan");
-        // ẨN LỚP PHỦ NẾU CÓ LỖI
         if (overviewLoadingOverlay) overviewLoadingOverlay.classList.remove('active');
         resetOverviewUI();
         return;
@@ -119,15 +126,12 @@ async function fetchAndDisplayClassOverview(examId, classId) {
 
     // Giai đoạn B: Tải nền
     try {
-        const paramsDetails = { examId };
-        if (classId) paramsDetails.classId = classId;
-        const detailsResult = await fetchApi('getClassDetails', paramsDetails);
+        const detailsResult = await fetchApi('getClassDetails', params);
         renderChartsAndDetails(detailsResult.data);
     } catch (error) {
         console.error("Lỗi khi tải dữ liệu chi tiết (nền):", error);
         gradeDistributionChartContainer.innerHTML = '<p class="error-placeholder">Lỗi tải biểu đồ.</p>';
     } finally {
-        // LUÔN ẨN LỚP PHỦ SAU KHI TẢI XONG GIAI ĐOẠN B
         if (overviewLoadingOverlay) overviewLoadingOverlay.classList.remove('active');
     }
 }

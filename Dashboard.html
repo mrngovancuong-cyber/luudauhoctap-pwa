@@ -46,16 +46,23 @@
         
         <!-- Hàng 1: Bộ lọc tổng quan - ĐÂY LÀ PHẦN CẦN SỬA -->
         <div class="filter-bar">
-            <select id="exam-select" class="filter-select">
-                <option value="">-- Đang tải bài tập --</option>
-            </select>
-            <select id="class-select" class="filter-select">
-                <option value="">-- Chọn bài tập trước --</option>
-            </select>
-            <!-- THÊM NÚT NÀY VÀO -->
-            <button id="view-report-btn" class="action-btn" disabled>Xem báo cáo</button>
-        </div>
+    <select id="exam-select" class="filter-select">
+        <option value="">-- Chọn bài tập --</option>
+    </select>
+    <select id="class-select" class="filter-select">
+        <option value="">-- Chọn bài tập trước --</option>
+    </select>
 
+    <!-- THÊM CÁC PHẦN TỬ MỚI VÀO ĐÂY -->
+    <label for="start-date-input" class="date-label">Từ ngày:</label>
+    <input type="date" id="start-date-input" class="filter-select" title="Ngày bắt đầu (tùy chọn)">
+    
+    <label for="end-date-input" class="date-label">Đến ngày:</label>
+    <input type="date" id="end-date-input" class="filter-select" title="Ngày kết thúc (tùy chọn)">
+
+    <button id="view-report-btn" class="action-btn" disabled>Xem báo cáo</button>
+    <button id="reset-filters-btn" class="action-btn utility-btn" title="Xóa bộ lọc ngày">&#x21BA;</button> <!-- Nút Reset -->
+</div>
         <hr class="divider">
 
         <!-- Hàng 2: Tìm kiếm chi tiết học sinh -->
