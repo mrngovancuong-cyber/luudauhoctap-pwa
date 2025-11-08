@@ -96,7 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Sự kiện thay đổi các dropdown
         examSelect.addEventListener('change', handleExamSelectChange);
-        classSelect.addEventListener('change', checkFilters);
+	classSelect.addEventListener('change', () => {
+	    checkFilters(); 
+	    if (classSelect.value === "") {
+            resetOverviewUI();
+    }
+});
         classSummarySelect.addEventListener('change', checkFilters);
 
         // 3. Sự kiện nhấn nút
@@ -344,15 +349,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function checkFilters() {
-        const mode = document.querySelector('input[name="viewMode"]:checked').value;
-        let isReady = false;
-        if (mode === 'byExam') {
-            isReady = examSelect.value !== "";
-        } else {
-            isReady = classSummarySelect.value !== "";
-        }
-        viewReportBtn.disabled = !isReady;
+    const mode = document.querySelector('input[name="viewMode"]:checked').value;
+    let isReady = false;
+
+    if (mode === 'byExam') {
+        // Ở chế độ "Theo bài tập", chỉ cần chọn bài tập là đủ
+        // vì "Tất cả các lớp" là một lựa chọn hợp lệ.
+        isReady = examSelect.value !== "";
+    } else { // byClass
+        // Ở chế độ "Theo lớp", phải chọn một lớp cụ thể.
+        isReady = classSummarySelect.value !== "";
     }
+    
+    viewReportBtn.disabled = !isReady;
+}
 
     function resetOverviewUI() {
         kpisContainer.innerHTML = `
