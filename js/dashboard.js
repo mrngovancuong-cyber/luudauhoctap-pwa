@@ -160,27 +160,39 @@ classSelect.addEventListener('change', () => {
     }
 
     function handleViewReportClick() {
-        const mode = document.querySelector('input[name="viewMode"]:checked').value;
-        overviewLoadingOverlay.classList.add('active');
+    const mode = document.querySelector('input[name="viewMode"]:checked').value;
+    overviewLoadingOverlay.classList.add('active');
 
-        const params = {
-            startDate: startDateInput.value || null,
-            endDate: endDateInput.value || null,
-        };
+    // --- BẮT ĐẦU PHẦN SỬA LỖI TRIỆT ĐỂ ---
+    const params = {
+        // Dùng `undefined` để URLSearchParams tự động bỏ qua nếu giá trị rỗng
+        startDate: startDateInput.value || undefined,
+        endDate: endDateInput.value || undefined,
+    };
 
-        if (mode === 'byExam') {
-            params.examId = examSelect.value;
-            params.classId = classSelect.value === "ALL" ? null : classSelect.value;
-            fetchAndDisplayClassOverview(params);
-        } else {
-            params.classId = classSummarySelect.value;
-            fetchApi('getClassSummary', params)
-                .then(result => renderClassSummary(result.data))
-                .catch(error => handleApiError(error, "Không thể tải báo cáo lớp"))
-                .finally(() => overviewLoadingOverlay.classList.remove('active'));
+    if (mode === 'byExam') {
+        params.examId = examSelect.value;
+        const selectedClass = classSelect.value;
+        
+        // LOGIC CỐT LÕI:
+        // Chỉ thêm thuộc tính 'classId' vào params nếu người dùng đã chọn
+        // một lớp cụ thể (khác rỗng và khác "ALL").
+        if (selectedClass && selectedClass !== "ALL") {
+            params.classId = selectedClass;
         }
+        
+        // Gọi hàm fetch với params đã được xây dựng cẩn thận
+        fetchAndDisplayClassOverview(params);
+
+    } else { // byClass
+        params.classId = classSummarySelect.value;
+        fetchApi('getClassSummary', params)
+            .then(result => renderClassSummary(result.data))
+            .catch(error => handleApiError(error, "Không thể tải báo cáo lớp"))
+            .finally(() => overviewLoadingOverlay.classList.remove('active'));
     }
-    
+    // --- KẾT THÚC PHẦN SỬA LỖI ---
+}
     function handleResetFiltersClick() {
         startDateInput.value = '';
         endDateInput.value = '';
@@ -195,18 +207,32 @@ classSelect.addEventListener('change', () => {
     // =================================================================
 
     async function fetchApi(action, params = {}) {
-        const token = localStorage.getItem('authToken');
-        if (!token) throw new Error("401 Unauthorized: Missing token");
-        
-        params.authToken = `Bearer ${token}`;
-        
-        const urlParams = new URLSearchParams({ action, ...params });
-        const response = await fetch(`${API_URL}?${urlParams.toString()}`);
+    const token = localStorage.getItem('authToken');
+    if (!token) throw new Error("401 Unauthorized: Missing token");
+    
+    params.authToken = `Bearer ${token}`;
 
-        const result = await response.json();
-        if (result.success === false) throw new Error(result.message);
-        return result;
-    }
+    // =============================================================
+    // === BẮT ĐẦU PHẦN SỬA LỖI TRIỆT ĐỂ ===
+    // =============================================================
+    // "Dọn dẹp" đối tượng params trước khi gửi
+    // Loại bỏ bất kỳ thuộc tính nào có giá trị là null hoặc undefined
+    Object.keys(params).forEach(key => {
+        if (params[key] === null || params[key] === undefined) {
+            delete params[key];
+        }
+    });
+    // =============================================================
+    // === KẾT THÚC PHẦN SỬA LỖI ===
+    // =============================================================
+
+    const urlParams = new URLSearchParams({ action, ...params });
+    const response = await fetch(`${API_URL}?${urlParams.toString()}`);
+
+    const result = await response.json();
+    if (result.success === false) throw new Error(result.message);
+    return result;
+}
 
     async function fetchAndDisplayClassOverview(params) {
         try {
