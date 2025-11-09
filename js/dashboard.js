@@ -96,6 +96,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Sự kiện thay đổi các dropdown
         examSelect.addEventListener('change', handleExamSelectChange);
+classSelect.addEventListener('change', () => {
+    // Mỗi khi người dùng chọn một lớp, hãy gọi lại checkFilters
+    // để kiểm tra xem đã đủ điều kiện bật nút "Xem báo cáo" chưa.
+    checkFilters(); 
+    
+    // Nếu người dùng chọn lại dòng trống ("-- Chọn lớp --"),
+    // thì reset giao diện về trạng thái ban đầu.
+    if (classSelect.value === "") {
+        resetOverviewUI();
+    }
+});
 	classSelect.addEventListener('change', () => {
 	    checkFilters(); 
 	    if (classSelect.value === "") {
@@ -353,11 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let isReady = false;
 
     if (mode === 'byExam') {
-        // Ở chế độ "Theo bài tập", chỉ cần chọn bài tập là đủ
-        // vì "Tất cả các lớp" là một lựa chọn hợp lệ.
-        isReady = examSelect.value !== "";
+        // Ở chế độ "Theo bài tập", phải chọn BÀI TẬP và LỚP
+        const examSelected = examSelect.value !== "";
+        const classSelected = classSelect.value !== "";
+        isReady = examSelected && classSelected;
     } else { // byClass
-        // Ở chế độ "Theo lớp", phải chọn một lớp cụ thể.
+        // Ở chế độ "Theo lớp", chỉ cần chọn LỚP
         isReady = classSummarySelect.value !== "";
     }
     
