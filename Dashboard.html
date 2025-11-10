@@ -124,20 +124,34 @@
                 </ul>
             </div>
         </div>
-        <div class="student-list-grid">
-            <div class="list-container card">
-                <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
-                <ul id="top-performers-list">
-                    <li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>
-                </ul>
-            </div>
-            <div class="list-container card">
-                <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
-                <ul id="bottom-performers-list">
-                    <li class="placeholder-item">Chọn bài tập và lớp để xem dữ liệu</li>
-                </ul>
-            </div>
-        </div>
+        <!-- DÁN KHỐI MỚI NÀY VÀO VỊ TRÍ CỦA 2 KHỐI ĐÃ XÓA -->
+<div class="student-list-grid three-columns"> <!-- Thêm class mới 'three-columns' -->
+    
+    <!-- Cột 1: Top 5 Điểm cao nhất -->
+    <div class="list-container card">
+        <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
+        <ul id="top-performers-list">
+            <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
+        </ul>
+    </div>
+    
+    <!-- Cột 2: Top 5 Cần cố gắng hơn -->
+    <div class="list-container card">
+        <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
+        <ul id="bottom-performers-list">
+            <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
+        </ul>
+    </div>
+
+    <!-- Cột 3: Học sinh chưa nộp bài -->
+    <div class="list-container card" id="missing-students-container">
+        <h4><span style="vertical-align: middle;">🔔</span> Học sinh chưa nộp bài</h4>
+        <ul id="missing-students-list">
+            <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
+        </ul>
+    </div>
+
+</div>
     </section>
     
     <!-- Khu vực Loading -->

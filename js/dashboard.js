@@ -34,8 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const hardestQuestionsList = document.getElementById('hardest-questions-list');
     const topPerformersList = document.getElementById('top-performers-list');
     const bottomPerformersList = document.getElementById('bottom-performers-list');
+    const missingStudentsContainer = document.getElementById('missing-students-container');
+    const missingStudentsList = document.getElementById('missing-students-list');
     const studentViewBtn = document.getElementById('student-view-btn');
-    
+
     // =================================================================
     //                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN
     // =================================================================
@@ -96,17 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Sự kiện thay đổi các dropdown
         examSelect.addEventListener('change', handleExamSelectChange);
-classSelect.addEventListener('change', () => {
-    // Mỗi khi người dùng chọn một lớp, hãy gọi lại checkFilters
-    // để kiểm tra xem đã đủ điều kiện bật nút "Xem báo cáo" chưa.
-    checkFilters(); 
-    
-    // Nếu người dùng chọn lại dòng trống ("-- Chọn lớp --"),
-    // thì reset giao diện về trạng thái ban đầu.
-    if (classSelect.value === "") {
-        resetOverviewUI();
-    }
-});
 	classSelect.addEventListener('change', () => {
 	    checkFilters(); 
 	    if (classSelect.value === "") {
@@ -257,9 +248,20 @@ classSelect.addEventListener('change', () => {
             <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
         `;
         const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.score}</span></li>`;
-        topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>(Không có)</li>';
-        bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>(Không có)</li>';
-        attachStudentLinkListeners();
+        topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>(Không có dữ liệu)</li>';
+        bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>(Không có dữ liệu)</li>';
+        
+	if (data.missingStudents && data.missingStudents.length > 0) {
+        missingStudentsList.innerHTML = data.missingStudents.map(s => 
+            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                <span>${s.name}</span>
+                <span class="score">${s.class}</span>
+            </li>`
+        ).join('');
+    } else {
+        missingStudentsList.innerHTML = '<li class="placeholder-item" style="color: var(--ok);">Tất cả học sinh đã nộp bài!</li>';
+    }
+    attachStudentLinkListeners();
     }
 
     function renderChartsAndDetails(data) {
@@ -403,16 +405,24 @@ classSelect.addEventListener('change', () => {
 }
 
     function resetOverviewUI() {
-kpisContainer.innerHTML = <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div> <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div> <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div> <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>;
-renderGradeDistributionChart(null);
-const placeholderText = '<li>Chọn bộ lọc và nhấn "Xem báo cáo"</li>';
-hardestQuestionsList.innerHTML = placeholderText;
-topPerformersList.innerHTML = placeholderText;
-bottomPerformersList.innerHTML = placeholderText;
-document.querySelector('#hardest-questions-list').parentElement.querySelector('h4').innerHTML = '💡 5 Câu hỏi cần chú ý nhất';
-document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
-document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
-}
+        kpisContainer.innerHTML = `
+            <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
+        `;
+        renderGradeDistributionChart(null);
+        const placeholderText = '<li>Chọn bộ lọc và nhấn "Xem báo cáo"</li>';
+        hardestQuestionsList.innerHTML = placeholderText;
+        topPerformersList.innerHTML = placeholderText;
+        bottomPerformersList.innerHTML = placeholderText;
+    if (missingStudentsList) {
+        missingStudentsList.innerHTML = placeholderText;
+    }
+        document.querySelector('#hardest-questions-list').parentElement.querySelector('h4').innerHTML = '💡 5 Câu hỏi cần chú ý nhất';
+        document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
+        document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
+    }
 
     function attachStudentLinkListeners() {
         document.querySelectorAll('.student-link').forEach(item => {

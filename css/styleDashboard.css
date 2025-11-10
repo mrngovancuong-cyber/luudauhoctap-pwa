@@ -1,767 +1,195 @@
 /* =====================================================
-   styleDashboard.css — Giao diện cho Bảng điều khiển Giáo viên
+   styleDashboard.css — PHIÊN BẢN HỢP NHẤT VÀ HOÀN CHỈNH
    ===================================================== */
 
 /* ------------------------------
-   Biến màu mới cho Dashboard
+   BIẾN MÀU (THEME)
 ------------------------------ */
-:root {
-  /* Bảng màu nền Nâu-Cà phê mới */
-  --bg: #1e1a17;      /* Nền Nâu đen rất đậm, gần như màu socola đen */
-  --bg-elev: #2d2621;  /* Nâu đậm hơn một chút cho header */
-  --bg-card: #2d2621;  /* Dùng chung màu cho card */
-  --border: #443b35;  /* Nâu nhạt hơn cho đường viền */
-  
-  /* Giữ lại màu text và các màu nhấn */
-  /* Màu text trắng ngà sẽ hợp với nền nâu hơn */
-  --text: #f3e9e0;     
+/* Chế độ Tối (Mặc định - Coffee) */
+:root,
+body.dashboard-page[data-theme="dark"] {
+  --bg: #1e1a17;
+  --bg-elev: #2d2621;
+  --bg-card: #2d2621;
+  --border: #443b35;
+  --text: #f3e9e0;
   --muted: #a18f83;
-  
-  /* Các màu nhấn có thể cần điều chỉnh nhẹ để hợp nền, nhưng tạm thời giữ nguyên */
-  --primary: #818cf8; /* Màu Tím lavender sáng hơn để nổi trên nền nâu */
-  --accent: #2dd4bf;  /* Màu Xanh mòng két sáng hơn */
+  --primary: #818cf8;
+  --accent: #2dd4bf;
   --ok: #4ade80;
   --bad: #f87171;
   --warn: #facc15;
 }
+
+/* Chế độ Sáng (Light Coffee) */
+body.dashboard-page[data-theme="light"] {
+  --bg: #fefbf6;
+  --bg-elev: #fae8d3;
+  --bg-card: #ffffff;
+  --border: #f5d7b5;
+  --text: #431407;
+  --muted: #9a3412;
+  --primary: #7c3aed;
+  --accent: #0d9488;
+  --ok: #15803d;
+  --bad: #b91c1c;
+  --warn: #f59e0b;
+}
+
 /* ------------------------------
-   Reset & Body
+   RESET & BODY
 ------------------------------ */
-* {
-  box-sizing: border-box;
-}
-html {
-  scroll-behavior: smooth;
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   margin: 0;
   background-color: var(--bg);
   color: var(--text);
 }
 button, input, select, textarea {
-    font-family: inherit; /* Lấy font từ thẻ cha (trong trường hợp này là body) */
-    font-size: 100%; /* Đảm bảo kích thước chữ không bị thay đổi mặc định */
+    font-family: inherit;
+    font-size: 100%;
 }
-/* ------------------------------
-   /* =================================================================
-   HEADER STYLE (PHIÊN BẢN SỬA LỖI VÀ HỢP NHẤT)
-   ================================================================= */
 
+/* ------------------------------
+   HEADER
+------------------------------ */
 .sticky-header {
-  position: sticky;
-  top: 0;
-  padding: 10px 16px;
-  background: var(--bg-elev);
-  border-bottom: 1px solid var(--border);
-  z-index: 1000;
+  position: sticky; top: 0; padding: 10px 16px;
+  background: var(--bg-elev); border-bottom: 1px solid var(--border); z-index: 1000;
 }
-
-.header-top {
-  display: grid;
-  grid-template-columns: auto 1fr auto; 
-  align-items: center;
-  gap: 12px;
-}
-
-.header-left, .header-right {
-  display: flex;
-  align-items: center;
-}
-
-.header-center {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-}
-
-.header-right { 
-  justify-content: flex-end; 
-}
-
-/* --- Quy tắc chung cho tất cả logo --- */
-.logo {
-  height: 70px; /* Chiều cao mặc định */
-  width: auto; 
-  object-fit: contain;
-}
-
-/* --- Tiêu đề giữa --- */
-.title {
-  font-weight: 700;
-  font-size: 1.5rem;
-  margin: 0;
-  color: var(--text);
-}
-
-/* --- Cụm link "Về nhà" ở góc phải --- */
-.header-link-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-}
-
-.header-link-container:hover {
-  opacity: 0.8;
-}
-
-/* Style riêng cho logo bên phải trong cụm link */
-.header-logo-right {
-  /* Không cần định nghĩa lại height ở đây, nó sẽ kế thừa từ .logo */
-  /* Nếu bạn muốn nó nhỏ hơn, bạn có thể ghi đè ở đây, ví dụ: height: 60px; */
-}
-
-/* Style cho icon Home */
-.header-home-icon {
-  fill: #E53935; /* Màu đỏ như bạn yêu cầu */
-  /* Kích thước của icon được đặt trực tiếp trong file HTML (width="32" height="32") */
-}
-
-
-/* --- Responsive cho màn hình nhỏ --- */
+.header-top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+.header-left, .header-right { display: flex; align-items: center; }
+.header-center { display: flex; justify-content: center; text-align: center; }
+.header-right { justify-content: flex-end; }
+.logo { height: 70px; width: auto; object-fit: contain; }
+.title { font-weight: 700; font-size: 1.5rem; margin: 0; color: var(--text); }
+.header-link-container { display: flex; align-items: center; gap: 12px; text-decoration: none; transition: opacity 0.2s ease; }
+.header-link-container:hover { opacity: 0.8; }
+.header-home-icon { fill: #E53935; }
 @media (max-width: 768px) {
-  .logo {
-    height: 55px; /* Thu nhỏ tất cả logo */
-  }
-  .title {
-    font-size: 1.2rem;
-  }
-  .header-home-icon {
-      width: 28px !important; /* Dùng !important để ghi đè thuộc tính inline */
-      height: 28px !important;
-  }
+  .logo { height: 55px; }
+  .title { font-size: 1.2rem; }
+  .header-home-icon { width: 28px !important; height: 28px !important; }
 }
-
 @media (max-width: 480px) {
-  .logo {
-    height: 40px; /* Thu nhỏ hơn nữa */
-  }
-  .title {
-    font-size: 1rem;
-  }
-  .header-home-icon {
-      width: 24px !important;
-      height: 24px !important;
-  }
+  .logo { height: 40px; }
+  .title { font-size: 1rem; }
+  .header-home-icon { width: 24px !important; height: 24px !important; }
 }
 
 /* ------------------------------
-   Layout chính và Card
+   LAYOUT CHÍNH & CARD
 ------------------------------ */
-.dashboard-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
+.dashboard-main { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
 .card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  background-color: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
 }
-
-.hidden {
-  display: none !important;
-}
+.hidden { display: none !important; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
 /* ------------------------------
-   Khu vực Tìm kiếm
+   BỘ LỌC VÀ TÌM KIẾM
 ------------------------------ */
-.search-section h2 {
-  margin-top: 0;
-  color: var(--accent);
+.filter-bar { display: flex; flex-direction: column; align-items: flex-start; gap: 1rem; }
+.view-mode-toggle { display: inline-flex; background-color: var(--bg); border-radius: 8px; padding: 4px; border: 1px solid var(--border); }
+.view-mode-label { padding: 0.5rem 1rem; cursor: pointer; border-radius: 6px; transition: all 0.2s; position: relative; user-select: none; }
+.view-mode-label input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.view-mode-label.active { background-color: var(--primary); color: white; font-weight: 600; }
+.filter-controls { display: flex; gap: 1rem; width: 100%; align-items: center; flex-wrap: wrap; }
+.filter-group { display: flex; gap: 1rem; flex-grow: 1; }
+.filter-group.hidden { display: none; }
+.filter-select {
+    padding: 0.75rem; background-color: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; min-width: 150px; flex-grow: 1;
 }
-
-.search-bar {
-  display: flex;
-  gap: 1rem;
+.date-label { align-self: center; color: var(--muted); font-size: 0.9rem; margin-left: 0.5rem; }
+#reset-filters-btn {
+    width: 42px; padding: 0.75rem; font-size: 1.5rem; line-height: 1;
+    background-color: var(--bg-elev); border: 1px solid var(--border); color: var(--muted);
 }
-
-#student-id-input {
-  flex-grow: 1;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  background-color: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  outline: none;
-  transition: all 0.2s ease;
+#reset-filters-btn:hover { background-color: var(--bg-card); color: var(--accent); border-color: var(--accent); }
+.search-bar { display: flex; gap: 1rem; }
+#student-id-input { flex-grow: 1; padding: 0.75rem 1rem; font-size: 1rem; background-color: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; transition: all 0.2s ease; }
+#student-id-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3); }
+.action-btn {
+  padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 600; background-color: var(--primary);
+  color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
 }
-
-#student-id-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
-}
-
-#search-btn {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-#search-btn:hover {
-  background-color: #4338ca; /* Tông đậm hơn của màu primary */
-}
+.action-btn:hover { background-color: #6366f1; }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ------------------------------
-   Khu vực Kết quả
+   KHU VỰC HIỂN THỊ KẾT QUẢ
 ------------------------------ */
-.student-profile {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-#student-name-display {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--text);
-}
-#student-class-display {
-  font-size: 1.2rem;
-  color: var(--muted);
-}
+#class-overview-section { position: relative; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-card { background-color: var(--bg-card); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary); }
+.kpi-card h3 { margin: 0 0 0.5rem 0; color: var(--muted); font-size: 1rem; font-weight: 600; }
+.kpi-card p { margin: 0; font-size: 2.25rem; font-weight: 700; color: var(--text); }
 
-/* ------------------------------
-   Thanh điều hướng Tab
------------------------------- */
-.tab-nav {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 1.5rem;
-}
-.tab-btn {
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  font-weight: 600;
-  background-color: transparent;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-}
-.tab-btn:hover {
-  color: var(--text);
-}
-.tab-btn.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
-/* ------------------------------
-   Nội dung Tab và Biểu đồ
------------------------------- */
-.tab-panel {
-  /* CSS cho các panel sẽ được thêm sau */
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: 1fr;
-}
-.chart-container {
-  background-color: var(--bg);
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-/* ------------------------------
-   Spinner cho việc tải dữ liệu inline
-   ------------------------------ */
-/* Container cho toàn bộ khu vực tổng quan, dùng để định vị lớp phủ */
-#class-overview-section {
-    position: relative; /* Rất quan trọng! */
-}
-
-/* Lớp phủ spinner */
-.loading-overlay {
-    position: absolute; /* Định vị tuyệt đối so với container #class-overview-section */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(30, 26, 23, 0.7); /* Màu nền nâu mờ (var(--bg) với độ trong suốt) */
-    display: flex; /* Dùng flexbox để căn giữa nội dung */
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10; /* Đảm bảo nó nằm trên các nội dung khác */
-    border-radius: 12px; /* Bo tròn góc cho đẹp */
-    
-    /* Hiệu ứng mờ dần khi xuất hiện/biến mất */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-/* Lớp 'active' để hiển thị lớp phủ */
-.loading-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Spinner bên trong lớp phủ */
-.loading-overlay .spinner {
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(243, 233, 224, 0.3);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-/* Chữ "Đang tải..." */
-.loading-overlay p {
-    margin-top: 1rem;
-    font-size: 1.1rem;
-    color: var(--text);
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ------------------------------
-   Tinh chỉnh ApexCharts
-   ------------------------------ */
-/* Sửa màu text trong menu download */
-.apexcharts-menu-item {
-  color: #111827; /* Màu xám đậm cho dễ đọc */
-}
-.apexcharts-menu-item:hover {
-  color: #fff; /* Màu trắng khi hover */
-  background-color: var(--primary);
-}
-/* ------------------------------
-   Tinh chỉnh Bảng Lịch sử
-   ------------------------------ */
-#history-table {
-  width: 100%;
-  border-collapse: collapse; /* Gộp các đường viền lại */
-  margin-top: 1rem;
-}
-
-#history-table th,
-#history-table td {
-  border: 1px solid var(--border); /* Thêm đường viền cho tất cả các ô */
-  padding: 0.75rem 1rem;
-  text-align: left;
-}
-
-#history-table thead {
-  background-color: var(--bg-elev); /* Màu nền cho hàng tiêu đề */
-}
-
-#history-table th {
-  font-weight: 600;
-  color: var(--accent);
-}
-
-#history-table tbody tr:hover {
-  background-color: var(--bg); /* Hiệu ứng hover cho các hàng */
-}
-
-/* ------------------------------
-   Modal for Behavior Details
-   ------------------------------ */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  background-color: var(--bg-card);
-  padding: 2rem;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
-  position: relative;
-  border: 1px solid var(--border);
-}
-.modal-close {
-  position: absolute;
-  top: 1rem; right: 1rem;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 2rem;
-  cursor: pointer;
-}
-#modal-title {
-  margin-top: 0;
-  color: var(--accent);
-}
-#modal-body ul {
-  list-style: none;
-  padding: 0;
-}
-#modal-body li {
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
-}
-#modal-body strong {
-  color: var(--warn);
-}
-/* ------------------------------
-   Nút nhỏ trong bảng
-   ------------------------------ */
-.action-btn-small {
-  padding: 4px 8px;
-  font-size: 12px;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-.action-btn-small:hover {
-  background-color: #4338ca; /* Tông đậm hơn của màu primary */
-}
-
-/* ------------------------------
-   Card Cảnh báo Hành vi
-   ------------------------------ */
-.warning-card {
-  grid-column: 1 / -1; /* Chiếm toàn bộ chiều rộng của grid */
-  background-color: rgba(250, 204, 21, 0.1); /* Nền vàng mờ */
-  border: 1px solid var(--warn);
-}
-.warning-card h4 {
-  margin-top: 0;
-  color: var(--warn);
-}
-#behavior-warning-content ul {
-  list-style: none;
-  padding-left: 0;
-}
-#behavior-warning-content li {
-  margin-bottom: 1rem;
-  border-left: 3px solid var(--warn);
-  padding-left: 1rem;
-}
-#behavior-warning-content strong {
-  color: var(--text);
-}
-
-.filter-bar { display: flex; gap: 1rem; }
-.filter-select { 
-    padding: 0.5rem; 
-    background-color: var(--bg); 
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-}
-
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-.kpi-card {
-    background-color: var(--bg-card);
-    padding: 1rem;
-    border-radius: 8px;
-    border-left: 4px solid var(--primary);
-}
-.kpi-card h3 { margin: 0 0 0.5rem 0; color: var(--muted); font-size: 1rem; }
-.kpi-card p { margin: 0; font-size: 2rem; font-weight: 700; }
-
-.chart-grid, .student-list-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-@media (max-width: 768px) {
-    .chart-grid, .student-list-grid { grid-template-columns: 1fr; }
+.chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.student-list-grid { display: grid; gap: 1.5rem; margin-bottom: 1.5rem; grid-template-columns: 2fr 1fr; }
+.student-list-grid.three-columns { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 992px) {
+    .chart-grid, .student-list-grid, .student-list-grid.three-columns { grid-template-columns: 1fr; }
 }
 
 .list-container h4 { margin-top: 0; color: var(--accent); }
 .list-container ul { list-style: none; padding: 0; margin: 0; }
-.list-container li { 
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer; /* Thêm để cho biết có thể click */
-    transition: background-color 0.2s;
-}
-.list-container li:hover { background-color: var(--bg-elev); }
+.list-container li { display: flex; justify-content: space-between; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border); transition: background-color 0.2s; }
 .list-container li:last-child { border-bottom: none; }
-.list-container li .score { font-weight: 700; }
+.list-container li.student-link { cursor: pointer; }
+.list-container li.student-link:hover { background-color: var(--bg); }
+.list-container li .score, .list-container li .accuracy { font-weight: 600; color: var(--muted); }
 .list-container li .accuracy { color: var(--bad); }
+.placeholder-item { color: var(--muted); font-style: italic; justify-content: center; }
 
-#back-to-overview-btn {
-    background-color: #6c757d;
-}
-#back-to-overview-btn:hover {
-    background-color: #5a6268;
-}
+.chart-container { background-color: var(--bg); padding: 1rem; border-radius: 8px; }
+.chart-summary { padding: 1rem 1.25rem; margin-top: -1.5rem; margin-bottom: 2rem; background-color: var(--bg); border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; box-shadow: inset 0 4px 8px rgba(0,0,0,0.1); font-size: 1rem; color: var(--text); line-height: 1.6; }
+.chart-summary strong { color: var(--accent); font-weight: 600; }
 
-/* Thêm vào cuối file styleDashboard.css */
-.divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 1.5rem 0;
-}
+/* ------------------------------
+   HIỆU ỨNG LOADING
+------------------------------ */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 50px; height: 50px; border: 5px solid rgba(243, 233, 224, 0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+.loading-inline { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem; width: 100%; }
+.loading-inline p { margin-top: 1.5rem; font-size: 1.2rem; color: var(--muted); font-weight: 600; }
+[data-theme="light"] .loading-inline .spinner { border-color: rgba(154, 52, 18, 0.2); border-top-color: var(--primary); }
+.loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; border-radius: 12px; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.loading-overlay.active { opacity: 1; visibility: visible; }
+.loading-overlay p { margin-top: 1rem; font-size: 1.1rem; color: var(--text); }
+[data-theme="dark"] .loading-overlay { background-color: rgba(30, 26, 23, 0.8); }
+[data-theme="light"] .loading-overlay { background-color: rgba(254, 251, 246, 0.8); }
 
-.kpi-subtext {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--muted);
-    margin-top: 4px;
-}
+/* ------------------------------
+   CÁC THÀNH PHẦN CHI TIẾT (STUDENT DETAIL)
+------------------------------ */
+.student-profile { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+#student-name-display { margin: 0; font-size: 2rem; color: var(--text); }
+#student-class-display { font-size: 1.2rem; color: var(--muted); }
+.tab-nav { display: flex; gap: 0.5rem; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; }
+.tab-btn { padding: 0.75rem 1.25rem; font-size: 1rem; font-weight: 600; background-color: transparent; border: none; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s ease; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-panel { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+.warning-card { grid-column: 1 / -1; background-color: rgba(250, 204, 21, 0.1); border: 1px solid var(--warn); }
+.warning-card h4 { margin-top: 0; color: var(--warn); }
+#behavior-warning-content ul { list-style: none; padding-left: 0; }
+#behavior-warning-content li { margin-bottom: 1rem; border-left: 3px solid var(--warn); padding-left: 1rem; }
+#behavior-warning-content strong { color: var(--text); }
 
-/* =================================================================
-   STYLE CHO PHẦN TÓM TẮT DƯỚI BIỂU ĐỒ (CHART SUMMARY)
-   ================================================================= */
-
-.chart-summary {
-    /* Layout và Kích thước */
-    padding: 1rem 1.25rem;
-    margin-top: -1.5rem;
-    margin-bottom: 2rem;
-    
-    /* Giao diện */
-    background-color: var(--bg);
-    border: 1px solid var(--border);
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-    box-shadow: inset 0 4px 8px rgba(0,0,0,0.2);
-    
-    /* === CÁC THAY ĐỔI QUAN TRỌNG NẰM Ở ĐÂY === */
-    font-size: 1rem;      /* Tăng kích thước font lên (tương đương 16px) */
-    color: var(--text);   /* Đổi màu chữ thành màu text chính (trắng ngà) */
-    font-style: normal;   /* Bỏ chữ nghiêng để dễ đọc hơn */
-    line-height: 1.6;
-}
-
-/* Style cho các từ khóa được nhấn mạnh bên trong phần tóm tắt */
-.chart-summary strong {
-    color: var(--accent);     /* Sử dụng màu xanh ngọc nổi bật */
-    font-weight: 600;         /* Đậm hơn một chút */
-    font-style: normal;       /* Chữ không bị nghiêng */
-}
-
-/* Style cho các biểu đồ cần chiếm toàn bộ chiều rộng và cao hơn */
-.full-width-chart {
-    /* Ghi đè lại grid layout nếu có */
-    grid-column: 1 / -1; 
-    /* Tăng chiều cao tối thiểu cho biểu đồ */
-    min-height: 450px; 
-}
-
-.loading-placeholder, .error-placeholder {
-    text-align: center;
-    color: var(--muted);
-    padding: 2rem;
-    font-style: italic;
-}
-.error-placeholder {
-    color: var(--bad);
-}
-.student-link {
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.student-link:hover {
-    background-color: var(--bg);
-}
-
-/* Thêm vào cuối file styleDashboard.css */
-
-.utility-section h2 {
-    margin-top: 0;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.utility-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.utility-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    background-color: var(--bg-elev); /* Nền tối, ít nổi bật hơn nút chính */
-    border: 1px solid var(--border);
-    color: var(--muted);
-    width: auto; /* Để nút co giãn theo nội dung */
-    transition: all 0.2s ease;
-}
-
-.utility-btn:hover {
-    background-color: var(--bg-card);
-    color: var(--accent);
-    border-color: var(--accent);
-}
-
-/* =====================================================
-   BỔ SUNG VÀ HOÀN THIỆN CSS CHO HIỆU ỨNG LOADING
-   ===================================================== */
-
-/* ----- 1. Bổ sung quy tắc cho Lớp phủ ở Chế độ Sáng ----- */
-[data-theme="light"] .loading-overlay {
-    background-color: rgba(254, 251, 246, 0.8); /* Màu nền sáng mờ */
-}
-
-/* ----- 2. Bổ sung toàn bộ quy tắc cho Loading Inline (cho StudentDetail.html) ----- */
-.loading-inline {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 3rem;
-    width: 100%;
-}
-
-.loading-inline .spinner {
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(161, 143, 131, 0.3); /* Dùng màu --muted của theme tối */
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite; /* Tái sử dụng animation đã có */
-}
-
-/* Quy tắc cho spinner của loading-inline ở theme sáng */
-[data-theme="light"] .loading-inline .spinner {
-    border-color: rgba(154, 52, 18, 0.2); /* Dùng màu --muted của theme sáng */
-    border-top-color: var(--primary);
-}
-
-.loading-inline p {
-    margin-top: 1.5rem;
-    font-size: 1.2rem;
-    color: var(--muted);
-    font-weight: 600;
-}
-
-/* Thêm vào cuối file styleDashboard.css */
-.filter-bar {
-    flex-wrap: wrap; /* Cho phép các mục xuống dòng trên màn hình nhỏ */
-    align-items: center;
-}
-.date-label {
-    color: var(--muted);
-    font-size: 0.9rem;
-    margin-left: 0.5rem;
-}
-#reset-filters-btn {
-    padding: 0.5rem;
-    width: 40px; /* Chiều rộng cố định */
-    font-size: 1.5rem;
-    line-height: 1;
-}
-
-/* =====================================================
-   CSS CHO BỘ LỌC DASHBOARD NÂNG CAO
-   ===================================================== */
-
-/* Định dạng lại container chính của bộ lọc */
-.filter-bar {
-    display: flex; /* Thay đổi từ flex thành block mặc định */
-    flex-direction: column;
-    align-items: flex-start; /* Căn các item về bên trái */
-    gap: 1rem;
-}
-
-/* --- Nút gạt chuyển chế độ xem --- */
-.view-mode-toggle {
-    display: inline-flex;
-    background-color: var(--bg);
-    border-radius: 8px;
-    padding: 4px;
-    border: 1px solid var(--border);
-}
-
-.view-mode-label {
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.2s, color 0.2s;
-    position: relative;
-    user-select: none; /* Tránh bôi đen chữ khi click */
-}
-
-/* Ẩn nút radio gốc */
-.view-mode-label input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-/* Style cho label được chọn */
-.view-mode-label.active {
-    background-color: var(--primary);
-    color: white;
-    font-weight: 600;
-}
-
-/* --- Container cho các bộ lọc chi tiết --- */
-.filter-controls {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-    align-items: center; /* Căn giữa các bộ lọc theo chiều dọc */
-    flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình nhỏ */
-}
-
-.filter-group {
-    display: flex;
-    gap: 1rem;
-    flex-grow: 1; /* Cho phép các nhóm co giãn */
-}
-
-.filter-group select {
-    min-width: 150px; /* Chiều rộng tối thiểu cho dropdown */
-    flex-grow: 1; /* Cho phép dropdown co giãn */
-}
-
-/* Ẩn nhóm filter không hoạt động */
-.filter-group.hidden {
-    display: none;
-}
-
-/* --- Bộ lọc ngày tháng --- */
-.date-filters {
-    flex-grow: 0; /* Không cho phép co giãn quá lớn */
-}
-.date-input {
-    min-width: 140px;
-}
-.date-label {
-    align-self: center; /* Căn giữa label */
-}
-
-/* --- Nút Reset --- */
-#reset-filters-btn {
-    width: 42px; /* Kích thước cố định cho nút reset */
-    padding: 0.5rem;
-    font-size: 1.5rem;
-    line-height: 1;
-}
+/* ------------------------------
+   MODAL & TIỆN ÍCH KHÁC
+------------------------------ */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: var(--bg-card); padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; position: relative; border: 1px solid var(--border); }
+.modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--muted); font-size: 2rem; cursor: pointer; }
+#modal-title { margin-top: 0; color: var(--accent); }
+.utility-section h2 { margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.utility-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+.utility-btn { display: inline-flex; align-items: center; gap: 0.75rem; background-color: var(--bg-elev); border: 1px solid var(--border); color: var(--muted); width: auto; }
+.utility-btn:hover { background-color: var(--bg-card); color: var(--accent); border-color: var(--accent); }
