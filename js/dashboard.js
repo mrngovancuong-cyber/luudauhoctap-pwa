@@ -275,28 +275,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderClassSummary(data) {
-        resetOverviewUI();
-        kpisContainer.innerHTML = `
-            <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${data.kpis.totalSubmissions} / ${data.kpis.expectedSubmissions}</p></div>
-            <div class="kpi-card"><h3>Điểm TB Chung</h3><p>${data.kpis.overallAvgScore}</p></div>
-        `;
-        renderClassScoreTrendChart(data.classScoreTrend);
-        const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
-        topPerformersList.innerHTML = data.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
-        bottomPerformersList.innerHTML = data.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
-        document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
-        document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
-        const hardestQuestionsContainer = hardestQuestionsList.parentElement;
-        hardestQuestionsContainer.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
-        hardestQuestionsList.innerHTML = data.topicAnalysis.weakTopics.map(t => `
-            <li>
-                <span>${t.topic}</span>
-                <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
-            </li>
-        `).join('') || '<li>(Không có)</li>';
-        attachStudentLinkListeners();
+    // Reset giao diện về trạng thái sạch trước khi render
+    resetOverviewUI();
+
+    // --- RENDER CÁC THẺ KPI MỚI ---
+    kpisContainer.innerHTML = `
+        <div class="kpi-card">
+            <h3>Mức độ Hoàn thành</h3>
+            <p>${data.kpis.totalSubmissions} / ${data.kpis.expectedSubmissions}</p>
+        </div>
+        <div class="kpi-card">
+            <h3>Điểm TB Chung</h3>
+            <p>${data.kpis.overallAvgScore}</p>
+        </div>
+    `;
+
+    // --- RENDER BIỂU ĐỒ XU HƯỚNG MỚI ---
+    renderClassScoreTrendChart(data.classScoreTrend);
+
+    // --- RENDER CÁC DANH SÁCH ---
+    const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
+
+    // Cập nhật tiêu đề và nội dung cho 3 cột danh sách
+    document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
+    topPerformersList.innerHTML = data.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
+
+    document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
+    bottomPerformersList.innerHTML = data.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
+
+    // Ẩn cột "5 Câu hỏi" và hiện cột "Học sinh chưa nộp" (nếu có)
+    // Tái sử dụng các DOM element đã có
+    const hardestQuestionsContainer = document.getElementById('hardest-questions-list').parentElement;
+    hardestQuestionsContainer.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
+    hardestQuestionsList.innerHTML = data.topicAnalysis.weakTopics.map(t => `
+        <li>
+            <span>${t.topic}</span>
+            <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
+        </li>
+    `).join('') || '<li>(Không có)</li>';
+
+    // Ẩn danh sách học sinh chưa nộp bài vì chế độ này không có ý nghĩa
+    if (missingStudentsContainer) {
+        missingStudentsContainer.style.display = 'none';
     }
 
+    // Gắn lại sự kiện click cho các tên học sinh vừa được render
+    attachStudentLinkListeners();
+}
     // --- CÁC HÀM VẼ BIỂU ĐỒ ---
     function renderGradeDistributionChart(gradeData) {
         const options = {
