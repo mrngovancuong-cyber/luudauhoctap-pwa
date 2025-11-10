@@ -382,17 +382,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function populateClassesForSummary() {
-        if (!currentUser || !currentUser.managedClasses) return;
-        if (currentUser.managedClasses === 'ALL') {
-            classSummarySelect.innerHTML = '<option value="">-- Tính năng đang phát triển cho Admin --</option>';
-            return;
+    async function populateClassesForSummary() {
+    if (!currentUser) return;
+
+    // Vô hiệu hóa dropdown trong khi tải
+    classSummarySelect.innerHTML = '<option value="">-- Đang tải các lớp --</option>';
+    classSummarySelect.disabled = true;
+
+    try {
+        let classesToDisplay = [];
+
+        if (currentUser.role === 'admin') {
+            // *** LOGIC MỚI CHO ADMIN ***
+            // Gọi API mới để lấy tất cả các lớp trong hệ thống
+            const result = await fetchApi('getAllClasses');
+            classesToDisplay = result.data;
+        } else {
+            // Logic cũ cho giáo viên thông thường
+            if (currentUser.managedClasses && currentUser.managedClasses !== 'ALL') {
+                classesToDisplay = currentUser.managedClasses.split(',').map(c => c.trim()).sort();
+            }
         }
-        const managedClasses = currentUser.managedClasses.split(',').map(c => c.trim()).sort();
-        classSummarySelect.innerHTML = 
-            '<option value="">-- Chọn lớp --</option>' +
-            managedClasses.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        if (classesToDisplay.length > 0) {
+            classSummarySelect.innerHTML =
+                '<option value="">-- Chọn lớp để xem --</option>' +
+                classesToDisplay.map(c => `<option value="${c}">${c}</option>`).join('');
+            classSummarySelect.disabled = false; // Bật lại dropdown
+        } else {
+            classSummarySelect.innerHTML = '<option value="">-- Không có lớp nào --</option>';
+        }
+
+    } catch (error) {
+        handleApiError(error, "Không thể tải danh sách lớp");
+        classSummarySelect.innerHTML = '<option value="">-- Lỗi tải lớp --</option>';
     }
+}
 
     function populateClassSelect(allAssignedClasses) {
         let classesToShow = allAssignedClasses;
