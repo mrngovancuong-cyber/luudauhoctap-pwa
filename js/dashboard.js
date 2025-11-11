@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/api/';
     let currentUser = null;
     let mainChart = null; // Dùng chung cho cả 2 chế độ xem
-
+    let multiSubjectReportData = null; // Cache dữ liệu báo cáo đa môn ở frontend
     // --- DOM Elements ---
     // Chế độ xem
     const viewModeRadios = document.querySelectorAll('input[name="viewMode"]');
@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const examSelect = document.getElementById('exam-select');
     const classSelect = document.getElementById('class-select');
     const classSummarySelect = document.getElementById('class-summary-select');
+    const subjectSelect = document.getElementById('subject-select');
     const startDateInput = document.getElementById('start-date-input');
     const endDateInput = document.getElementById('end-date-input');
     
@@ -105,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
         classSummarySelect.addEventListener('change', checkFilters);
-
+	subjectSelect.addEventListener('change', handleSubjectSelectChange);
         // 3. Sự kiện nhấn nút
         viewReportBtn.addEventListener('click', handleViewReportClick);
         resetFiltersBtn.addEventListener('click', handleResetFiltersClick);
@@ -153,10 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleViewReportClick() {
     const mode = document.querySelector('input[name="viewMode"]:checked').value;
     overviewLoadingOverlay.classList.add('active');
+    resetOverviewUI(); // Reset giao diện trước khi tải mới
 
-    // --- BẮT ĐẦU PHẦN SỬA LỖI TRIỆT ĐỂ ---
     const params = {
-        // Dùng `undefined` để URLSearchParams tự động bỏ qua nếu giá trị rỗng
         startDate: startDateInput.value || undefined,
         endDate: endDateInput.value || undefined,
     };
@@ -164,25 +164,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mode === 'byExam') {
         params.examId = examSelect.value;
         const selectedClass = classSelect.value;
-        
-        // LOGIC CỐT LÕI:
-        // Chỉ thêm thuộc tính 'classId' vào params nếu người dùng đã chọn
-        // một lớp cụ thể (khác rỗng và khác "ALL").
         if (selectedClass && selectedClass !== "ALL") {
             params.classId = selectedClass;
         }
-        
-        // Gọi hàm fetch với params đã được xây dựng cẩn thận
-        fetchAndDisplayClassOverview(params);
-
+        fetchAndDisplayClassOverview(params); // Gọi luồng cũ
     } else { // byClass
         params.classId = classSummarySelect.value;
-        fetchApi('getClassSummary', params)
-            .then(result => renderClassSummary(result.data))
+        // Gọi API điều phối MỚI
+        fetchApi('get_CLASS_REPORT', params)
+            .then(result => {
+                if (result.data.reportType === 'multi_subject') {
+                    // Nếu là Admin/GVCN, render báo cáo đa môn
+                    renderMultiSubjectReport(result.data.data);
+                } else { // single_subject
+                    // Nếu là GVBM, xử lý "kho" dữ liệu
+                    handleSingleSubjectReportData(result.data.data);
+                }
+            })
             .catch(error => handleApiError(error, "Không thể tải báo cáo lớp"))
             .finally(() => overviewLoadingOverlay.classList.remove('active'));
     }
-    // --- KẾT THÚC PHẦN SỬA LỖI ---
 }
     function handleResetFiltersClick() {
         startDateInput.value = '';
@@ -226,53 +227,62 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
     async function fetchAndDisplayClassOverview(params) {
-        try {
-            const kpiResult = await fetchApi('getClassKPIs', params);
-            renderKPIsAndLists(kpiResult.data);
+    try {
+        overviewLoadingOverlay.classList.add('active'); // Bật spinner
+        // Luồng nhanh
+        const kpiResult = await fetchApi('getClassKPIs', params);
+        renderKPIsAndLists(kpiResult.data.kpis, kpiResult.data.topPerformers, kpiResult.data.bottomPerformers, kpiResult.data.missingStudents);
+        
+        // Luồng chậm
+        const detailsResult = await fetchApi('getClassDetails', params);
+        renderChartsAndDetails(detailsResult.data.gradeDistribution, detailsResult.data.itemAnalysis);
 
-            const detailsResult = await fetchApi('getClassDetails', params);
-            renderChartsAndDetails(detailsResult.data);
-        } catch (error) {
-            handleApiError(error, "Không thể tải dữ liệu tổng quan");
-            resetOverviewUI();
-        } finally {
-            overviewLoadingOverlay.classList.remove('active');
+    } catch (error) {
+        handleApiError(error, "Không thể tải dữ liệu tổng quan");
+        resetOverviewUI();
+    } finally {
+        overviewLoadingOverlay.classList.remove('active'); // Tắt spinner
+    }
+}
+    function renderKPIsAndLists(kpis, top, bottom, missing = []) {
+    kpisContainer.innerHTML = `
+        <div class="kpi-card"><h3>Tỷ lệ tham gia</h3><p>${kpis.submissionCount} / ${kpis.totalStudents}</p></div>
+        <div class="kpi-card"><h3>Điểm TB</h3><p>${kpis.averageScore}</p></div>
+        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${kpis.highestScore}</p></div>
+        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${kpis.lowestScore}</p></div>
+    `;
+
+    const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.score}</span></li>`;
+    
+    document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
+    topPerformersList.innerHTML = top.map(createStudentListItem).join('') || '<li>(Không có)</li>';
+    
+    document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
+    bottomPerformersList.innerHTML = bottom.map(createStudentListItem).join('') || '<li>(Không có)</li>';
+    
+    if (missingStudentsContainer) {
+        missingStudentsContainer.style.display = 'block';
+        if (missing.length > 0) {
+            missingStudentsList.innerHTML = missing.map(s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.class}</span></li>`).join('');
+        } else {
+            missingStudentsList.innerHTML = '<li class="placeholder-item" style="color: var(--ok);">Tất cả học sinh đã nộp bài!</li>';
         }
     }
-
-    function renderKPIsAndLists(data) {
-        kpisContainer.innerHTML = `
-            <div class="kpi-card"><h3>Tỷ lệ tham gia</h3><p>${data.kpis.submissionCount} / ${data.kpis.totalStudents}</p></div>
-            <div class="kpi-card"><h3>Điểm TB</h3><p>${data.kpis.averageScore}</p></div>
-            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>${data.kpis.highestScore}</p></div>
-            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>${data.kpis.lowestScore}</p></div>
-        `;
-        const createStudentListItem = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}"><span>${s.name}</span><span class="score">${s.score}</span></li>`;
-        topPerformersList.innerHTML = data.topPerformers.map(createStudentListItem).join('') || '<li>(Không có dữ liệu)</li>';
-        bottomPerformersList.innerHTML = data.bottomPerformers.map(createStudentListItem).join('') || '<li>(Không có dữ liệu)</li>';
-        
-	if (data.missingStudents && data.missingStudents.length > 0) {
-        missingStudentsList.innerHTML = data.missingStudents.map(s => 
-            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
-                <span>${s.name}</span>
-                <span class="score">${s.class}</span>
-            </li>`
-        ).join('');
-    } else {
-        missingStudentsList.innerHTML = '<li class="placeholder-item" style="color: var(--ok);">Tất cả học sinh đã nộp bài!</li>';
-    }
     attachStudentLinkListeners();
-    }
+}
 
-    function renderChartsAndDetails(data) {
-        renderGradeDistributionChart(data.gradeDistribution);
-        hardestQuestionsList.innerHTML = data.itemAnalysis.hardestQuestions.map(q => `
-            <li>
-                <span>Câu ${q.id.replace(/.*_/, '')}</span>
-                <span class="accuracy">${q.accuracy.toFixed(0)}% đúng</span>
-            </li>
-        `).join('') || '<li>(Không có)</li>';
-    }
+    function renderChartsAndDetails(gradeData, itemAnalysis) {
+    renderGradeDistributionChart(gradeData);
+
+    const hardestQuestionsContainer = document.getElementById('hardest-questions-list').parentElement;
+    hardestQuestionsContainer.querySelector('h4').innerHTML = '💡 5 Câu hỏi cần chú ý nhất';
+    hardestQuestionsList.innerHTML = itemAnalysis.hardestQuestions.map(q => `
+        <li>
+            <span>Câu ${q.id.replace(/.*_/, '')}</span>
+            <span class="accuracy">${q.accuracy.toFixed(0)}% đúng</span>
+        </li>
+    `).join('') || '<li>(Không có)</li>';
+}
 
     function renderClassSummary(data) {
     // Reset giao diện về trạng thái sạch trước khi render
@@ -322,7 +332,122 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gắn lại sự kiện click cho các tên học sinh vừa được render
     attachStudentLinkListeners();
 }
-    // --- CÁC HÀM VẼ BIỂU ĐỒ ---
+    
+// CÁC HÀM XỬ LÝ VÀ RENDER MỚI
+
+function handleSubjectSelectChange() {
+    const selectedSubject = subjectSelect.value;
+    if (!selectedSubject) {
+        resetOverviewUI(true); // Reset nhẹ, không reset dropdown
+        return;
+    }
+    
+    if (multiSubjectReportData && multiSubjectReportData[selectedSubject]) {
+        overviewLoadingOverlay.classList.add('active');
+        setTimeout(() => {
+            const subjectData = multiSubjectReportData[selectedSubject];
+            // Render dữ liệu chi tiết của môn học đã chọn
+            renderSubjectDetailReport(subjectData);
+            overviewLoadingOverlay.classList.remove('active');
+        }, 50);
+    }
+}
+
+// Hàm render cho báo cáo Đa môn của Admin/GVCN
+function renderMultiSubjectReport(data) {
+    subjectSelect.style.display = 'none';
+    kpisContainer.innerHTML = ''; // Xóa KPI mặc định
+    mainChart.destroy(); // Xóa biểu đồ cũ
+    mainChart = null;
+
+    const tableHtml = `
+        <div class="list-container card">
+            <h4>So sánh Hiệu suất các Môn học</h4>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Môn học</th>
+                        <th>Điểm TB</th>
+                        <th>Tỷ lệ Tham gia</th>
+                        <th>Mất tập trung TB</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.map(subject => `
+                        <tr>
+                            <td>${subject.subject}</td>
+                            <td>${subject.avgScore}</td>
+                            <td>${subject.avgParticipation}%</td>
+                            <td>${subject.avgLeaveCount} lần/bài</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+    mainChartContainer.innerHTML = tableHtml;
+
+    hardestQuestionsList.innerHTML = '<li>(Báo cáo đa môn không áp dụng)</li>';
+    topPerformersList.innerHTML = '<li>(Báo cáo đa môn không áp dụng)</li>';
+    bottomPerformersList.innerHTML = '<li>(Báo cáo đa môn không áp dụng)</li>';
+    if (missingStudentsContainer) {
+        missingStudentsContainer.style.display = 'none';
+    }
+}
+
+// Hàm xử lý "kho" dữ liệu trả về cho GVBM
+function handleSingleSubjectReportData(data) {
+    multiSubjectReportData = data;
+    const subjects = Object.keys(data);
+    if (subjects.length > 0) {
+        subjectSelect.innerHTML = 
+            '<option value="">-- Chọn Môn học --</option>' +
+            subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        subjectSelect.style.display = 'block';
+    } else {
+        subjectSelect.style.display = 'none';
+        alert("Không tìm thấy dữ liệu môn học nào cho lớp này.");
+    }
+}
+
+// Hàm render báo cáo chi tiết cho MỘT môn học (dành cho GVBM)
+function renderSubjectDetailReport(subjectData) {
+    // Render KPIs
+    const kpis = subjectData.kpis;
+    kpisContainer.innerHTML = `
+        <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${kpis.totalSubmissions} / ${kpis.expectedSubmissions}</p></div>
+        <div class="kpi-card"><h3>Điểm TB Chung</h3><p>${kpis.overallAvgScore}</p></div>
+    `;
+
+    // Render biểu đồ Xu hướng điểm
+    renderClassScoreTrendChart(subjectData.classScoreTrend);
+
+    // Render danh sách học sinh
+    const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
+    
+    document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
+    topPerformersList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    
+    document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
+    bottomPerformersList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    
+    // Render danh sách chủ đề yếu
+    const hardestQuestionsContainer = document.getElementById('hardest-questions-list').parentElement;
+    hardestQuestionsContainer.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
+    hardestQuestionsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `
+        <li>
+            <span>${t.topic}</span>
+            <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
+        </li>
+    `).join('') || '<li>(Không có)</li>';
+
+    if (missingStudentsContainer) {
+        missingStudentsContainer.style.display = 'none';
+    }
+    attachStudentLinkListeners();
+}
+
+// --- CÁC HÀM VẼ BIỂU ĐỒ ---
     function renderGradeDistributionChart(gradeData) {
         const options = {
             chart: { type: 'bar', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
