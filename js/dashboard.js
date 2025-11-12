@@ -559,7 +559,7 @@ function renderSubjectComparisonChart(comparisonData) {
     if(existingChart) existingChart.destroy();
     
     const options = {
-        chart: { type: 'bar', height: 350, foreColor: getChartForeColor(), background: 'transparent' },
+        chart: { type: 'bar', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
         series: [{
             name: 'Điểm TB',
             data: comparisonData.map(s => s.avgScore)
@@ -574,7 +574,9 @@ function renderSubjectComparisonChart(comparisonData) {
             { seriesName: 'Điểm TB', min: 0, max: 10, title: { text: 'Điểm trung bình' } },
             { seriesName: 'Tỷ lệ Tham gia (%)', opposite: true, min: 0, max: 100, title: { text: 'Tỷ lệ Tham gia (%)' } }
         ],
-        title: { text: 'So sánh Hiệu suất các Môn học', align: 'left' },
+        title: { text: 'So sánh Hiệu suất các Môn học', align: 'left', style: {
+                fontSize: '18px',
+                color: getChartForeColor() },
         plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
         dataLabels: { enabled: false },
         stroke: { show: true, width: 2, colors: ['transparent'] }
@@ -594,7 +596,7 @@ function renderOverallSkillChart(levelData) {
     const sortedData = [...levelData].sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
     
     const options = {
-        chart: { type: 'radar', height: 280, foreColor: getChartForeColor(), background: 'transparent', toolbar: { show: false } },
+        chart: { type: 'radar', height: 280, foreColor: getChartForeColor(), background: 'transparent', toolbar: { show: false }, fontFamily: "'Be Vietnam Pro', sans-serif" },
         series: [{
             name: 'Tỷ lệ đúng',
             data: sortedData.map(l => l.accuracy.toFixed(0))
@@ -604,6 +606,14 @@ function renderOverallSkillChart(levelData) {
         stroke: { width: 2 },
         fill: { opacity: 0.2 },
         markers: { size: 3 }
+title: {
+            text: 'Năng lực Chung của Lớp',
+            align: 'left',
+            style: {
+                fontSize: '16px', // Cỡ chữ nhỏ hơn một chút cho widget nhỏ
+                color: getChartForeColor()
+            }
+        },
     };
 
     const chart = new ApexCharts(overallSkillChartContainer, options);
