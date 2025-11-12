@@ -41,12 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentViewBtn = document.getElementById('student-view-btn');
 
     // Bố cục Đa môn
-    const overallSkillChartContainer = document.getElementById('overall-skill-chart');
-    const improvingStudentsList = document.getElementById('improving-students-list');
-    const watchingStudentsList = document.getElementById('watching-students-list');
-    const lowParticipationList = document.getElementById('low-participation-list');
-    const weakestTopicsList = document.getElementById('weakest-topics-list');
-    const highAttentionIssueList = document.getElementById('high-attention-issue-list');
+    const ms_mainChartContainer = document.getElementById('ms-main-chart-container');
+    const ms_overallSkillChartContainer = document.getElementById('ms-overall-skill-chart');
+    const ms_improvingStudentsList = document.getElementById('ms-improving-students-list');
+    const ms_watchingStudentsList = document.getElementById('ms-watching-students-list');
+    // BỔ SUNG BIẾN CÒN THIẾU
+    const ms_weakestTopicsList = document.getElementById('ms-weakest-topics-list');
+    const ms_highAttentionIssueList = document.getElementById('ms-high-attention-issue-list');
     // =================================================================
     //                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN
     // =================================================================
@@ -406,61 +407,49 @@ function renderMultiSubjectReport(data) {
     renderOverallSkillChart(data.overallSkillAnalysis.byLevel);
     
     // 3. Render danh sách Tuyên dương
-    if (improvingStudentsList) {
+    if (ms_improvingStudentsList) {
         if (data.improvingStudents && data.improvingStudents.length > 0) {
-            improvingStudentsList.innerHTML = data.improvingStudents.map(s => 
+            ms_improvingStudentsList.innerHTML = data.improvingStudents.map(s => 
                 `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
                     <span>${s.name}</span><span class="score">${s.trend}</span>
                 </li>`).join('');
         } else {
-            improvingStudentsList.innerHTML = '<li class="placeholder-item">Chưa có ghi nhận</li>';
+            ms_improvingStudentsList.innerHTML = '<li class="placeholder-item">Chưa có ghi nhận</li>';
         }
     }
 
     // 4. Render danh sách Cảnh báo
-    if (watchingStudentsList) {
+    if (ms_watchingStudentsList) {
         if (data.studentsToWatch && data.studentsToWatch.length > 0) {
-            watchingStudentsList.innerHTML = data.studentsToWatch.map(s => 
+            ms_watchingStudentsList.innerHTML = data.studentsToWatch.map(s => 
                 `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
                     <span>${s.name}</span><span class="score">${s.trend}</span>
                 </li>`).join('');
         } else {
-            watchingStudentsList.innerHTML = '<li class="placeholder-item">Không có ai</li>';
+            ms_watchingStudentsList.innerHTML = '<li class="placeholder-item">Không có ai</li>';
         }
     }
     
-    // 5. Render danh sách Chuyên cần thấp
-    if (lowParticipationList) {
-        if (data.participationAnalysis && data.participationAnalysis.lowestParticipation.length > 0) {
-            lowParticipationList.innerHTML = data.participationAnalysis.lowestParticipation.map(s => 
-                `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
-                    <span>${s.name}</span><span class="score">${s.submitted}/${s.total} bài</span>
-                </li>`).join('');
-        } else {
-            lowParticipationList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
-        }
-    }
-    
-    // 6. Render danh sách Chủ đề yếu
-    if (weakestTopicsList) {
+    // 5. Render danh sách Chủ đề yếu
+     if (ms_weakestTopicsList) {
         if (data.overallSkillAnalysis && data.overallSkillAnalysis.weakestTopics.length > 0) {
-            weakestTopicsList.innerHTML = data.overallSkillAnalysis.weakestTopics.map(t =>
+            ms_weakestTopicsList.innerHTML = data.overallSkillAnalysis.weakestTopics.map(t =>
                 `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`
             ).join('');
         } else {
-            weakestTopicsList.innerHTML = '<li class="placeholder-item">Không có chủ đề nào yếu rõ rệt</li>';
+            ms_weakestTopicsList.innerHTML = '<li class="placeholder-item">Không có chủ đề nào yếu rõ rệt</li>';
         }
     }
     
-    // 7. Render danh sách Mất tập trung
-    if (highAttentionIssueList) {
+    // 6. Render danh sách Mất tập trung
+    if (ms_highAttentionIssueList) {
         if (data.attentionAnalysis && data.attentionAnalysis.highestAttentionIssue.length > 0) {
-            highAttentionIssueList.innerHTML = data.attentionAnalysis.highestAttentionIssue.map(s => 
+            ms_highAttentionIssueList.innerHTML = data.attentionAnalysis.highestAttentionIssue.map(s => 
                 `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
                     <span>${s.name}</span><span class="score">${s.avgLeaves.toFixed(1)} lần/bài</span>
                 </li>`).join('');
         } else {
-            highAttentionIssueList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+            ms_highAttentionIssueList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
         }
     }
 
@@ -608,12 +597,13 @@ function renderClassScoreTrendChart(trendData) {
     mainChart.render();
 }
 function renderSubjectComparisonChart(comparisonData) {
-    if (!multiSubjectChartContainer) return; 
+    // Luôn kiểm tra an toàn
+    if (!ms_mainChartContainer) return; 
 
-    const existingChart = ApexCharts.getChartByID(multiSubjectChartContainer.id);
+    // Hủy biểu đồ cũ nếu có
+    const existingChart = ApexCharts.getChartByID(ms_mainChartContainer.id);
     if(existingChart) existingChart.destroy();
     
-    // Xác định theme hiện tại
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
     const options = {
@@ -635,7 +625,7 @@ function renderSubjectComparisonChart(comparisonData) {
             categories: comparisonData.map(s => s.subject),
             labels: {
                 style: {
-                    colors: getChartForeColor() // <-- THÊM MÀU CHO TRỤC X
+                    colors: getChartForeColor()
                 }
             }
         },
@@ -647,7 +637,7 @@ function renderSubjectComparisonChart(comparisonData) {
                 title: { text: 'Điểm trung bình' },
                 labels: {
                     style: {
-                        colors: getChartForeColor() // <-- THÊM MÀU CHO TRỤC Y 1
+                        colors: getChartForeColor()
                     }
                 }
             },
@@ -659,7 +649,7 @@ function renderSubjectComparisonChart(comparisonData) {
                 title: { text: 'Tỷ lệ Tham gia (%)' },
                 labels: {
                     style: {
-                        colors: getChartForeColor() // <-- THÊM MÀU CHO TRỤC Y 2
+                        colors: getChartForeColor()
                     }
                 }
             }
@@ -675,34 +665,32 @@ function renderSubjectComparisonChart(comparisonData) {
         plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
         dataLabels: { enabled: false },
         stroke: { show: true, width: 2, colors: ['transparent'] },
-        
-        // --- BỔ SUNG CÁC TÙY CHỌN QUAN TRỌNG ---
         legend: {
             labels: {
-                colors: getChartForeColor() // Đặt màu cho chữ trong chú thích
+                colors: getChartForeColor()
             }
         },
         tooltip: {
-            theme: currentTheme // Đồng bộ theme của tooltip với theme của trang
+            theme: currentTheme
         },
         grid: {
-            borderColor: 'rgba(128, 128, 128, 0.2)' // Màu lưới nhẹ, phù hợp cả 2 theme
+            borderColor: 'rgba(128, 128, 128, 0.2)'
         }
     };
     
-    const chart = new ApexCharts(multiSubjectChartContainer, options);
+    // Vẽ biểu đồ vào đúng container có ID 'ms-main-chart-container'
+    const chart = new ApexCharts(ms_mainChartContainer, options);
     chart.render();
 }
 
 function renderOverallSkillChart(levelData) {
-    if (!overallSkillChartContainer) return;
+    // Luôn kiểm tra an toàn
+    if (!ms_overallSkillChartContainer) return;
 
-    const existingChart = ApexCharts.getChartByID(overallSkillChartContainer.id);
+    const existingChart = ApexCharts.getChartByID(ms_overallSkillChartContainer.id);
     if(existingChart) existingChart.destroy();
 
-    // Xác định theme hiện tại
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-
     const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
     const sortedData = [...levelData].sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
     
@@ -727,7 +715,7 @@ function renderOverallSkillChart(levelData) {
             labels: { 
                 formatter: (val) => `${val}%`,
                 style: {
-                    colors: getChartForeColor() // <-- THÊM MÀU CHO CÁC SỐ %
+                    colors: getChartForeColor()
                 }
             } 
         },
@@ -742,28 +730,23 @@ function renderOverallSkillChart(levelData) {
         stroke: { width: 2 },
         fill: { opacity: 0.2 },
         markers: { size: 3 },
-        
-        // --- BỔ SUNG CÁC TÙY CHỌN QUAN TRỌNG ---
-        legend: {
-            show: false // Biểu đồ radar thường không cần chú thích khi chỉ có 1 series
-        },
         tooltip: {
-            theme: currentTheme // Đồng bộ theme của tooltip
+            theme: currentTheme
         },
         plotOptions: {
             radar: {
                 polygons: {
-                    strokeColors: 'rgba(128, 128, 128, 0.2)', // Màu lưới mạng nhện
+                    strokeColors: 'rgba(128, 128, 128, 0.2)',
                     connectorColors: 'rgba(128, 128, 128, 0.2)'
                 }
             }
         }
     };
 
-    const chart = new ApexCharts(overallSkillChartContainer, options);
+    // Vẽ biểu đồ vào đúng container có ID 'ms-overall-skill-chart'
+    const chart = new ApexCharts(ms_overallSkillChartContainer, options);
     chart.render();
 }
-
 // HÀM VẼ BIỂU ĐỒ XU HƯỚNG CHO GVBM
 function renderClassScoreTrendChart_forDetailedView(trendData) {
     if (!detailedChartContainer) return;

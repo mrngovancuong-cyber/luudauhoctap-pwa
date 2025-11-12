@@ -160,52 +160,52 @@
     <!-- =================================================================
          BỐ CỤC 2: BÁO CÁO TỔNG QUAN ĐA MÔN (Cho Admin/GVCN)
     ================================================================== -->
-    <div id="multisubject-report-layout" class="hidden">
-        
-        <!-- Hàng 1: Biểu đồ chính và Năng lực chung -->
-        <div class="chart-grid">
-            <div class="chart-container" id="main-chart-container">
-                 <!-- Biểu đồ So sánh Môn học sẽ được vẽ ở đây -->
-            </div>
-            <div class="list-container card">
-                <h4><span style="vertical-align: middle;">🧠</span> Năng lực Chung của Lớp</h4>
-                <div id="overall-skill-chart" style="min-height: 250px;"></div>
-            </div>
+<div id="multisubject-report-layout" class="hidden">
+    
+    <!-- Hàng 1: Biểu đồ chính và Năng lực chung -->
+    <div class="chart-grid">
+        <div class="chart-container" id="ms-main-chart-container"> <!-- Đổi ID -->
+             <!-- Biểu đồ So sánh Môn học sẽ được vẽ ở đây -->
         </div>
-
-        <!-- Hàng 2: Các danh sách xu hướng -->
-        <div class="student-list-grid two-columns" id="action-lists-grid">
-            <div class="list-container card">
-                <h4><span style="vertical-align: middle;">📈</span> Tuyên dương Phong độ cao</h4>
-                <ul id="improving-students-list">
-                     <li class="placeholder-item">Đang phân tích...</li>
-                </ul>
-            </div>
-            <div class="list-container card">
-                <h4><span style="vertical-align: middle;">📉</span> Cảnh báo Rớt phong độ</h4>
-                <ul id="watching-students-list">
-                     <li class="placeholder-item">Đang phân tích...</li>
-                </ul>
-            </div>
+        <div class="list-container card">
+            <h4><span style="vertical-align: middle;">🧠</span> Năng lực Chung của Lớp</h4>
+            <div id="ms-overall-skill-chart" style="min-height: 250px;"></div> <!-- Đổi ID -->
         </div>
-        
-        <!-- Hàng 3: Các danh sách hành vi -->
-        <div class="student-list-grid two-columns" id="detail-tables-grid">
-            <div class="list-container card">
-                 <h4><span style="vertical-align: middle;">🎯</span> Các Chủ đề yếu nhất (Đa môn)</h4>
-                 <ul id="weakest-topics-list">
-                      <li class="placeholder-item">Đang phân tích...</li>
-                 </ul>
-            </div>
-            <div class="list-container card">
-                 <h4><span style="vertical-align: middle;">👀</span> Mất tập trung cao nhất</h4>
-                 <ul id="high-attention-issue-list">
-                      <li class="placeholder-item">Đang phân tích...</li>
-                 </ul>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Hàng 2: Các danh sách xu hướng -->
+    <div class="student-list-grid two-columns">
+        <div class="list-container card">
+            <h4><span style="vertical-align: middle;">📈</span> Tuyên dương Phong độ cao</h4>
+            <ul id="ms-improving-students-list"> <!-- Đổi ID -->
+                 <li class="placeholder-item">Đang phân tích...</li>
+            </ul>
+        </div>
+        <div class="list-container card">
+            <h4><span style="vertical-align: middle;">📉</span> Cảnh báo Rớt phong độ</h4>
+            <ul id="ms-watching-students-list"> <!-- Đổi ID -->
+                 <li class="placeholder-item">Đang phân tích...</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Hàng 3: Các danh sách hành vi -->
+    <div class="student-list-grid two-columns">
+        <div class="list-container card">
+             <h4><span style="vertical-align: middle;">🎯</span> Các Chủ đề yếu nhất (Đa môn)</h4>
+             <ul id="ms-weakest-topics-list"> <!-- Đổi ID -->
+                  <li class="placeholder-item">Đang phân tích...</li>
+             </ul>
+        </div>
+        <div class="list-container card">
+             <h4><span style="vertical-align: middle;">👀</span> Mất tập trung cao nhất</h4>
+             <ul id="ms-high-attention-issue-list"> <!-- Đổi ID -->
+                  <li class="placeholder-item">Đang phân tích...</li>
+             </ul>
+        </div>
+    </div>
+
+</div>
 
 </section>
     
