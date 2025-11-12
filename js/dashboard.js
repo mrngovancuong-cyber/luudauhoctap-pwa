@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Khu vực hiển thị
     const overviewLoadingOverlay = document.getElementById('overview-loading-overlay');
     const kpisContainer = document.getElementById('overview-kpis');
-    const mainChartContainer = document.getElementById('grade-distribution-chart'); // Tái sử dụng chart container
+    const detailedChartContainer = document.getElementById('grade-distribution-chart');
+    const multiSubjectChartContainer = document.getElementById('main-chart-container');
     const hardestQuestionsList = document.getElementById('hardest-questions-list');
     const topPerformersList = document.getElementById('top-performers-list');
     const bottomPerformersList = document.getElementById('bottom-performers-list');
@@ -39,6 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const missingStudentsList = document.getElementById('missing-students-list');
     const studentViewBtn = document.getElementById('student-view-btn');
 
+    // Bố cục Đa môn
+    const overallSkillChartContainer = document.getElementById('overall-skill-chart');
+    const improvingStudentsList = document.getElementById('improving-students-list');
+    const watchingStudentsList = document.getElementById('watching-students-list');
+    const lowParticipationList = document.getElementById('low-participation-list');
+    const weakestTopicsList = document.getElementById('weakest-topics-list');
+    const highAttentionIssueList = document.getElementById('high-attention-issue-list');
     // =================================================================
     //                    LUỒNG KHỞI TẠO VÀ SỰ KIỆN
     // =================================================================
@@ -493,7 +501,7 @@ function renderSubjectDetailReport(subjectData) {
             tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' }
         };
         if (mainChart) { mainChart.updateOptions(options, true, true, true); }
-        else { mainChart = new ApexCharts(mainChartContainer, options); mainChart.render(); }
+        else { mainChart = new ApexCharts(detailedChartContainer, options); mainChart.render(); }
     }
     
     function renderClassScoreTrendChart(trendData) {
