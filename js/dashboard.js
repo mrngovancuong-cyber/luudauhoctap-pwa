@@ -399,26 +399,19 @@ function handleSubjectSelectChange() {
 // THAY THẾ TOÀN BỘ HÀM NÀY
 function renderMultiSubjectReport(data) {
     // 1. Dọn dẹp giao diện (giữ nguyên)
-    subjectSelect.style.display = 'none';
-    kpisContainer.innerHTML = ''; 
+    if (subjectSelect) subjectSelect.style.display = 'none';
+    if (kpisContainer) kpisContainer.innerHTML = ''; 
     
-    // Hủy biểu đồ cũ một cách an toàn
-    if (mainChart) {
-        mainChart.destroy();
-        mainChart = null;
-    }
-
     // === BẮT ĐẦU PHẦN SỬA LỖI VÀ NÂNG CẤP ===
     
     // 2. Render Biểu đồ So sánh Môn học (thay vì bảng tĩnh)
-    // Dữ liệu cho biểu đồ này nằm trong data.subjectComparison
     renderSubjectComparisonChart(data.subjectComparison);
 
     // 3. Render Biểu đồ Radar Năng lực chung
-    // Dữ liệu cho biểu đồ này nằm trong data.overallSkillAnalysis.byLevel
     renderOverallSkillChart(data.overallSkillAnalysis.byLevel);
     
     // 4. Render danh sách Tuyên dương
+if (improvingStudentsList) { // Kiểm tra an toàn
     if (data.improvingStudents && data.improvingStudents.length > 0) {
         improvingStudentsList.innerHTML = data.improvingStudents.map(s => 
             `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
@@ -429,6 +422,7 @@ function renderMultiSubjectReport(data) {
     }
 
     // 5. Render danh sách Cảnh báo
+if (watchingStudentsList) { // Kiểm tra an toàn
     if (data.studentsToWatch && data.studentsToWatch.length > 0) {
         watchingStudentsList.innerHTML = data.studentsToWatch.map(s => 
             `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
@@ -439,6 +433,7 @@ function renderMultiSubjectReport(data) {
     }
     
     // 6. Render danh sách Chuyên cần thấp
+if (lowParticipationList) { // Kiểm tra an toàn
     if (data.participationAnalysis && data.participationAnalysis.lowestParticipation.length > 0) {
         lowParticipationList.innerHTML = data.participationAnalysis.lowestParticipation.map(s => 
             `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
@@ -449,7 +444,8 @@ function renderMultiSubjectReport(data) {
     }
     
     // 7. Render danh sách Chủ đề yếu
-     if (data.overallSkillAnalysis && data.overallSkillAnalysis.weakestTopics.length > 0) {
+if (weakestTopicsList) { // Kiểm tra an toàn
+    if (data.overallSkillAnalysis && data.overallSkillAnalysis.weakestTopics.length > 0) {
         weakestTopicsList.innerHTML = data.overallSkillAnalysis.weakestTopics.map(t =>
             `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`
         ).join('');
@@ -458,6 +454,7 @@ function renderMultiSubjectReport(data) {
     }
     
     // 8. Render danh sách Mất tập trung
+if (highAttentionIssueList) { // Kiểm tra an toàn
     if (data.attentionAnalysis && data.attentionAnalysis.highestAttentionIssue.length > 0) {
         highAttentionIssueList.innerHTML = data.attentionAnalysis.highestAttentionIssue.map(s => 
             `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
