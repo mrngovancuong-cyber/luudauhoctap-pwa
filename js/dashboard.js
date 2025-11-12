@@ -485,51 +485,66 @@ function handleSingleSubjectReportData(data) {
 
 // Hàm render báo cáo chi tiết cho MỘT môn học (dành cho GVBM)
 // THAY THẾ TOÀN BỘ HÀM NÀY
+// THAY THẾ TOÀN BỘ HÀM NÀY
 function renderSubjectDetailReport(subjectData) {
-    // 1. Render KPIs
+    // === HÀM NÀY RENDER VÀO BỐ CỤC CHI TIẾT (`detailed-report-layout`) ===
+
+    // 1. Render KPIs (Chỉ hiển thị 2 KPI chính)
     const kpis = subjectData.kpis;
     kpisContainer.innerHTML = `
         <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${kpis.totalSubmissions} / ${kpis.expectedSubmissions}</p></div>
         <div class="kpi-card"><h3>Điểm TB Chung</h3><p>${kpis.overallAvgScore}</p></div>
+        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
     `;
 
-    // 2. Render Biểu đồ chính: Xu hướng điểm
-    // Container này giờ được dùng chung
-    renderClassScoreTrendChart(subjectData.classScoreTrend);
+    // 2. Render Biểu đồ chính: Xu hướng Điểm trung bình của Môn học
+    renderClassScoreTrendChart_forDetailedView(subjectData.classScoreTrend);
 
-    // 3. Render Biểu đồ phụ: Phân tích Năng lực theo Cấp độ (DÙNG LẠI BIỂU ĐỒ RADAR)
-    // Container này cũng được dùng chung
-    renderOverallSkillChart(subjectData.topicAnalysis.byLevel); // Lấy dữ liệu byLevel từ topicAnalysis
+    // 3. Render Biểu đồ phụ: Phân tích Năng lực theo Cấp độ (DÙNG LẠI CONTAINER CỦA "5 CÂU HỎI KHÓ")
+    // Chúng ta sẽ "hy sinh" danh sách 5 câu hỏi khó để hiển thị biểu đồ radar quan trọng hơn.
+    if (hardestQuestionsList) {
+        const parentContainer = hardestQuestionsList.parentElement;
+        parentContainer.querySelector('h4').innerHTML = '🧠 Năng lực theo Cấp độ';
+        // Xóa danh sách `ul` cũ và tạo một `div` mới cho biểu đồ
+        hardestQuestionsList.remove();
+        let skillChartDiv = document.getElementById('subject-skill-chart');
+        if (!skillChartDiv) {
+            skillChartDiv = document.createElement('div');
+            skillChartDiv.id = 'subject-skill-chart';
+            skillChartDiv.style.minHeight = '250px';
+            parentContainer.appendChild(skillChartDiv);
+        }
+        renderOverallSkillChart_forDetailedView(subjectData.topicAnalysis.byLevel);
+    }
 
-    // 4. Render Danh sách: Học sinh Tiến bộ & Cần quan tâm
+    // 4. Render các danh sách vào đúng 3 cột bên dưới
     const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
     
-    // Đảm bảo các element tồn tại trước khi gán
-    if (improvingStudentsList) {
-        improvingStudentsList.parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
-        improvingStudentsList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    // Cột 1: Đổi thành Học sinh Tiến bộ
+    if (topPerformersList) {
+        topPerformersList.parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
+        topPerformersList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
     }
-    
-    if (watchingStudentsList) {
-        watchingStudentsList.parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
-        watchingStudentsList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    // Cột 2: Đổi thành Học sinh Cần quan tâm
+    if (bottomPerformersList) {
+        bottomPerformersList.parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
+        bottomPerformersList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
     }
-    
-    // 5. Render Danh sách: Chủ đề yếu & Chuyên cần thấp
-    if (weakestTopicsList) {
-        weakestTopicsList.parentElement.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
-        weakestTopicsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `
-            <li>
-                <span>${t.topic}</span>
-                <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
-            </li>
-        `).join('') || '<li>(Không có)</li>';
+    // Cột 3: Đổi thành Chủ đề yếu nhất
+    if (missingStudentsList) {
+        missingStudentsList.parentElement.querySelector('h4').innerHTML = '📉 Các Chủ đề yếu nhất';
+        if (subjectData.topicAnalysis && subjectData.topicAnalysis.weakTopics.length > 0) {
+            missingStudentsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `
+                <li>
+                    <span>${t.topic}</span>
+                    <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
+                </li>
+            `).join('');
+        } else {
+             missingStudentsList.innerHTML = '<li>(Không có)</li>';
+        }
     }
-
-    // Ẩn các danh sách không áp dụng cho chế độ này
-    if (lowParticipationList) lowParticipationList.parentElement.style.display = 'none';
-    if (highAttentionIssueList) highAttentionIssueList.parentElement.style.display = 'none';
-
 
     attachStudentLinkListeners();
 }
@@ -746,6 +761,61 @@ function renderOverallSkillChart(levelData) {
     };
 
     const chart = new ApexCharts(overallSkillChartContainer, options);
+    chart.render();
+}
+
+// HÀM VẼ BIỂU ĐỒ XU HƯỚNG CHO GVBM
+function renderClassScoreTrendChart_forDetailedView(trendData) {
+    if (!detailedChartContainer) return;
+
+    const existingChart = ApexCharts.getChartByID(detailedChartContainer.id);
+    if(existingChart) existingChart.destroy();
+    
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+    const options = {
+        chart: { type: 'line', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
+        series: [{ name: 'Điểm TB Lớp', data: trendData.map(d => d.avgScore) }],
+        xaxis: { categories: trendData.map(d => d.examTitle), labels: { style: { colors: getChartForeColor() } } },
+        yaxis: { title: { text: 'Điểm trung bình' }, min: 0, max: 10, labels: { style: { colors: getChartForeColor() } } },
+        title: { text: 'Xu hướng Điểm trung bình của Môn học', align: 'left', style: { fontSize: '18px', color: getChartForeColor() } },
+        stroke: { curve: 'smooth' },
+        noData: { text: 'Không đủ dữ liệu.' },
+        tooltip: { theme: currentTheme },
+        grid: { borderColor: 'rgba(128, 128, 128, 0.2)' },
+        legend: { labels: { colors: getChartForeColor() } }
+    };
+    
+    const chart = new ApexCharts(detailedChartContainer, options);
+    chart.render();
+}
+
+// HÀM VẼ BIỂU ĐỒ RADAR CHO GVBM
+function renderOverallSkillChart_forDetailedView(levelData) {
+    const container = document.getElementById('subject-skill-chart');
+    if (!container) return;
+
+    const existingChart = ApexCharts.getChartByID(container.id);
+    if(existingChart) existingChart.destroy();
+
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
+    const sortedData = [...levelData].sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
+    
+    const options = {
+        chart: { type: 'radar', height: 280, foreColor: getChartForeColor(), background: 'transparent', toolbar: { show: false }, fontFamily: "'Be Vietnam Pro', sans-serif" },
+        series: [{ name: 'Tỷ lệ đúng', data: sortedData.map(l => l.accuracy.toFixed(0)) }],
+        labels: sortedData.map(l => l.level),
+        yaxis: { min: 0, max: 100, tickAmount: 5, labels: { formatter: (val) => `${val}%`, style: { colors: getChartForeColor() } } },
+        title: { text: 'Năng lực theo Cấp độ', align: 'left', style: { fontSize: '16px', color: getChartForeColor() } },
+        stroke: { width: 2 },
+        fill: { opacity: 0.2 },
+        markers: { size: 3 },
+        tooltip: { theme: currentTheme },
+        plotOptions: { radar: { polygons: { strokeColors: 'rgba(128, 128, 128, 0.2)', connectorColors: 'rgba(128, 128, 128, 0.2)' } } }
+    };
+
+    const chart = new ApexCharts(container, options);
     chart.render();
 }
     // =================================================================
