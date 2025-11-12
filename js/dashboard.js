@@ -659,7 +659,7 @@ function resetOverviewUI() {
 
     // === PHẦN 3: RESET NỘI DUNG BỐ CỤC ĐA MÔN (BỔ SUNG) ===
     // Đảm bảo các thành phần của layout mới cũng được dọn dẹp
-    if (mainChartContainer) mainChartContainer.innerHTML = ''; // Xóa bảng so sánh môn học
+    if (multiSubjectChartContainer) multiSubjectChartContainer.innerHTML = ''; // Xóa bảng so sánh môn học
     if (overallSkillChartContainer) overallSkillChartContainer.innerHTML = ''; // Xóa biểu đồ radar
     
     const multiSubjectPlaceholder = '<li>Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"</li>';
