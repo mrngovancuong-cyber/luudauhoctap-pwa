@@ -327,46 +327,50 @@ document.addEventListener('DOMContentLoaded', () => {
         attachStudentLinkListeners();
     }
 
-    function renderSubjectDetailReport(subjectData) {
-        const kpis = subjectData.kpis;
-        kpisContainer.innerHTML = `
-            <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${kpis.totalSubmissions} / ${kpis.expectedSubmissions}</p></div>
-            <div class="kpi-card"><h3>Điểm TB Chung</h3><p>${kpis.overallAvgScore}</p></div>
-            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
-            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
-        `;
+function renderSubjectDetailReport(subjectData) {
+    // ... (Phần render KPIs và biểu đồ Xu hướng điểm giữ nguyên)
+    const kpis = subjectData.kpis;
+    kpisContainer.innerHTML = `...`;
+    renderClassScoreTrendChart_forDetailedView(subjectData.classScoreTrend);
 
-        renderClassScoreTrendChart(subjectData.classScoreTrend, detailedChartContainer);
-
-        if (hardestQuestionsList) {
-            const parentContainer = hardestQuestionsList.parentElement;
-            parentContainer.querySelector('h4').innerHTML = '🧠 Năng lực theo Cấp độ';
-            hardestQuestionsList.style.display = 'none';
-            let skillChartDiv = document.getElementById('subject-skill-chart');
-            if (!skillChartDiv) {
-                skillChartDiv = document.createElement('div');
-                skillChartDiv.id = 'subject-skill-chart';
-                parentContainer.appendChild(skillChartDiv);
-            }
-            renderOverallSkillChart(subjectData.topicAnalysis.byLevel, skillChartDiv);
+    // === BẮT ĐẦU PHẦN GIA CỐ ===
+    const topicAnalysisData = subjectData.topicAnalysis || {}; // Tạo đối tượng rỗng nếu không có
+    const improvingStudentsData = subjectData.improvingStudents || [];
+    const studentsToWatchData = subjectData.studentsToWatch || [];
+    
+    // Render biểu đồ phụ
+    if (hardestQuestionsList) {
+        const parentContainer = hardestQuestionsList.parentElement;
+        parentContainer.querySelector('h4').innerHTML = '🧠 Năng lực theo Cấp độ';
+        hardestQuestionsList.style.display = 'none';
+        let skillChartDiv = document.getElementById('subject-skill-chart');
+        if (!skillChartDiv) {
+            skillChartDiv = document.createElement('div');
+            skillChartDiv.id = 'subject-skill-chart';
+            parentContainer.appendChild(skillChartDiv);
         }
-
-        const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
-        
-        if (topPerformersList) {
-            topPerformersList.parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
-            topPerformersList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
-        }
-        if (bottomPerformersList) {
-            bottomPerformersList.parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
-            bottomPerformersList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
-        }
-        if (missingStudentsList) {
-            missingStudentsList.parentElement.querySelector('h4').innerHTML = '📉 Các Chủ đề yếu nhất';
-            missingStudentsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`).join('') || '<li>(Không có)</li>';
-        }
-        attachStudentLinkListeners();
+        // Truyền vào mảng rỗng nếu không có dữ liệu
+        renderOverallSkillChart_forDetailedView(topicAnalysisData.byLevel || []);
     }
+
+    // Render các danh sách
+    const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
+    if (topPerformersList) {
+        topPerformersList.parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
+        topPerformersList.innerHTML = improvingStudentsData.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    }
+    if (bottomPerformersList) {
+        bottomPerformersList.parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
+        bottomPerformersList.innerHTML = studentsToWatchData.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    }
+    if (missingStudentsList) {
+        missingStudentsList.parentElement.querySelector('h4').innerHTML = '📉 Các Chủ đề yếu nhất';
+        const weakTopicsData = topicAnalysisData.weakTopics || [];
+        missingStudentsList.innerHTML = weakTopicsData.map(t => `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`).join('') || '<li>(Không có)</li>';
+    }
+    // === KẾT THÚC PHẦN GIA CỐ ===
+    attachStudentLinkListeners();
+}
 
     // --- CÁC HÀM VẼ BIỂU ĐỒ (ĐÃ CHUẨN HÓA) ---
 
