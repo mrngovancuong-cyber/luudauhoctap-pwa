@@ -778,35 +778,39 @@ function renderOverallSkillChart(levelData) {
         }
     }
     
-    async function populateClassesForSummary() {
+// THAY THẾ TOÀN BỘ HÀM NÀY
+async function populateClassesForSummary() {
     if (!currentUser) return;
 
-    // Vô hiệu hóa dropdown trong khi tải
+    // Vô hiệu hóa dropdown trong khi tải (giữ nguyên)
     classSummarySelect.innerHTML = '<option value="">-- Đang tải các lớp --</option>';
     classSummarySelect.disabled = true;
+    if (subjectSelect) subjectSelect.style.display = 'none'; // Thêm dòng này để ẩn dropdown môn học
 
     try {
         let classesToDisplay = [];
 
         if (currentUser.role === 'admin') {
-            // *** LOGIC MỚI CHO ADMIN ***
-            // Gọi API mới để lấy tất cả các lớp trong hệ thống
+            // === LOGIC CHO ADMIN (GIỮ NGUYÊN) ===
+            // Gọi API để lấy TẤT CẢ các lớp trong hệ thống
             const result = await fetchApi('getAllClasses');
             classesToDisplay = result.data;
         } else {
-            // Logic cũ cho giáo viên thông thường
-            if (currentUser.managedClasses && currentUser.managedClasses !== 'ALL') {
-                classesToDisplay = currentUser.managedClasses.split(',').map(c => c.trim()).sort();
-            }
+            // === LOGIC CHO GIÁO VIÊN (SỬA LẠI) ===
+            // Thay vì đọc từ localStorage, gọi API để lấy các lớp MÀ GV ĐÓ QUẢN LÝ
+            // API getClassesForSummaryReport đã có sẵn logic này ở backend
+            const result = await fetchApi('getClassesForSummaryReport');
+            classesToDisplay = result.data;
         }
 
-        if (classesToDisplay.length > 0) {
+        // Logic hiển thị kết quả (giữ nguyên)
+        if (classesToDisplay && classesToDisplay.length > 0) {
             classSummarySelect.innerHTML =
                 '<option value="">-- Chọn lớp để xem --</option>' +
                 classesToDisplay.map(c => `<option value="${c}">${c}</option>`).join('');
-            classSummarySelect.disabled = false; // Bật lại dropdown
+            classSummarySelect.disabled = false;
         } else {
-            classSummarySelect.innerHTML = '<option value="">-- Không có lớp nào --</option>';
+            classSummarySelect.innerHTML = '<option value="">-- Không có lớp nào để báo cáo --</option>';
         }
 
     } catch (error) {
