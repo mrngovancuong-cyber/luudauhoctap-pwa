@@ -551,15 +551,19 @@ function renderSubjectDetailReport(subjectData) {
     }
 
 function renderSubjectComparisonChart(comparisonData) {
-    // An toàn hơn: kiểm tra xem container có tồn tại không
     if (!multiSubjectChartContainer) return; 
 
-    // Hủy biểu đồ cũ nếu có
     const existingChart = ApexCharts.getChartByID(multiSubjectChartContainer.id);
     if(existingChart) existingChart.destroy();
     
     const options = {
-        chart: { type: 'bar', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
+        chart: { 
+            type: 'bar', 
+            height: 350, 
+            foreColor: getChartForeColor(), 
+            background: 'transparent', 
+            fontFamily: "'Be Vietnam Pro', sans-serif" 
+        },
         series: [{
             name: 'Điểm TB',
             data: comparisonData.map(s => s.avgScore)
@@ -574,12 +578,25 @@ function renderSubjectComparisonChart(comparisonData) {
             { seriesName: 'Điểm TB', min: 0, max: 10, title: { text: 'Điểm trung bình' } },
             { seriesName: 'Tỷ lệ Tham gia (%)', opposite: true, min: 0, max: 100, title: { text: 'Tỷ lệ Tham gia (%)' } }
         ],
-        title: { text: 'So sánh Hiệu suất các Môn học', align: 'left', style: {
+        title: { 
+            text: 'So sánh Hiệu suất các Môn học', 
+            align: 'left', 
+            style: {
                 fontSize: '18px',
-                color: getChartForeColor() },
-        plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
-        dataLabels: { enabled: false },
-        stroke: { show: true, width: 2, colors: ['transparent'] }
+                color: getChartForeColor() 
+            } 
+        }, // <-- THÊM DẤU PHẨY Ở ĐÂY
+
+        // DI CHUYỂN CÁC THUỘC TÍNH NÀY RA NGOÀI `title`
+        plotOptions: { 
+            bar: { horizontal: false, columnWidth: '50%' } 
+        },
+        dataLabels: { 
+            enabled: false 
+        },
+        stroke: { 
+            show: true, width: 2, colors: ['transparent'] 
+        }
     };
     
     const chart = new ApexCharts(multiSubjectChartContainer, options);
