@@ -162,27 +162,56 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (mode === 'byExam') {
+        // --- BÁO CÁO THEO BÀI TẬP (LOGIC CŨ) ---
         params.examId = examSelect.value;
         const selectedClass = classSelect.value;
         if (selectedClass && selectedClass !== "ALL") {
             params.classId = selectedClass;
         }
-        fetchAndDisplayClassOverview(params); // Gọi luồng cũ
-    } else { // byClass
+
+        // Đảm bảo đúng layout được hiển thị
+        document.getElementById('detailed-report-layout').classList.remove('hidden');
+        document.getElementById('multisubject-report-layout').classList.add('hidden');
+        
+        fetchAndDisplayClassOverview(params);
+
+    } else { // byClass - BÁO CÁO THEO LỚP (LOGIC MỚI)
         params.classId = classSummarySelect.value;
-        // Gọi API điều phối MỚI
+        
         fetchApi('get_CLASS_REPORT', params)
             .then(result => {
+                const detailedLayout = document.getElementById('detailed-report-layout');
+                const multiSubjectLayout = document.getElementById('multisubject-report-layout');
+
                 if (result.data.reportType === 'multi_subject') {
-                    // Nếu là Admin/GVCN, render báo cáo đa môn
+                    // === Luồng Admin/GVCN ===
+                    // 1. Chuyển đổi layout
+                    detailedLayout.classList.add('hidden');
+                    multiSubjectLayout.classList.remove('hidden');
+                    // 2. Render báo cáo đa môn
                     renderMultiSubjectReport(result.data.data);
+
                 } else { // single_subject
-                    // Nếu là GVBM, xử lý "kho" dữ liệu
+                    // === Luồng GVBM ===
+                    // 1. Chuyển đổi layout
+                    detailedLayout.classList.remove('hidden');
+                    multiSubjectLayout.classList.add('hidden');
+                    // 2. Xử lý "kho" dữ liệu để tạo dropdown Môn học
                     handleSingleSubjectReportData(result.data.data);
                 }
             })
-            .catch(error => handleApiError(error, "Không thể tải báo cáo lớp"))
-            .finally(() => overviewLoadingOverlay.classList.remove('active'));
+            .catch(error => {
+                handleApiError(error, "Không thể tải báo cáo lớp");
+                // Đảm bảo tắt spinner nếu có lỗi
+                overviewLoadingOverlay.classList.remove('active');
+            })
+            .finally(() => {
+                // Tắt spinner chỉ khi là báo cáo đa môn (vì báo cáo chi tiết có luồng riêng)
+                const reportType = document.querySelector('#multisubject-report-layout.hidden') ? 'detailed' : 'multisubject';
+                if (reportType === 'multisubject') {
+                    overviewLoadingOverlay.classList.remove('active');
+                }
+            });
     }
 }
     function handleResetFiltersClick() {
@@ -227,21 +256,26 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
     async function fetchAndDisplayClassOverview(params) {
+    // 1. Điều khiển hiển thị layout
+    document.getElementById('detailed-report-layout').classList.remove('hidden');
+    document.getElementById('multisubject-report-layout').classList.add('hidden');
+    
     try {
-        overviewLoadingOverlay.classList.add('active'); // Bật spinner
-        // Luồng nhanh
+        overviewLoadingOverlay.classList.add('active');
+        
+        // 2. Luồng Nhanh (giữ nguyên)
         const kpiResult = await fetchApi('getClassKPIs', params);
         renderKPIsAndLists(kpiResult.data.kpis, kpiResult.data.topPerformers, kpiResult.data.bottomPerformers, kpiResult.data.missingStudents);
         
-        // Luồng chậm
+        // 3. Luồng Chậm (giữ nguyên)
         const detailsResult = await fetchApi('getClassDetails', params);
         renderChartsAndDetails(detailsResult.data.gradeDistribution, detailsResult.data.itemAnalysis);
 
     } catch (error) {
         handleApiError(error, "Không thể tải dữ liệu tổng quan");
-        resetOverviewUI();
+        resetOverviewUI(); // Giữ nguyên xử lý lỗi
     } finally {
-        overviewLoadingOverlay.classList.remove('active'); // Tắt spinner
+        overviewLoadingOverlay.classList.remove('active'); // Giữ nguyên
     }
 }
     function renderKPIsAndLists(kpis, top, bottom, missing = []) {
@@ -579,26 +613,54 @@ function renderSubjectDetailReport(subjectData) {
     viewReportBtn.disabled = !isReady;
 }
 
-    function resetOverviewUI() {
-        kpisContainer.innerHTML = `
-            <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
-            <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
-            <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
-            <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
-        `;
-        renderGradeDistributionChart(null);
-        const placeholderText = '<li>Chọn bộ lọc và nhấn "Xem báo cáo"</li>';
-        hardestQuestionsList.innerHTML = placeholderText;
-        topPerformersList.innerHTML = placeholderText;
-        bottomPerformersList.innerHTML = placeholderText;
+    // THAY THẾ TOÀN BỘ HÀM NÀY
+function resetOverviewUI() {
+    // === PHẦN 1: ĐIỀU KHIỂN ẨN/HIỆN CÁC BỐ CỤC (BỔ SUNG) ===
+    const detailedLayout = document.getElementById('detailed-report-layout');
+    const multiSubjectLayout = document.getElementById('multisubject-report-layout');
+    
+    // Luôn hiển thị layout chi tiết và ẩn layout đa môn khi reset
+    if (detailedLayout) detailedLayout.classList.remove('hidden');
+    if (multiSubjectLayout) multiSubjectLayout.classList.add('hidden');
+    
+    // Ẩn dropdown chọn môn học (nếu nó đang hiện)
+    if (subjectSelect) subjectSelect.style.display = 'none';
+
+    // === PHẦN 2: RESET NỘI DUNG BỐ CỤC CHI TIẾT (GIỮ NGUYÊN CODE CỦA BẠN) ===
+    kpisContainer.innerHTML = `
+        <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
+    `;
+    
+    renderGradeDistributionChart(null); // Giữ nguyên cách reset biểu đồ chính
+    
+    const placeholderText = '<li>Chọn bộ lọc và nhấn "Xem báo cáo"</li>';
+    hardestQuestionsList.innerHTML = placeholderText;
+    topPerformersList.innerHTML = placeholderText;
+    bottomPerformersList.innerHTML = placeholderText;
     if (missingStudentsList) {
         missingStudentsList.innerHTML = placeholderText;
     }
-        document.querySelector('#hardest-questions-list').parentElement.querySelector('h4').innerHTML = '💡 5 Câu hỏi cần chú ý nhất';
-        document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
-        document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
-    }
+    
+    // Đặt lại các tiêu đề về mặc định
+    document.querySelector('#hardest-questions-list').parentElement.querySelector('h4').innerHTML = '💡 5 Câu hỏi cần chú ý nhất';
+    document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
+    document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
 
+    // === PHẦN 3: RESET NỘI DUNG BỐ CỤC ĐA MÔN (BỔ SUNG) ===
+    // Đảm bảo các thành phần của layout mới cũng được dọn dẹp
+    if (mainChartContainer) mainChartContainer.innerHTML = ''; // Xóa bảng so sánh môn học
+    if (overallSkillChartContainer) overallSkillChartContainer.innerHTML = ''; // Xóa biểu đồ radar
+    
+    const multiSubjectPlaceholder = '<li>Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"</li>';
+    if (improvingStudentsList) improvingStudentsList.innerHTML = multiSubjectPlaceholder;
+    if (watchingStudentsList) watchingStudentsList.innerHTML = multiSubjectPlaceholder;
+    if (lowParticipationList) lowParticipationList.innerHTML = multiSubjectPlaceholder;
+    if (weakestTopicsList) weakestTopicsList.innerHTML = multiSubjectPlaceholder;
+    if (highAttentionIssueList) highAttentionIssueList.innerHTML = multiSubjectPlaceholder;
+}
     function attachStudentLinkListeners() {
         document.querySelectorAll('.student-link').forEach(item => {
             item.addEventListener('click', () => {

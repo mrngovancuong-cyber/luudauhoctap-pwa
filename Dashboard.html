@@ -102,23 +102,30 @@
         </div>
     </section>
 
-    <!-- KHU VỰC TỔNG QUAN LỚP HỌC (chứa các placeholder) -->
-    <section id="class-overview-section" style="position: relative;"> <!-- THÊM style="position: relative;" -->
-	<!-- DÁN LỚP PHỦ VÀO ĐÂY -->
-	    <div id="overview-loading-overlay" class="loading-overlay">
-		<div class="spinner"></div>
-	        <p>Đang tải dữ liệu...</p>
-	    </div>
-    	    
+    <!-- KHU VỰC TỔNG QUAN LỚP HỌC (ĐÃ NÂNG CẤP) -->
+<section id="class-overview-section" style="position: relative;">
+
+    <!-- Lớp phủ Loading (Dùng chung cho cả hai bố cục) -->
+    <div id="overview-loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Đang tải dữ liệu...</p>
+    </div>
+    
+    <!-- =================================================================
+         BỐ CỤC 1: BÁO CÁO CHI TIẾT (Theo Bài tập / Cho GVBM)
+    ================================================================== -->
+    <div id="detailed-report-layout">
+    
         <div id="overview-kpis" class="kpi-grid">
             <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
             <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
             <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
             <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
         </div>
+
         <div class="chart-grid">
             <div class="chart-container" id="grade-distribution-chart">
-                 <!-- Biểu đồ trống sẽ được JS vẽ ở đây -->
+                 <!-- Biểu đồ Phân bổ Điểm số sẽ được JS vẽ ở đây -->
             </div>
             <div class="list-container card">
                 <h4><span style="vertical-align: middle;">💡</span> 5 Câu hỏi cần chú ý nhất</h4>
@@ -127,35 +134,80 @@
                 </ul>
             </div>
         </div>
-        <!-- DÁN KHỐI MỚI NÀY VÀO VỊ TRÍ CỦA 2 KHỐI ĐÃ XÓA -->
-<div class="student-list-grid three-columns"> <!-- Thêm class mới 'three-columns' -->
-    
-    <!-- Cột 1: Top 5 Điểm cao nhất -->
-    <div class="list-container card">
-        <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
-        <ul id="top-performers-list">
-            <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
-        </ul>
-    </div>
-    
-    <!-- Cột 2: Top 5 Cần cố gắng hơn -->
-    <div class="list-container card">
-        <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
-        <ul id="bottom-performers-list">
-            <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
-        </ul>
+
+        <div class="student-list-grid three-columns">
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">🏆</span> Top 5 Điểm cao nhất</h4>
+                <ul id="top-performers-list">
+                    <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
+                </ul>
+            </div>
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">💪</span> Top 5 Cần cố gắng hơn</h4>
+                <ul id="bottom-performers-list">
+                    <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
+                </ul>
+            </div>
+            <div class="list-container card" id="missing-students-container">
+                <h4><span style="vertical-align: middle;">🔔</span> Học sinh chưa nộp bài</h4>
+                <ul id="missing-students-list">
+                    <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <!-- Cột 3: Học sinh chưa nộp bài -->
-    <div class="list-container card" id="missing-students-container">
-        <h4><span style="vertical-align: middle;">🔔</span> Học sinh chưa nộp bài</h4>
-        <ul id="missing-students-list">
-            <li class="placeholder-item">Chọn bộ lọc để xem dữ liệu</li>
-        </ul>
+    <!-- =================================================================
+         BỐ CỤC 2: BÁO CÁO TỔNG QUAN ĐA MÔN (Cho Admin/GVCN)
+    ================================================================== -->
+    <div id="multisubject-report-layout" class="hidden">
+        
+        <!-- Hàng 1: Biểu đồ chính và Năng lực chung -->
+        <div class="chart-grid">
+            <div class="chart-container" id="main-chart-container">
+                 <!-- Biểu đồ So sánh Môn học sẽ được vẽ ở đây -->
+            </div>
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">🧠</span> Năng lực Chung của Lớp</h4>
+                <div id="overall-skill-chart" style="min-height: 250px;"></div>
+            </div>
+        </div>
+
+        <!-- Hàng 2: Các danh sách xu hướng -->
+        <div class="student-list-grid two-columns" id="action-lists-grid">
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">📈</span> Tuyên dương Phong độ cao</h4>
+                <ul id="improving-students-list">
+                     <li class="placeholder-item">Đang phân tích...</li>
+                </ul>
+            </div>
+            <div class="list-container card">
+                <h4><span style="vertical-align: middle;">📉</span> Cảnh báo Rớt phong độ</h4>
+                <ul id="watching-students-list">
+                     <li class="placeholder-item">Đang phân tích...</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Hàng 3: Các danh sách hành vi -->
+        <div class="student-list-grid two-columns" id="detail-tables-grid">
+            <div class="list-container card">
+                 <h4><span style="vertical-align: middle;">🎯</span> Các Chủ đề yếu nhất (Đa môn)</h4>
+                 <ul id="weakest-topics-list">
+                      <li class="placeholder-item">Đang phân tích...</li>
+                 </ul>
+            </div>
+            <div class="list-container card">
+                 <h4><span style="vertical-align: middle;">👀</span> Mất tập trung cao nhất</h4>
+                 <ul id="high-attention-issue-list">
+                      <li class="placeholder-item">Đang phân tích...</li>
+                 </ul>
+            </div>
+        </div>
+
     </div>
 
-</div>
-    </section>
+</section>
     
     <!-- Khu vực Loading -->
     <div id="loading-spinner" class="loading-inline hidden">
