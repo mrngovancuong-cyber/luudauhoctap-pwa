@@ -396,45 +396,81 @@ function handleSubjectSelectChange() {
 }
 
 // Hàm render cho báo cáo Đa môn của Admin/GVCN
+// THAY THẾ TOÀN BỘ HÀM NÀY
 function renderMultiSubjectReport(data) {
+    // 1. Dọn dẹp giao diện (giữ nguyên)
     subjectSelect.style.display = 'none';
-    kpisContainer.innerHTML = ''; // Xóa KPI mặc định
-    mainChart.destroy(); // Xóa biểu đồ cũ
-    mainChart = null;
-
-    const tableHtml = `
-        <div class="list-container card">
-            <h4>So sánh Hiệu suất các Môn học</h4>
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>Môn học</th>
-                        <th>Điểm TB</th>
-                        <th>Tỷ lệ Tham gia</th>
-                        <th>Mất tập trung TB</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.map(subject => `
-                        <tr>
-                            <td>${subject.subject}</td>
-                            <td>${subject.avgScore}</td>
-                            <td>${subject.avgParticipation}%</td>
-                            <td>${subject.avgLeaveCount} lần/bài</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
-    mainChartContainer.innerHTML = tableHtml;
-
-    hardestQuestionsList.innerHTML = '<li>(Báo cáo đa môn không áp dụng)</li>';
-    topPerformersList.innerHTML = '<li>(Báo cáo đa môn không áp dụng)</li>';
-    bottomPerformersList.innerHTML = '<li>(Báo cáo đa môn không áp dụng)</li>';
-    if (missingStudentsContainer) {
-        missingStudentsContainer.style.display = 'none';
+    kpisContainer.innerHTML = ''; 
+    
+    // Hủy biểu đồ cũ một cách an toàn
+    if (mainChart) {
+        mainChart.destroy();
+        mainChart = null;
     }
+
+    // === BẮT ĐẦU PHẦN SỬA LỖI VÀ NÂNG CẤP ===
+    
+    // 2. Render Biểu đồ So sánh Môn học (thay vì bảng tĩnh)
+    // Dữ liệu cho biểu đồ này nằm trong data.subjectComparison
+    renderSubjectComparisonChart(data.subjectComparison);
+
+    // 3. Render Biểu đồ Radar Năng lực chung
+    // Dữ liệu cho biểu đồ này nằm trong data.overallSkillAnalysis.byLevel
+    renderOverallSkillChart(data.overallSkillAnalysis.byLevel);
+    
+    // 4. Render danh sách Tuyên dương
+    if (data.improvingStudents && data.improvingStudents.length > 0) {
+        improvingStudentsList.innerHTML = data.improvingStudents.map(s => 
+            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                <span>${s.name}</span><span class="score">${s.trend}</span>
+            </li>`).join('');
+    } else {
+        improvingStudentsList.innerHTML = '<li class="placeholder-item">Chưa có ghi nhận</li>';
+    }
+
+    // 5. Render danh sách Cảnh báo
+    if (data.studentsToWatch && data.studentsToWatch.length > 0) {
+        watchingStudentsList.innerHTML = data.studentsToWatch.map(s => 
+            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                <span>${s.name}</span><span class="score">${s.trend}</span>
+            </li>`).join('');
+    } else {
+        watchingStudentsList.innerHTML = '<li class="placeholder-item">Không có ai</li>';
+    }
+    
+    // 6. Render danh sách Chuyên cần thấp
+    if (data.participationAnalysis && data.participationAnalysis.lowestParticipation.length > 0) {
+        lowParticipationList.innerHTML = data.participationAnalysis.lowestParticipation.map(s => 
+            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                <span>${s.name}</span><span class="score">${s.submitted}/${s.total} bài</span>
+            </li>`).join('');
+    } else {
+        lowParticipationList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+    }
+    
+    // 7. Render danh sách Chủ đề yếu
+     if (data.overallSkillAnalysis && data.overallSkillAnalysis.weakestTopics.length > 0) {
+        weakestTopicsList.innerHTML = data.overallSkillAnalysis.weakestTopics.map(t =>
+            `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`
+        ).join('');
+    } else {
+        weakestTopicsList.innerHTML = '<li class="placeholder-item">Không có chủ đề nào yếu rõ rệt</li>';
+    }
+    
+    // 8. Render danh sách Mất tập trung
+    if (data.attentionAnalysis && data.attentionAnalysis.highestAttentionIssue.length > 0) {
+        highAttentionIssueList.innerHTML = data.attentionAnalysis.highestAttentionIssue.map(s => 
+            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                <span>${s.name}</span><span class="score">${s.avgLeaves.toFixed(1)} lần/bài</span>
+            </li>`).join('');
+    } else {
+        highAttentionIssueList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+    }
+
+    // Gắn lại sự kiện click cho các tên học sinh vừa được render
+    attachStudentLinkListeners();
+    
+    // === KẾT THÚC PHẦN SỬA LỖI VÀ NÂNG CẤP ===
 }
 
 // Hàm xử lý "kho" dữ liệu trả về cho GVBM
