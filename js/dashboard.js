@@ -396,78 +396,76 @@ function handleSubjectSelectChange() {
 }
 
 // Hàm render cho báo cáo Đa môn của Admin/GVCN
-// THAY THẾ TOÀN BỘ HÀM NÀY
 function renderMultiSubjectReport(data) {
-    // 1. Dọn dẹp giao diện (giữ nguyên)
+    // 1. Dọn dẹp giao diện
     if (subjectSelect) subjectSelect.style.display = 'none';
     if (kpisContainer) kpisContainer.innerHTML = ''; 
     
-    // === BẮT ĐẦU PHẦN SỬA LỖI VÀ NÂNG CẤP ===
-    
-    // 2. Render Biểu đồ So sánh Môn học (thay vì bảng tĩnh)
+    // 2. Render các biểu đồ chính
     renderSubjectComparisonChart(data.subjectComparison);
-
-    // 3. Render Biểu đồ Radar Năng lực chung
     renderOverallSkillChart(data.overallSkillAnalysis.byLevel);
     
-    // 4. Render danh sách Tuyên dương
-if (improvingStudentsList) { // Kiểm tra an toàn
-    if (data.improvingStudents && data.improvingStudents.length > 0) {
-        improvingStudentsList.innerHTML = data.improvingStudents.map(s => 
-            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
-                <span>${s.name}</span><span class="score">${s.trend}</span>
-            </li>`).join('');
-    } else {
-        improvingStudentsList.innerHTML = '<li class="placeholder-item">Chưa có ghi nhận</li>';
+    // 3. Render danh sách Tuyên dương
+    if (improvingStudentsList) {
+        if (data.improvingStudents && data.improvingStudents.length > 0) {
+            improvingStudentsList.innerHTML = data.improvingStudents.map(s => 
+                `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                    <span>${s.name}</span><span class="score">${s.trend}</span>
+                </li>`).join('');
+        } else {
+            improvingStudentsList.innerHTML = '<li class="placeholder-item">Chưa có ghi nhận</li>';
+        }
     }
 
-    // 5. Render danh sách Cảnh báo
-if (watchingStudentsList) { // Kiểm tra an toàn
-    if (data.studentsToWatch && data.studentsToWatch.length > 0) {
-        watchingStudentsList.innerHTML = data.studentsToWatch.map(s => 
-            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
-                <span>${s.name}</span><span class="score">${s.trend}</span>
-            </li>`).join('');
-    } else {
-        watchingStudentsList.innerHTML = '<li class="placeholder-item">Không có ai</li>';
+    // 4. Render danh sách Cảnh báo
+    if (watchingStudentsList) {
+        if (data.studentsToWatch && data.studentsToWatch.length > 0) {
+            watchingStudentsList.innerHTML = data.studentsToWatch.map(s => 
+                `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                    <span>${s.name}</span><span class="score">${s.trend}</span>
+                </li>`).join('');
+        } else {
+            watchingStudentsList.innerHTML = '<li class="placeholder-item">Không có ai</li>';
+        }
     }
     
-    // 6. Render danh sách Chuyên cần thấp
-if (lowParticipationList) { // Kiểm tra an toàn
-    if (data.participationAnalysis && data.participationAnalysis.lowestParticipation.length > 0) {
-        lowParticipationList.innerHTML = data.participationAnalysis.lowestParticipation.map(s => 
-            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
-                <span>${s.name}</span><span class="score">${s.submitted}/${s.total} bài</span>
-            </li>`).join('');
-    } else {
-        lowParticipationList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+    // 5. Render danh sách Chuyên cần thấp
+    if (lowParticipationList) {
+        if (data.participationAnalysis && data.participationAnalysis.lowestParticipation.length > 0) {
+            lowParticipationList.innerHTML = data.participationAnalysis.lowestParticipation.map(s => 
+                `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                    <span>${s.name}</span><span class="score">${s.submitted}/${s.total} bài</span>
+                </li>`).join('');
+        } else {
+            lowParticipationList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+        }
     }
     
-    // 7. Render danh sách Chủ đề yếu
-if (weakestTopicsList) { // Kiểm tra an toàn
-    if (data.overallSkillAnalysis && data.overallSkillAnalysis.weakestTopics.length > 0) {
-        weakestTopicsList.innerHTML = data.overallSkillAnalysis.weakestTopics.map(t =>
-            `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`
-        ).join('');
-    } else {
-        weakestTopicsList.innerHTML = '<li class="placeholder-item">Không có chủ đề nào yếu rõ rệt</li>';
+    // 6. Render danh sách Chủ đề yếu
+    if (weakestTopicsList) {
+        if (data.overallSkillAnalysis && data.overallSkillAnalysis.weakestTopics.length > 0) {
+            weakestTopicsList.innerHTML = data.overallSkillAnalysis.weakestTopics.map(t =>
+                `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`
+            ).join('');
+        } else {
+            weakestTopicsList.innerHTML = '<li class="placeholder-item">Không có chủ đề nào yếu rõ rệt</li>';
+        }
     }
     
-    // 8. Render danh sách Mất tập trung
-if (highAttentionIssueList) { // Kiểm tra an toàn
-    if (data.attentionAnalysis && data.attentionAnalysis.highestAttentionIssue.length > 0) {
-        highAttentionIssueList.innerHTML = data.attentionAnalysis.highestAttentionIssue.map(s => 
-            `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
-                <span>${s.name}</span><span class="score">${s.avgLeaves.toFixed(1)} lần/bài</span>
-            </li>`).join('');
-    } else {
-        highAttentionIssueList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+    // 7. Render danh sách Mất tập trung
+    if (highAttentionIssueList) {
+        if (data.attentionAnalysis && data.attentionAnalysis.highestAttentionIssue.length > 0) {
+            highAttentionIssueList.innerHTML = data.attentionAnalysis.highestAttentionIssue.map(s => 
+                `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">
+                    <span>${s.name}</span><span class="score">${s.avgLeaves.toFixed(1)} lần/bài</span>
+                </li>`).join('');
+        } else {
+            highAttentionIssueList.innerHTML = '<li class="placeholder-item">Rất tốt, không có</li>';
+        }
     }
 
     // Gắn lại sự kiện click cho các tên học sinh vừa được render
     attachStudentLinkListeners();
-    
-    // === KẾT THÚC PHẦN SỬA LỖI VÀ NÂNG CẤP ===
 }
 
 // Hàm xử lý "kho" dữ liệu trả về cho GVBM
