@@ -555,6 +555,65 @@ function renderSubjectDetailReport(subjectData) {
         else { mainChart = new ApexCharts(mainChartContainer, options); mainChart.render(); }
     }
 
+function renderSubjectComparisonChart(comparisonData) {
+    // An toàn hơn: kiểm tra xem container có tồn tại không
+    if (!multiSubjectChartContainer) return; 
+
+    // Hủy biểu đồ cũ nếu có
+    const existingChart = ApexCharts.getChartByID(multiSubjectChartContainer.id);
+    if(existingChart) existingChart.destroy();
+    
+    const options = {
+        chart: { type: 'bar', height: 350, foreColor: getChartForeColor(), background: 'transparent' },
+        series: [{
+            name: 'Điểm TB',
+            data: comparisonData.map(s => s.avgScore)
+        }, {
+            name: 'Tỷ lệ Tham gia (%)',
+            data: comparisonData.map(s => s.avgParticipation)
+        }],
+        xaxis: {
+            categories: comparisonData.map(s => s.subject)
+        },
+        yaxis: [
+            { seriesName: 'Điểm TB', min: 0, max: 10, title: { text: 'Điểm trung bình' } },
+            { seriesName: 'Tỷ lệ Tham gia (%)', opposite: true, min: 0, max: 100, title: { text: 'Tỷ lệ Tham gia (%)' } }
+        ],
+        title: { text: 'So sánh Hiệu suất các Môn học', align: 'left' },
+        plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
+        dataLabels: { enabled: false },
+        stroke: { show: true, width: 2, colors: ['transparent'] }
+    };
+    
+    const chart = new ApexCharts(multiSubjectChartContainer, options);
+    chart.render();
+}
+
+function renderOverallSkillChart(levelData) {
+    if (!overallSkillChartContainer) return;
+
+    const existingChart = ApexCharts.getChartByID(overallSkillChartContainer.id);
+    if(existingChart) existingChart.destroy();
+
+    const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
+    const sortedData = [...levelData].sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
+    
+    const options = {
+        chart: { type: 'radar', height: 280, foreColor: getChartForeColor(), background: 'transparent', toolbar: { show: false } },
+        series: [{
+            name: 'Tỷ lệ đúng',
+            data: sortedData.map(l => l.accuracy.toFixed(0))
+        }],
+        labels: sortedData.map(l => l.level),
+        yaxis: { min: 0, max: 100, tickAmount: 5, labels: { formatter: (val) => `${val}%` } },
+        stroke: { width: 2 },
+        fill: { opacity: 0.2 },
+        markers: { size: 3 }
+    };
+
+    const chart = new ApexCharts(overallSkillChartContainer, options);
+    chart.render();
+}
     // =================================================================
     //                    HÀM TIỆN ÍCH
     // =================================================================
