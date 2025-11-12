@@ -141,47 +141,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleViewReportClick() {
-        const mode = document.querySelector('input[name="viewMode"]:checked').value;
-        overviewLoadingOverlay.classList.add('active');
-        resetOverviewUI();
+    const mode = document.querySelector('input[name="viewMode"]:checked').value;
+    overviewLoadingOverlay.classList.add('active');
+    resetOverviewUI();
 
-        const params = {
-            startDate: startDateInput.value || undefined,
-            endDate: endDateInput.value || undefined,
-        };
+    const params = {
+        startDate: startDateInput.value || undefined,
+        endDate: endDateInput.value || undefined,
+    };
 
-        if (mode === 'byExam') {
-            params.examId = examSelect.value;
-            const selectedClass = classSelect.value;
-            if (selectedClass && selectedClass !== "ALL") {
-                params.classId = selectedClass;
-            }
-            fetchAndDisplayClassOverview(params);
-        } else { // byClass
-            params.classId = classSummarySelect.value;
-            fetchApi('get_CLASS_REPORT', params)
-                .then(result => {
-                    const detailedLayout = document.getElementById('detailed-report-layout');
-                    const multiSubjectLayout = document.getElementById('multisubject-report-layout');
-
-                    if (result.data.reportType === 'multi_subject') {
-                        detailedLayout.classList.add('hidden');
-                        multiSubjectLayout.classList.remove('hidden');
-                        renderMultiSubjectReport(result.data.data);
-                        overviewLoadingOverlay.classList.remove('active');
-                    } else { // single_subject
-                        detailedLayout.classList.remove('hidden');
-                        multiSubjectLayout.classList.add('hidden');
-                        handleSingleSubjectReportData(result.data.data);
-                        overviewLoadingOverlay.classList.remove('active');
-                    }
-                })
-                .catch(error => {
-                    handleApiError(error, "Không thể tải báo cáo lớp");
-                    overviewLoadingOverlay.classList.remove('active');
-                });
+    if (mode === 'byExam') {
+        params.examId = examSelect.value;
+        const selectedClass = classSelect.value;
+        if (selectedClass && selectedClass !== "ALL") {
+            params.classId = selectedClass;
         }
+        fetchAndDisplayClassOverview(params);
+    } else { // byClass
+        params.classId = classSummarySelect.value;
+        
+        console.log("Chế độ 'Theo Lớp'. Đang gọi API 'get_CLASS_REPORT'...");
+        fetchApi('get_CLASS_REPORT', params)
+            .then(result => {
+                console.log("API trả về:", result);
+                const detailedLayout = document.getElementById('detailed-report-layout');
+                const multiSubjectLayout = document.getElementById('multisubject-report-layout');
+
+                // Dọn dẹp trước khi render
+                if(detailedLayout) detailedLayout.classList.add('hidden');
+                if(multiSubjectLayout) multiSubjectLayout.classList.add('hidden');
+
+                if (result && result.data && result.data.reportType === 'multi_subject') {
+                    console.log("Phát hiện reportType: 'multi_subject'. Chuyển sang luồng Admin/GVCN.");
+                    if(multiSubjectLayout) multiSubjectLayout.classList.remove('hidden');
+                    renderMultiSubjectReport(result.data.data);
+                } else if (result && result.data && result.data.reportType === 'single_subject') {
+                    console.log("Phát hiện reportType: 'single_subject'. Chuyển sang luồng GVBM.");
+                    if(detailedLayout) detailedLayout.classList.remove('hidden');
+                    handleSingleSubjectReportData(result.data.data);
+                } else {
+                    console.error("API trả về cấu trúc không mong đợi:", result);
+                    alert("Đã xảy ra lỗi: Dữ liệu trả về từ máy chủ không hợp lệ.");
+                }
+            })
+            .catch(error => {
+                handleApiError(error, "Không thể tải báo cáo lớp");
+            })
+            .finally(() => {
+                overviewLoadingOverlay.classList.remove('hidden');
+            });
     }
+}
     
     function handleSubjectSelectChange() {
         const selectedSubject = subjectSelect.value;
@@ -576,29 +586,48 @@ async function populateClassesForSummary() {
 }
 
 function resetOverviewUI() {
-        const detailedLayout = document.getElementById('detailed-report-layout');
-        const multiSubjectLayout = document.getElementById('multisubject-report-layout');
-        
-        if (detailedLayout) detailedLayout.classList.add('hidden');
-        if (multiSubjectLayout) multiSubjectLayout.classList.add('hidden');
-        if (subjectSelect) subjectSelect.style.display = 'none';
+    const detailedLayout = document.getElementById('detailed-report-layout');
+    const multiSubjectLayout = document.getElementById('multisubject-report-layout');
+    
+    // 1. Ẩn cả hai layout
+    if (detailedLayout) detailedLayout.classList.add('hidden');
+    if (multiSubjectLayout) multiSubjectLayout.classList.add('hidden');
+    if (subjectSelect) subjectSelect.style.display = 'none';
 
-        if (mainChart) { mainChart.destroy(); mainChart = null; }
-        if (skillChart) { skillChart.destroy(); skillChart = null; }
+    // 2. Hủy các đối tượng biểu đồ cũ
+    if (mainChart) { mainChart.destroy(); mainChart = null; }
+    if (skillChart) { skillChart.destroy(); skillChart = null; }
+    // Hủy các biểu đồ được tạo động
+    const dynamicCharts = ['subject-skill-chart'];
+    dynamicCharts.forEach(id => {
+        const chartEl = document.getElementById(id);
+        if (chartEl) {
+            const chartInstance = ApexCharts.getChartByID(id);
+            if (chartInstance) chartInstance.destroy();
+            chartEl.innerHTML = ''; // Dọn dẹp cả container
+        }
+    });
 
-        if (kpisContainer) kpisContainer.innerHTML = '';
-        if (detailedChartContainer) detailedChartContainer.innerHTML = '';
-        if (ms_mainChartContainer) ms_mainChartContainer.innerHTML = '';
-        if (ms_overallSkillChartContainer) ms_overallSkillChartContainer.innerHTML = '';
-        
-        const placeholder = '<li>Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"</li>';
-        [hardestQuestionsList, topPerformersList, bottomPerformersList, missingStudentsList, 
-         ms_improvingStudentsList, ms_watchingStudentsList, ms_lowParticipationList, 
-         ms_weakestTopicsList, ms_highAttentionIssueList].forEach(list => {
-            if (list) list.innerHTML = placeholder;
-        });
-    }
+    // 3. Đặt lại nội dung của tất cả các container về placeholder
+    const placeholder = '<li>Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"</li>';
+    
+    // Container chung
+    if (kpisContainer) kpisContainer.innerHTML = '';
 
+    // Container của layout chi tiết
+    if (detailedChartContainer) detailedChartContainer.innerHTML = '';
+    [hardestQuestionsList, topPerformersList, bottomPerformersList, missingStudentsList].forEach(list => {
+        if (list) list.innerHTML = placeholder;
+    });
+
+    // Container của layout đa môn
+    if (ms_mainChartContainer) ms_mainChartContainer.innerHTML = '';
+    if (ms_overallSkillChartContainer) ms_overallSkillChartContainer.innerHTML = '';
+    [ms_improvingStudentsList, ms_watchingStudentsList, ms_lowParticipationList, 
+     ms_weakestTopicsList, ms_highAttentionIssueList].forEach(list => {
+        if (list) list.innerHTML = placeholder;
+    });
+}
     function resetDetailedLayoutContent() {
         const placeholderText = '<li>Vui lòng chọn một môn học</li>';
         kpisContainer.innerHTML = '';
