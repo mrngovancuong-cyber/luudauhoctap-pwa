@@ -613,24 +613,40 @@ function renderOverallSkillChart(levelData) {
     const sortedData = [...levelData].sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
     
     const options = {
-        chart: { type: 'radar', height: 280, foreColor: getChartForeColor(), background: 'transparent', toolbar: { show: false }, fontFamily: "'Be Vietnam Pro', sans-serif" },
+        chart: { 
+            type: 'radar', 
+            height: 280, 
+            foreColor: getChartForeColor(), 
+            background: 'transparent', 
+            toolbar: { show: false }, 
+            fontFamily: "'Be Vietnam Pro', sans-serif" 
+        },
         series: [{
             name: 'Tỷ lệ đúng',
             data: sortedData.map(l => l.accuracy.toFixed(0))
         }],
         labels: sortedData.map(l => l.level),
-        yaxis: { min: 0, max: 100, tickAmount: 5, labels: { formatter: (val) => `${val}%` } },
-        stroke: { width: 2 },
-        fill: { opacity: 0.2 },
-        markers: { size: 3 }
-title: {
+        yaxis: { 
+            min: 0, 
+            max: 100, 
+            tickAmount: 5, 
+            labels: { formatter: (val) => `${val}%` } 
+        },
+        
+        // --- BẮT ĐẦU SỬA LỖI ---
+        title: {
             text: 'Năng lực Chung của Lớp',
             align: 'left',
             style: {
-                fontSize: '16px', // Cỡ chữ nhỏ hơn một chút cho widget nhỏ
+                fontSize: '16px',
                 color: getChartForeColor()
             }
-        },
+        }, // Thêm dấu phẩy sau title
+        
+        stroke: { width: 2 },
+        fill: { opacity: 0.2 },
+        markers: { size: 3 }
+        // --- KẾT THÚC SỬA LỖI ---
     };
 
     const chart = new ApexCharts(overallSkillChartContainer, options);
