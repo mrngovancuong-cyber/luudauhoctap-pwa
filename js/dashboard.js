@@ -484,39 +484,53 @@ function handleSingleSubjectReportData(data) {
 }
 
 // Hàm render báo cáo chi tiết cho MỘT môn học (dành cho GVBM)
+// THAY THẾ TOÀN BỘ HÀM NÀY
 function renderSubjectDetailReport(subjectData) {
-    // Render KPIs
+    // 1. Render KPIs
     const kpis = subjectData.kpis;
     kpisContainer.innerHTML = `
         <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${kpis.totalSubmissions} / ${kpis.expectedSubmissions}</p></div>
         <div class="kpi-card"><h3>Điểm TB Chung</h3><p>${kpis.overallAvgScore}</p></div>
     `;
 
-    // Render biểu đồ Xu hướng điểm
+    // 2. Render Biểu đồ chính: Xu hướng điểm
+    // Container này giờ được dùng chung
     renderClassScoreTrendChart(subjectData.classScoreTrend);
 
-    // Render danh sách học sinh
+    // 3. Render Biểu đồ phụ: Phân tích Năng lực theo Cấp độ (DÙNG LẠI BIỂU ĐỒ RADAR)
+    // Container này cũng được dùng chung
+    renderOverallSkillChart(subjectData.topicAnalysis.byLevel); // Lấy dữ liệu byLevel từ topicAnalysis
+
+    // 4. Render Danh sách: Học sinh Tiến bộ & Cần quan tâm
     const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
     
-    document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
-    topPerformersList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
-    
-    document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
-    bottomPerformersList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
-    
-    // Render danh sách chủ đề yếu
-    const hardestQuestionsContainer = document.getElementById('hardest-questions-list').parentElement;
-    hardestQuestionsContainer.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
-    hardestQuestionsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `
-        <li>
-            <span>${t.topic}</span>
-            <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
-        </li>
-    `).join('') || '<li>(Không có)</li>';
-
-    if (missingStudentsContainer) {
-        missingStudentsContainer.style.display = 'none';
+    // Đảm bảo các element tồn tại trước khi gán
+    if (improvingStudentsList) {
+        improvingStudentsList.parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
+        improvingStudentsList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
     }
+    
+    if (watchingStudentsList) {
+        watchingStudentsList.parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
+        watchingStudentsList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
+    }
+    
+    // 5. Render Danh sách: Chủ đề yếu & Chuyên cần thấp
+    if (weakestTopicsList) {
+        weakestTopicsList.parentElement.querySelector('h4').innerHTML = '📉 Các Chủ đề cần Cải thiện nhất';
+        weakestTopicsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `
+            <li>
+                <span>${t.topic}</span>
+                <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
+            </li>
+        `).join('') || '<li>(Không có)</li>';
+    }
+
+    // Ẩn các danh sách không áp dụng cho chế độ này
+    if (lowParticipationList) lowParticipationList.parentElement.style.display = 'none';
+    if (highAttentionIssueList) highAttentionIssueList.parentElement.style.display = 'none';
+
+
     attachStudentLinkListeners();
 }
 
@@ -535,27 +549,58 @@ function renderSubjectDetailReport(subjectData) {
         else { mainChart = new ApexCharts(detailedChartContainer, options); mainChart.render(); }
     }
     
-    function renderClassScoreTrendChart(trendData) {
-        const options = {
-            chart: { type: 'line', height: 350, foreColor: getChartForeColor(), background: 'transparent', fontFamily: "'Be Vietnam Pro', sans-serif" },
-            series: [{ name: 'Điểm TB Lớp', data: trendData.map(d => d.avgScore) }],
-            xaxis: { categories: trendData.map(d => d.examTitle) },
-            yaxis: { title: { text: 'Điểm trung bình' }, min: 0, max: 10 },
-            title: { text: 'Xu hướng Điểm trung bình của Lớp', align: 'left', style: { fontSize: '18px', color: getChartForeColor() } },
-            stroke: { curve: 'smooth' },
-            noData: { text: 'Không đủ dữ liệu để vẽ biểu đồ.' },
-            tooltip: { theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark' }
-        };
-        if (mainChart) { mainChart.updateOptions(options, true, true, true); }
-        else { mainChart = new ApexCharts(mainChartContainer, options); mainChart.render(); }
-    }
+function renderClassScoreTrendChart(trendData) {
+    if (!mainChartContainer) return;
 
+    if (mainChart) mainChart.destroy();
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+    const options = {
+        chart: { 
+            type: 'line', 
+            height: 350, 
+            foreColor: getChartForeColor(), 
+            background: 'transparent', 
+            fontFamily: "'Be Vietnam Pro', sans-serif" 
+        },
+        series: [{ 
+            name: 'Điểm TB Lớp', 
+            data: trendData.map(d => d.avgScore) 
+        }],
+        xaxis: { 
+            categories: trendData.map(d => d.examTitle),
+            labels: { style: { colors: getChartForeColor() } }
+        },
+        yaxis: { 
+            title: { text: 'Điểm trung bình' }, 
+            min: 0, 
+            max: 10,
+            labels: { style: { colors: getChartForeColor() } }
+        },
+        title: { 
+            text: 'Xu hướng Điểm trung bình của Lớp', 
+            align: 'left', 
+            style: { fontSize: '18px', color: getChartForeColor() } 
+        },
+        stroke: { curve: 'smooth' },
+        noData: { text: 'Không đủ dữ liệu để vẽ biểu đồ.' },
+        tooltip: { theme: currentTheme },
+        grid: { borderColor: 'rgba(128, 128, 128, 0.2)' },
+        legend: { labels: { colors: getChartForeColor() } }
+    };
+    
+    mainChart = new ApexCharts(mainChartContainer, options);
+    mainChart.render();
+}
 function renderSubjectComparisonChart(comparisonData) {
     if (!multiSubjectChartContainer) return; 
 
     const existingChart = ApexCharts.getChartByID(multiSubjectChartContainer.id);
     if(existingChart) existingChart.destroy();
     
+    // Xác định theme hiện tại
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
     const options = {
         chart: { 
             type: 'bar', 
@@ -572,11 +617,37 @@ function renderSubjectComparisonChart(comparisonData) {
             data: comparisonData.map(s => s.avgParticipation)
         }],
         xaxis: {
-            categories: comparisonData.map(s => s.subject)
+            categories: comparisonData.map(s => s.subject),
+            labels: {
+                style: {
+                    colors: getChartForeColor() // <-- THÊM MÀU CHO TRỤC X
+                }
+            }
         },
         yaxis: [
-            { seriesName: 'Điểm TB', min: 0, max: 10, title: { text: 'Điểm trung bình' } },
-            { seriesName: 'Tỷ lệ Tham gia (%)', opposite: true, min: 0, max: 100, title: { text: 'Tỷ lệ Tham gia (%)' } }
+            { 
+                seriesName: 'Điểm TB', 
+                min: 0, 
+                max: 10, 
+                title: { text: 'Điểm trung bình' },
+                labels: {
+                    style: {
+                        colors: getChartForeColor() // <-- THÊM MÀU CHO TRỤC Y 1
+                    }
+                }
+            },
+            { 
+                seriesName: 'Tỷ lệ Tham gia (%)', 
+                opposite: true, 
+                min: 0, 
+                max: 100, 
+                title: { text: 'Tỷ lệ Tham gia (%)' },
+                labels: {
+                    style: {
+                        colors: getChartForeColor() // <-- THÊM MÀU CHO TRỤC Y 2
+                    }
+                }
+            }
         ],
         title: { 
             text: 'So sánh Hiệu suất các Môn học', 
@@ -585,17 +656,22 @@ function renderSubjectComparisonChart(comparisonData) {
                 fontSize: '18px',
                 color: getChartForeColor() 
             } 
-        }, // <-- THÊM DẤU PHẨY Ở ĐÂY
-
-        // DI CHUYỂN CÁC THUỘC TÍNH NÀY RA NGOÀI `title`
-        plotOptions: { 
-            bar: { horizontal: false, columnWidth: '50%' } 
         },
-        dataLabels: { 
-            enabled: false 
+        plotOptions: { bar: { horizontal: false, columnWidth: '50%' } },
+        dataLabels: { enabled: false },
+        stroke: { show: true, width: 2, colors: ['transparent'] },
+        
+        // --- BỔ SUNG CÁC TÙY CHỌN QUAN TRỌNG ---
+        legend: {
+            labels: {
+                colors: getChartForeColor() // Đặt màu cho chữ trong chú thích
+            }
         },
-        stroke: { 
-            show: true, width: 2, colors: ['transparent'] 
+        tooltip: {
+            theme: currentTheme // Đồng bộ theme của tooltip với theme của trang
+        },
+        grid: {
+            borderColor: 'rgba(128, 128, 128, 0.2)' // Màu lưới nhẹ, phù hợp cả 2 theme
         }
     };
     
@@ -608,6 +684,9 @@ function renderOverallSkillChart(levelData) {
 
     const existingChart = ApexCharts.getChartByID(overallSkillChartContainer.id);
     if(existingChart) existingChart.destroy();
+
+    // Xác định theme hiện tại
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
     const levelOrder = ["Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao"];
     const sortedData = [...levelData].sort((a, b) => levelOrder.indexOf(a.level) - levelOrder.indexOf(b.level));
@@ -630,10 +709,13 @@ function renderOverallSkillChart(levelData) {
             min: 0, 
             max: 100, 
             tickAmount: 5, 
-            labels: { formatter: (val) => `${val}%` } 
+            labels: { 
+                formatter: (val) => `${val}%`,
+                style: {
+                    colors: getChartForeColor() // <-- THÊM MÀU CHO CÁC SỐ %
+                }
+            } 
         },
-        
-        // --- BẮT ĐẦU SỬA LỖI ---
         title: {
             text: 'Năng lực Chung của Lớp',
             align: 'left',
@@ -641,12 +723,26 @@ function renderOverallSkillChart(levelData) {
                 fontSize: '16px',
                 color: getChartForeColor()
             }
-        }, // Thêm dấu phẩy sau title
-        
+        },
         stroke: { width: 2 },
         fill: { opacity: 0.2 },
-        markers: { size: 3 }
-        // --- KẾT THÚC SỬA LỖI ---
+        markers: { size: 3 },
+        
+        // --- BỔ SUNG CÁC TÙY CHỌN QUAN TRỌNG ---
+        legend: {
+            show: false // Biểu đồ radar thường không cần chú thích khi chỉ có 1 series
+        },
+        tooltip: {
+            theme: currentTheme // Đồng bộ theme của tooltip
+        },
+        plotOptions: {
+            radar: {
+                polygons: {
+                    strokeColors: 'rgba(128, 128, 128, 0.2)', // Màu lưới mạng nhện
+                    connectorColors: 'rgba(128, 128, 128, 0.2)'
+                }
+            }
+        }
     };
 
     const chart = new ApexCharts(overallSkillChartContainer, options);
