@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleViewReportClick() {
     const mode = document.querySelector('input[name="viewMode"]:checked').value;
     overviewLoadingOverlay.classList.add('active');
-    resetOverviewUI(); // Reset giao diện trước khi tải mới
+    resetOverviewUI();
 
     const params = {
         startDate: startDateInput.value || undefined,
@@ -171,20 +171,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     if (mode === 'byExam') {
-        // --- BÁO CÁO THEO BÀI TẬP (LOGIC CŨ) ---
         params.examId = examSelect.value;
         const selectedClass = classSelect.value;
         if (selectedClass && selectedClass !== "ALL") {
             params.classId = selectedClass;
         }
-
-        // Đảm bảo đúng layout được hiển thị
-        document.getElementById('detailed-report-layout').classList.remove('hidden');
-        document.getElementById('multisubject-report-layout').classList.add('hidden');
-        
-        fetchAndDisplayClassOverview(params);
-
-    } else { // byClass - BÁO CÁO THEO LỚP (LOGIC MỚI)
+        fetchAndDisplayClassOverview(params); // Hàm này có logic spinner riêng
+    } else { // byClass
         params.classId = classSummarySelect.value;
         
         fetchApi('get_CLASS_REPORT', params)
@@ -193,33 +186,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const multiSubjectLayout = document.getElementById('multisubject-report-layout');
 
                 if (result.data.reportType === 'multi_subject') {
-                    // === Luồng Admin/GVCN ===
-                    // 1. Chuyển đổi layout
                     detailedLayout.classList.add('hidden');
                     multiSubjectLayout.classList.remove('hidden');
-                    // 2. Render báo cáo đa môn
                     renderMultiSubjectReport(result.data.data);
-
+                    overviewLoadingOverlay.classList.remove('active'); // Tắt spinner ngay cho Admin
                 } else { // single_subject
-                    // === Luồng GVBM ===
-                    // 1. Chuyển đổi layout
                     detailedLayout.classList.remove('hidden');
                     multiSubjectLayout.classList.add('hidden');
-                    // 2. Xử lý "kho" dữ liệu để tạo dropdown Môn học
                     handleSingleSubjectReportData(result.data.data);
+                    // Tắt spinner ngay sau khi dropdown Môn học hiện ra
+                    overviewLoadingOverlay.classList.remove('active'); 
                 }
             })
             .catch(error => {
                 handleApiError(error, "Không thể tải báo cáo lớp");
-                // Đảm bảo tắt spinner nếu có lỗi
-                overviewLoadingOverlay.classList.remove('active');
-            })
-            .finally(() => {
-                // Tắt spinner chỉ khi là báo cáo đa môn (vì báo cáo chi tiết có luồng riêng)
-                const reportType = document.querySelector('#multisubject-report-layout.hidden') ? 'detailed' : 'multisubject';
-                if (reportType === 'multisubject') {
-                    overviewLoadingOverlay.classList.remove('active');
-                }
+                overviewLoadingOverlay.classList.remove('active'); // Luôn tắt spinner nếu có lỗi
             });
     }
 }
@@ -380,19 +361,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function handleSubjectSelectChange() {
     const selectedSubject = subjectSelect.value;
+    // Reset nhẹ giao diện chi tiết, chỉ xóa nội dung, không ẩn layout
+    resetDetailedLayoutContent(); 
+
     if (!selectedSubject) {
-        resetOverviewUI(true); // Reset nhẹ, không reset dropdown
-        return;
+        return; // Nếu người dùng chọn "--Chọn Môn học--", không làm gì cả
     }
     
     if (multiSubjectReportData && multiSubjectReportData[selectedSubject]) {
-        overviewLoadingOverlay.classList.add('active');
-        setTimeout(() => {
-            const subjectData = multiSubjectReportData[selectedSubject];
-            // Render dữ liệu chi tiết của môn học đã chọn
-            renderSubjectDetailReport(subjectData);
-            overviewLoadingOverlay.classList.remove('active');
-        }, 50);
+        // Không cần spinner ở đây nữa vì render rất nhanh
+        const subjectData = multiSubjectReportData[selectedSubject];
+        renderSubjectDetailReport(subjectData);
     }
 }
 
@@ -476,9 +455,7 @@ function handleSingleSubjectReportData(data) {
 // THAY THẾ TOÀN BỘ HÀM NÀY
 // THAY THẾ TOÀN BỘ HÀM NÀY
 function renderSubjectDetailReport(subjectData) {
-    // === HÀM NÀY RENDER VÀO BỐ CỤC CHI TIẾT (`detailed-report-layout`) ===
-
-    // 1. Render KPIs (Chỉ hiển thị 2 KPI chính)
+    // 1. Render KPIs
     const kpis = subjectData.kpis;
     kpisContainer.innerHTML = `
         <div class="kpi-card"><h3>Mức độ Hoàn thành</h3><p>${kpis.totalSubmissions} / ${kpis.expectedSubmissions}</p></div>
@@ -487,52 +464,37 @@ function renderSubjectDetailReport(subjectData) {
         <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
     `;
 
-    // 2. Render Biểu đồ chính: Xu hướng Điểm trung bình của Môn học
+    // 2. Render Biểu đồ chính: Xu hướng điểm
     renderClassScoreTrendChart_forDetailedView(subjectData.classScoreTrend);
 
-    // 3. Render Biểu đồ phụ: Phân tích Năng lực theo Cấp độ (DÙNG LẠI CONTAINER CỦA "5 CÂU HỎI KHÓ")
-    // Chúng ta sẽ "hy sinh" danh sách 5 câu hỏi khó để hiển thị biểu đồ radar quan trọng hơn.
+    // 3. Render Biểu đồ phụ: Năng lực (thay thế danh sách câu hỏi khó)
     if (hardestQuestionsList) {
         const parentContainer = hardestQuestionsList.parentElement;
         parentContainer.querySelector('h4').innerHTML = '🧠 Năng lực theo Cấp độ';
-        // Xóa danh sách `ul` cũ và tạo một `div` mới cho biểu đồ
-        hardestQuestionsList.remove();
+        hardestQuestionsList.style.display = 'none'; // Ẩn danh sách ul
         let skillChartDiv = document.getElementById('subject-skill-chart');
         if (!skillChartDiv) {
             skillChartDiv = document.createElement('div');
             skillChartDiv.id = 'subject-skill-chart';
-            skillChartDiv.style.minHeight = '250px';
             parentContainer.appendChild(skillChartDiv);
         }
         renderOverallSkillChart_forDetailedView(subjectData.topicAnalysis.byLevel);
     }
 
-    // 4. Render các danh sách vào đúng 3 cột bên dưới
+    // 4. Render các danh sách vào đúng 3 cột
     const createStudentLink = s => `<li data-studentid="${s.id}" class="student-link" title="Xem chi tiết ${s.name}">${s.name}</li>`;
     
-    // Cột 1: Đổi thành Học sinh Tiến bộ
     if (topPerformersList) {
         topPerformersList.parentElement.querySelector('h4').innerHTML = '📈 Học sinh Tiến bộ';
         topPerformersList.innerHTML = subjectData.improvingStudents.map(createStudentLink).join('') || '<li>(Không có)</li>';
     }
-    // Cột 2: Đổi thành Học sinh Cần quan tâm
     if (bottomPerformersList) {
         bottomPerformersList.parentElement.querySelector('h4').innerHTML = '⚠️ Học sinh Cần quan tâm';
         bottomPerformersList.innerHTML = subjectData.studentsToWatch.map(createStudentLink).join('') || '<li>(Không có)</li>';
     }
-    // Cột 3: Đổi thành Chủ đề yếu nhất
     if (missingStudentsList) {
         missingStudentsList.parentElement.querySelector('h4').innerHTML = '📉 Các Chủ đề yếu nhất';
-        if (subjectData.topicAnalysis && subjectData.topicAnalysis.weakTopics.length > 0) {
-            missingStudentsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `
-                <li>
-                    <span>${t.topic}</span>
-                    <span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span>
-                </li>
-            `).join('');
-        } else {
-             missingStudentsList.innerHTML = '<li>(Không có)</li>';
-        }
+        missingStudentsList.innerHTML = subjectData.topicAnalysis.weakTopics.map(t => `<li><span>${t.topic}</span><span class="accuracy">${t.accuracy.toFixed(0)}% đúng</span></li>`).join('') || '<li>(Không có)</li>';
     }
 
     attachStudentLinkListeners();
@@ -907,7 +869,22 @@ async function populateClassesForSummary() {
     viewReportBtn.disabled = !isReady;
 }
 
-    // THAY THẾ TOÀN BỘ HÀM NÀY
+function resetDetailedLayoutContent() {
+    kpisContainer.innerHTML = `
+        <div class="kpi-card"><h3>Số HS đã nộp</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm TB</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm cao nhất</h3><p>--</p></div>
+        <div class="kpi-card"><h3>Điểm thấp nhất</h3><p>--</p></div>
+    `;
+    if (detailedChartContainer) detailedChartContainer.innerHTML = '<div class="placeholder-text">Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"</div>';
+    
+    const placeholderText = '<li>Chọn bộ lọc và nhấn "Xem báo cáo"</li>';
+    if(hardestQuestionsList) hardestQuestionsList.innerHTML = placeholderText;
+    if(topPerformersList) topPerformersList.innerHTML = placeholderText;
+    if(bottomPerformersList) bottomPerformersList.innerHTML = placeholderText;
+    if(missingStudentsList) missingStudentsList.innerHTML = placeholderText;
+}
+    
 function resetOverviewUI() {
     // === PHẦN 1: ĐIỀU KHIỂN ẨN/HIỆN CÁC BỐ CỤC (BỔ SUNG) ===
     const detailedLayout = document.getElementById('detailed-report-layout');
