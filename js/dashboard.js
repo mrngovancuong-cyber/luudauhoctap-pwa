@@ -943,17 +943,16 @@ function resetOverviewUI() {
     document.querySelector('#top-performers-list').parentElement.querySelector('h4').innerHTML = '🏆 Top 5 Điểm cao nhất';
     document.querySelector('#bottom-performers-list').parentElement.querySelector('h4').innerHTML = '💪 Top 5 Cần cố gắng hơn';
 
-    // === PHẦN 3: RESET NỘI DUNG BỐ CỤC ĐA MÔN (BỔ SUNG) ===
-    // Đảm bảo các thành phần của layout mới cũng được dọn dẹp
-    if (multiSubjectChartContainer) multiSubjectChartContainer.innerHTML = ''; // Xóa bảng so sánh môn học
-    if (overallSkillChartContainer) overallSkillChartContainer.innerHTML = ''; // Xóa biểu đồ radar
+    // === PHẦN 3: RESET NỘI DUNG BỐ CỤC ĐA MÔN ===
+    if (ms_mainChartContainer) ms_mainChartContainer.innerHTML = '';
+    if (ms_overallSkillChartContainer) ms_overallSkillChartContainer.innerHTML = ''; // <-- DÒNG SỬA LỖI CHÍNH
     
     const multiSubjectPlaceholder = '<li>Vui lòng chọn bộ lọc và nhấn "Xem báo cáo"</li>';
-    if (improvingStudentsList) improvingStudentsList.innerHTML = multiSubjectPlaceholder;
-    if (watchingStudentsList) watchingStudentsList.innerHTML = multiSubjectPlaceholder;
-    if (lowParticipationList) lowParticipationList.innerHTML = multiSubjectPlaceholder;
-    if (weakestTopicsList) weakestTopicsList.innerHTML = multiSubjectPlaceholder;
-    if (highAttentionIssueList) highAttentionIssueList.innerHTML = multiSubjectPlaceholder;
+    if (ms_improvingStudentsList) ms_improvingStudentsList.innerHTML = multiSubjectPlaceholder;
+    if (ms_watchingStudentsList) ms_watchingStudentsList.innerHTML = multiSubjectPlaceholder;
+    // Bỏ qua ms_lowParticipationList vì nó không có trong HTML mới của bạn
+    if (ms_weakestTopicsList) ms_weakestTopicsList.innerHTML = multiSubjectPlaceholder;
+    if (ms_highAttentionIssueList) ms_highAttentionIssueList.innerHTML = multiSubjectPlaceholder;
 }
     function attachStudentLinkListeners() {
         document.querySelectorAll('.student-link').forEach(item => {
