@@ -524,9 +524,9 @@ function renderSubjectDetailReport(subjectData) {
     function getChartForeColor() {
         const theme = document.documentElement.getAttribute('data-theme');
 	if (theme === 'light') { 
-	    return '#431407';
+	    return '#000000';
 	}
-            return '#f3e9e0';
+            return '#FFFFFF';
     }
     
     function searchStudent() {
