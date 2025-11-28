@@ -92,7 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Cấu hình cập nhật màu sắc
                     const updateOptions = {
-                        chart: { foreColor: newColor },
+                        chart: { foreColor: newColor,
+			theme: { mode: newTheme }
+			},
                         tooltip: { theme: newTheme },
                         xaxis: { labels: { style: { colors: newColor } } },
                         yaxis: { labels: { style: { colors: newColor } } },
@@ -100,23 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         legend: { labels: { colors: newColor } }
                     };
 
-                    // Cập nhật tất cả các biểu đồ đang hiển thị
-                    // 1. Biểu đồ chính (So sánh môn học hoặc Phân bổ điểm)
-                    if (mainChart) mainChart.updateOptions(updateOptions);
+                    if (mainChart) mainChart.updateOptions(updateOptions, true, true);
                     
-                    // 2. Biểu đồ Đa môn (cần lấy theo ID vì không lưu biến toàn cục)
                     const msChart = ApexCharts.getChartByID('ms-main-chart-container');
-                    if (msChart) msChart.updateOptions(updateOptions);
+                    if (msChart) msChart.updateOptions(updateOptions, true, true);
 
-                    // 3. Biểu đồ Radar (Năng lực chung)
                     const skillChart = ApexCharts.getChartByID('ms-overall-skill-chart');
-                    if (skillChart) skillChart.updateOptions(updateOptions);
+                    if (skillChart) skillChart.updateOptions(updateOptions, true, true);
 
-                    // 4. Các biểu đồ chi tiết khác (nếu đang xem chi tiết)
-                    const detailCharts = ['subject-skill-chart', 'score-trend-chart'];
-                    detailCharts.forEach(id => {
+                    ['subject-skill-chart', 'score-trend-chart'].forEach(id => {
                         const chart = ApexCharts.getChartByID(id);
-                        if(chart) chart.updateOptions(updateOptions);
+                        if(chart) chart.updateOptions(updateOptions, true, true);
                     });
 
                 }, 50);
@@ -526,8 +522,11 @@ function renderSubjectDetailReport(subjectData) {
     //                    HÀM TIỆN ÍCH
     // =================================================================
     function getChartForeColor() {
-        if (document.documentElement.getAttribute('data-theme') === 'light') return '#431407';
-        return '#f3e9e0';
+        const theme = document.documentElement.getAttribute('data-theme');
+	if (theme === 'light') { 
+	    return '#431407';
+	}
+            return '#f3e9e0';
     }
     
     function searchStudent() {
