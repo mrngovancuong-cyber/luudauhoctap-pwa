@@ -81,6 +81,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function attachEventListeners() {
         viewModeRadios.forEach(radio => radio.addEventListener('change', handleViewModeChange));
+
+	const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                // Đợi 50ms để theme kịp đổi, sau đó cập nhật màu biểu đồ
+                setTimeout(() => {
+                    const newColor = getChartForeColor();
+                    const newTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                    
+                    // Cấu hình cập nhật màu sắc
+                    const updateOptions = {
+                        chart: { foreColor: newColor },
+                        tooltip: { theme: newTheme },
+                        xaxis: { labels: { style: { colors: newColor } } },
+                        yaxis: { labels: { style: { colors: newColor } } },
+                        title: { style: { color: newColor } },
+                        legend: { labels: { colors: newColor } }
+                    };
+
+                    // Cập nhật tất cả các biểu đồ đang hiển thị
+                    // 1. Biểu đồ chính (So sánh môn học hoặc Phân bổ điểm)
+                    if (mainChart) mainChart.updateOptions(updateOptions);
+                    
+                    // 2. Biểu đồ Đa môn (cần lấy theo ID vì không lưu biến toàn cục)
+                    const msChart = ApexCharts.getChartByID('ms-main-chart-container');
+                    if (msChart) msChart.updateOptions(updateOptions);
+
+                    // 3. Biểu đồ Radar (Năng lực chung)
+                    const skillChart = ApexCharts.getChartByID('ms-overall-skill-chart');
+                    if (skillChart) skillChart.updateOptions(updateOptions);
+
+                    // 4. Các biểu đồ chi tiết khác (nếu đang xem chi tiết)
+                    const detailCharts = ['subject-skill-chart', 'score-trend-chart'];
+                    detailCharts.forEach(id => {
+                        const chart = ApexCharts.getChartByID(id);
+                        if(chart) chart.updateOptions(updateOptions);
+                    });
+
+                }, 50);
+            });
+        }
+
         examSelect.addEventListener('change', handleExamSelectChange);
         classSelect.addEventListener('change', checkFilters);
         classSummarySelect.addEventListener('change', checkFilters);
