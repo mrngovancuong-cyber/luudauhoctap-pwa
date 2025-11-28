@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleApiError(error, "Không thể tải báo cáo lớp");
             })
             .finally(() => {
-                overviewLoadingOverlay.classList.remove('hidden');
+                overviewLoadingOverlay.classList.remove('active');
             });
     }
 }
