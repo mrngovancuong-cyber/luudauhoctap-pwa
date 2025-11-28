@@ -124,7 +124,7 @@ button, input, select, textarea {
 /* ------------------------------
    KHU VỰC HIỂN THỊ KẾT QUẢ
 ------------------------------ */
-#class-overview-section { position: relative; }
+#class-overview-section { position: relative; min-height: 400px; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .kpi-card { background-color: var(--bg-card); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary); }
 .kpi-card h3 { margin: 0 0 0.5rem 0; color: var(--muted); font-size: 1rem; font-weight: 600; }
@@ -155,7 +155,7 @@ button, input, select, textarea {
    HIỆU ỨNG LOADING
 ------------------------------ */
 @keyframes spin { to { transform: rotate(360deg); } }
-.spinner { width: 50px; height: 50px; border: 5px solid rgba(243, 233, 224, 0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+.spinner { width: 50px; height: 50px; border: 5px solid rgba(243, 233, 224, 0.3); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; flex-shrink: 0; }
 .loading-inline { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem; width: 100%; }
 .loading-inline p { margin-top: 1.5rem; font-size: 1.2rem; color: var(--muted); font-weight: 600; }
 [data-theme="light"] .loading-inline .spinner { border-color: rgba(154, 52, 18, 0.2); border-top-color: var(--primary); }
@@ -211,4 +211,16 @@ button, input, select, textarea {
 }
 .comparison-table th {
     color: var(--accent);
+}
+
+#ms-weakest-topics-list,      /* Chủ đề yếu nhất */
+#ms-watching-students-list,   /* Cảnh báo rớt phong độ */
+#ms-improving-students-list,  /* Tuyên dương phong độ cao */
+#ms-high-attention-issue-list, /* Mất tập trung */
+#ms-low-participation-list    /* Tham gia ít (nếu có) */
+{
+    max-height: 300px; /* Giới hạn chiều cao */
+    overflow-y: auto;  /* Tự động hiện thanh cuộn khi danh sách dài */
+    scrollbar-width: thin; /* Thanh cuộn mảnh (Firefox) */
+    padding-right: 5px;
 }
